@@ -14,5 +14,9 @@
                  #:defclass-std
                  )
     :pathname "src/"
-    :components ((:file "basic-morphenator"))
+  :components ((:file "basic-morphenator")
+               (:file "classes")
+               (:file "methods")
+               (:file "main")
+               )
     :description "basic morphenator for GUI for clops in separate system")
