@@ -196,10 +196,11 @@
      menu
      (gui-menu:prepare-submenu
       "File"
-      (gui-menu:prepare-section
-       nil
-       (gui-menu:build-items
-        (gui-menu:prepare-item-simple lisp-window app menu "New" "new")))
+      ;; (gui-menu:prepare-section
+      ;;  nil
+      ;;  (gui-menu:build-items
+      ;;   (gui-menu:prepare-item-simple lisp-window app menu "New" "new"))
+      ;;  )
       (gui-menu:prepare-section
        nil
        (gui-menu:build-items
