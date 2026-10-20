@@ -1,2 +1,4 @@
 * Readme
-Trying to copy elements of Morph
+Trying to copy elements of [[file:~/Documents/Roams/githubkasten/org-roam/20261020141744-morph.org::*Morph][Morph]]
+
+** zzz
