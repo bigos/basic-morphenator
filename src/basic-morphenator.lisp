@@ -52,15 +52,24 @@
                                 (if (slot-boundp obj slot-name)
                                     (format nil "~S" (slot-value obj slot-name))
                                     (format nil "---unbound---" )))))))
-;; (defun main ()
-;;   (format t "basic morphenator"))
 
+;;; ============================================================================
 (defclass/std basic-morphenator-model (boxes:model)
   ((text :std (sy:rope ""))))
 
 (defclass/std basic-morphenator-window (boxes:boxes-window) (()))
 
-(defclass/std basic-morphenator-model () (()))
+;;; ----------------------------------------------------------------------------
+(progn                                  ; morph classes
+
+  (defclass/std world (box)
+    ())
+
+  (defclass/std morph (box)
+    ())
+
+  ;; end of classes
+  )
 
 ;;; ============================================================================
 
