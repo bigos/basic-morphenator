@@ -2,7 +2,7 @@
 
 (in-package #:basic-morphenator)
 
-
+;;; morphic - kernel -----------------------------------------------------------
 (defclass/std morph ()
   ((owner)
    (submorphs)
@@ -40,3 +40,14 @@
    (last-cycle-had-any-event)
    (taskbar)
    (scale-factor :allocation :class)))
+
+;;; morphic - layouts ----------------------------------------------------------
+(defclass/std layout ()
+  (()))
+
+(defclass/std form-layout (layout)
+  (()))
+
+(defclass/std linear-layout (layout)
+  ((gap)
+   (axis-edge-weight)))
