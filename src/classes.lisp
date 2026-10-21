@@ -51,3 +51,9 @@
 (defclass/std linear-layout (layout)
   ((gap)
    (axis-edge-weight)))
+
+(defclass/std column-layout (linear-layout)
+  (()))
+
+(defclass/std row-layout (linear-layout)
+  (()))
