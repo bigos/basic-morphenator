@@ -1,3 +1,16 @@
 (declaim (optimize (speed 0) (safety 3) (debug 3)))
 
 (in-package #:basic-morphenator)
+
+(defmethod init-gui ((model basic-morphenator-model))
+  (let ((model-world (world model))
+        (first-box (make-instance 'morph)))
+    (add-submorph model-world first-box)))
+
+(defmethod add-submorph ((morph morph) (submorph morph) )
+  (setf (owner submorph) morph)
+  (setf (submorphs morph) (if (submorphs morph)
+                              ;; then add morph to submorph collection
+                              (append (submorphs morph) (list submorph))
+                              ;; else create a collection with one submorph
+                              (list submorph))))

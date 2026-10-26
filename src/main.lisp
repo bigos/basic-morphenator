@@ -189,6 +189,8 @@
    *basic-morphenator-model* (make-instance 'basic-morphenator-model)
    boxes:*model* *basic-morphenator-model*)
 
+  (init-gui *basic-morphenator-model*)
+
   (if testing
       ;; then
       (let ((experimental-window (make-instance 'basic-morphenator-window)))
