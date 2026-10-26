@@ -5,21 +5,24 @@
 ;; (fiveam:run-all-tests)
 ;; (run! 'basic-equalities)
 
+;; (setf 5am:*on-error* :debug)
+
 ;;; =========================== fixtures =======================================
-(def-fixture prepare-varables (n)
+(def-fixture prepare-variables (n)
     (let ((a n)
           (b 2)
-          (c 3))
+          (c 3)
+          (expected 6))
       ;; body
       (&body)
       ;; teardown code
       ))
 
 ;;; ======================= tests ==============================================
-(test basic-equalities
+(fiveam:test basic-equalities
       "basic equalities"
-      (with-fixture prepare-varables ((1))
+      (with-fixture prepare-variables (1)
                     (is (eq a 1))
                     (is (eq b 2))
                     (is (eq c 3))
-                    (is (eq (+ a b c) 6))))
+                    (is (eq (+ a b c) expected))))

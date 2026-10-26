@@ -1,4 +1,4 @@
-(defpackage #:basic-editor-test
+(defpackage #:basic-morphenator-test
   (:use #:cl
         #:basic-morphenator
         #:fiveam)
