@@ -124,7 +124,8 @@
 (defmethod draw-window ((window basic-morphenator-window))
   ;; paint background
   (let ((cv 0.95)) (cairo:set-source-rgb  cv cv cv))
-  (cairo:paint))
+  (cairo:paint)
+  (render (world *basic-morphenator-model*)))
 
 ;;; main =======================================================================
 (defun menu-bar (app lisp-window)

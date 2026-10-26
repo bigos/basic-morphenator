@@ -14,3 +14,17 @@
                               (append (submorphs morph) (list submorph))
                               ;; else create a collection with one submorph
                               (list submorph))))
+
+;;; ============= render =======================================================
+(defmethod render ((morph world))
+  ;; absolute coordinates
+
+  ;; actual morph
+  (gui-color:set-rgba "red")
+  (cairo:rectangle   (x (coordinates-absolute node))
+                     (y (coordinates-absolute node))
+                     (width node)
+                     (height node))
+  (cairo:fill-path)
+
+  (loop for m in (submorphs morph) do (render m)))

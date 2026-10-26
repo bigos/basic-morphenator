@@ -16,6 +16,7 @@
     :pathname "src/"
   :components ((:file "basic-morphenator")
                (:file "classes")
+               (:file "gui-color")
                (:file "methods")
                (:file "main")
                )
