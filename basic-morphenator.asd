@@ -20,3 +20,12 @@
                (:file "main")
                )
     :description "basic morphenator for GUI for clops in separate system")
+
+(defsystem "basic-morphenator/tests"
+    :depends-on ("basic-morphenator" "fiveam")
+    :pathname "tests/"
+    :serial T
+    :components ((:file "packages")
+                 (:file "basic-morphenator-tests"))
+    :perform (test-op (op c)
+                      (uiop:symbol-call :fiveam :run-all-tests)))

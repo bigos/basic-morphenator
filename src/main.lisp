@@ -181,10 +181,10 @@
    gui-window-gtk:*initial-window-height*   400
    gui-window-gtk:*initial-title*           "Basic-Morphenator"
    ;; gui-window-gtk:*client-fn-menu-bar* 'basic-morphenator::menu-bar
-   gui-window-gtk:*client-fn-open-file* 'basic-morphenator:open-file
-   gui-window-gtk:*client-fn-cancel-open-file* 'basic-morphenator:cancel-open-file
-   gui-window-gtk:*client-fn-save-file* 'basic-morphenator:save-file
-   gui-window-gtk:*client-fn-cancel-save-file* 'basic-morphenator:cancel-save-file
+   ;; gui-window-gtk:*client-fn-open-file* 'basic-morphenator:open-file
+   ;; gui-window-gtk:*client-fn-cancel-open-file* 'basic-morphenator:cancel-open-file
+   ;; gui-window-gtk:*client-fn-save-file* 'basic-morphenator:save-file
+   ;; gui-window-gtk:*client-fn-cancel-save-file* 'basic-morphenator:cancel-save-file
 
    *basic-morphenator-model* (make-instance 'basic-morphenator-model)
    boxes:*model* *basic-morphenator-model*)
