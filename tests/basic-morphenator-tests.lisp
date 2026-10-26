@@ -1,7 +1,7 @@
 (declaim (optimize (speed 0) (safety 3) (debug 3)))
 
 ;; (ql:quickload :basic-morphenator/tests)
-;; (in-package #:basic-morphenator-test)
+(in-package #:basic-morphenator-test)
 ;; (fiveam:run-all-tests)
 ;; (run! 'basic-equalities)
 
