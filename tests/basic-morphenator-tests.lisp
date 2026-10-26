@@ -16,7 +16,9 @@
       ;; body
       (&body)
       ;; teardown code
-      ))
+      (setf a nil
+            b nil
+            c nil)))
 
 ;;; ======================= tests ==============================================
 (fiveam:test basic-equalities
