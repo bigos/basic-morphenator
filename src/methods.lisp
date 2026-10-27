@@ -38,8 +38,8 @@
   (gui-color:set-rgba "lime")
   (cairo:rectangle   10
                      10
-                     60
-                     60)
+                     20
+                     20)
   (cairo:fill-path))
 
 ;;; ------------ world ---------------------------------------------------------
@@ -53,5 +53,5 @@
                      (width window)
                      (height window))
   (cairo:fill-path)
-
+  ;; render children
   (loop for m in (submorphs morph) do (render m)))
