@@ -9,13 +9,24 @@
     (add-submorph model-world first-box)
     (add-submorph first-box second-box)))
 
+(defun build-location (x y)
+  (make-instance 'location
+                 :x x
+                 :y y))
+
 (defmethod add-submorph ((morph morph) (submorph morph) )
   (setf (owner submorph) morph)
   (setf (submorphs morph) (if (submorphs morph)
                               ;; then add morph to submorph collection
                               (append (submorphs morph) (list submorph))
                               ;; else create a collection with one submorph
-                              (list submorph))))
+                              (list submorph)))
+  (setf (location submorph)
+        (make-instance 'location
+                       :absolute-x (+ (~> morph location absolute-x) (~> submorph location x))
+                       :absolute-y (+ (~> morph location absolute-y) (~> submorph location y))
+                       :x (~> submorph location x)
+                       :y (~> submorph location y))))
 
 ;;; ============= render =======================================================
 ;; (defmethod render :before ((morph morph))

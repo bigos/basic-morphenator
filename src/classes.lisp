@@ -7,6 +7,11 @@
                               :owner nil
                               :location (cons 0 0)
                               :scale-factor 1.0))))
+(defclass/std location ()
+  ((absolute-x)
+   (absolute-y)
+   (x)
+   (y)))
 
 ;;; morphic - kernel -----------------------------------------------------------
 (defclass/std morph ()
