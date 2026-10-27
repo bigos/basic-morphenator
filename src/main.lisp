@@ -64,9 +64,9 @@
     (:resize
           ;; on resize move cursor to corresponding file position
      (destructuring-bind ((w h)) args
-       ;; (gui-window:window-resize w h lisp-window)
-       ;; (setf (width lisp-window) w
-       ;;       (height lisp-window) h)
+       (gui-window:window-resize w h lisp-window)
+       (setf (width lisp-window) w
+             (height lisp-window) h)
        ;; (let ((model *basic-morphenator-model*))
        ;;   (when (world model)
        ;;     (let ((bwidth (calculate-bwidth model)))
@@ -125,7 +125,7 @@
   ;; paint background
   (let ((cv 0.95)) (cairo:set-source-rgb  cv cv cv))
   (cairo:paint)
-  (render (world *basic-morphenator-model*)))
+  (render-world (world *basic-morphenator-model*) window))
 
 ;;; main =======================================================================
 (defun menu-bar (app lisp-window)

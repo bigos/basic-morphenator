@@ -4,8 +4,10 @@
 
 (defmethod init-gui ((model basic-morphenator-model))
   (let ((model-world (world model))
-        (first-box (make-instance 'morph)))
-    (add-submorph model-world first-box)))
+        (first-box (make-instance 'morph))
+        (second-box (make-instance 'placed-morph :location (cons 50 50))))
+    (add-submorph model-world first-box)
+    (add-submorph first-box second-box)))
 
 (defmethod add-submorph ((morph morph) (submorph morph) )
   (setf (owner submorph) morph)
@@ -16,15 +18,40 @@
                               (list submorph))))
 
 ;;; ============= render =======================================================
-(defmethod render ((morph world))
+;; (defmethod render :before ((morph morph))
+;;   (absolute-coordinates morph))
+
+(defmethod render ((morph morph))
+
+  (gui-color:set-rgba "yellow")
+  (cairo:rectangle   10
+                     10
+                     50
+                     30)
+  (cairo:fill-path))
+
+(defmethod render :after ((morph morph))
+  (loop for m in (submorphs morph)
+        do (render m)))
+
+(defmethod render ((morph placed-morph))
+  (gui-color:set-rgba "lime")
+  (cairo:rectangle   10
+                     10
+                     60
+                     60)
+  (cairo:fill-path))
+
+;;; ------------ world ---------------------------------------------------------
+(defmethod render-world ((morph world-morph) (window basic-morphenator-window))
   ;; absolute coordinates
 
   ;; actual morph
   (gui-color:set-rgba "red")
-  (cairo:rectangle   (x (coordinates-absolute node))
-                     (y (coordinates-absolute node))
-                     (width node)
-                     (height node))
+  (cairo:rectangle   0
+                     0
+                     (width window)
+                     (height window))
   (cairo:fill-path)
 
   (loop for m in (submorphs morph) do (render m)))
