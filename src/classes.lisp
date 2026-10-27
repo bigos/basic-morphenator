@@ -14,14 +14,16 @@
    (submorphs)
    (properties)
    (id)
+   (location)
+   (layout-spec)
    (private-display-bounds)
    (last-morph-id :allocation :class)))
 
-(defclass/std placed-morph (morph)
-  ((location)
-   (layout-spec)))
+;; (defclass/std placed-morph (morph)
+;;   ((location)
+;;    (layout-spec)))
 
-(defclass/std box-morph (placed-morph)
+(defclass/std box-morph (morph)
   ((extent)))
 
 (defclass/std colored-box-morph (box-morph)
