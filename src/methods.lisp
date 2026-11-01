@@ -4,11 +4,27 @@
 
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
-  (let ((world (world model))
-        (first-box (make-instance 'morph :location (build-location 10 20)))
-        (second-box (make-instance 'morph :location (build-location 50 50))))
-    (add-submorph world first-box)
-    (add-submorph first-box second-box)))
+  (let* ((view )                     ;column
+         (row )
+         (input)
+         (greeting-label)
+         (button))
+
+    (add-morph row 333)
+    (add-morph row input)
+    (add-morph row button)
+
+    (add-morph view row)
+    (add-morph view greeting-label)
+
+    (add-morph (world model) view)))
+
+;; (defmethod init-gui ((model basic-morphenator-model))
+;;   (let ((world (world model))
+;;         (first-box (make-instance 'morph :location (build-location 10 20)))
+;;         (second-box (make-instance 'morph :location (build-location 50 50))))
+;;     (add-submorph world first-box)
+;;     (add-submorph first-box second-box)))
 
 (defun build-location (x y)
   (make-instance 'location
@@ -37,10 +53,10 @@
   (loop for m in (submorphs morph)
         do (refresh-location m)))
 
-(defmethod add-submorph ((morph morph) (submorph morph) )
+(defmethod add-morph ((morph morph) (submorph morph) )
   (setf (owner submorph) morph)
   (setf (submorphs morph) (append (submorphs morph) (list submorph))))
-(defmethod add-submorph :after ((morph morph) (submorph morph) )
+(defmethod add-morph :after ((morph morph) (submorph morph) )
   (refresh-location submorph))
 
 ;;; ============= render =======================================================
