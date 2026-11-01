@@ -30,7 +30,6 @@
 (defmethod refresh-locations ((morph morph))
   "Refresh LOCATION and children."
   (refresh-location morph))
-
 (defmethod refresh-locations :after ((morph morph))
   (loop for m in (submorphs morph)
         do (refresh-location m)))
@@ -38,7 +37,6 @@
 (defmethod add-submorph ((morph morph) (submorph morph) )
   (setf (owner submorph) morph)
   (setf (submorphs morph) (append (submorphs morph) (list submorph))))
-
 (defmethod add-submorph :after ((morph morph) (submorph morph) )
   (refresh-location submorph))
 
