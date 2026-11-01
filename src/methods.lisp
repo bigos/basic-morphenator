@@ -18,8 +18,6 @@
   (typep morph 'world-morph))
 
 (defmethod refresh-location ((morph morph))
-  (break "examine morph ~s and owner ~s" morph (owner morph))
-
   (setf (location morph)
         (let ((owner-morph-location-absolute-x (if (world-morphp morph) 0
                                                    (~> morph owner location absolute-x)))
@@ -44,16 +42,7 @@
                               (list submorph))))
 
 (defmethod add-submorph :after ((morph morph) (submorph morph) )
-  (refresh-location submorph)
-  ;; (setf (location submorph)
-  ;;       (let ((morph-location-absolute-x (if (world-morphp morph) 0 (~> morph location absolute-x)))
-  ;;             (morph-location-absolute-y (if (world-morphp morph) 0 (~> morph location absolute-y))))
-  ;;         (make-instance 'location
-  ;;                        :absolute-x (+ morph-location-absolute-x (~> submorph location x))
-  ;;                        :absolute-y (+ morph-location-absolute-y (~> submorph location y))
-  ;;                        :x (~> submorph location x)
-  ;;                        :y (~> submorph location y))))
-  )
+  (refresh-location submorph))
 
 ;;; ============= render =======================================================
 
@@ -93,7 +82,7 @@
   ;; render children
   (loop for m in (submorphs morph) do (render m)))
 
-(defmethod initialize-instance :after ((morph world-morph))
+(defmethod initialize-instance :after ((morph world-morph) &key)
   (warn "setting the world data")
   (setf (owner morph) nil
         (scale-factor morph) 1.0
