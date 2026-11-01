@@ -18,15 +18,17 @@
   (typep morph 'world-morph))
 
 (defmethod refresh-location ((morph morph))
-  (setf (location morph)
-        (let ((owner-morph-location (~> morph owner location)))
-          (make-instance 'location
-                         :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                         :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                         :x (~> morph location x)
-                         :y (~> morph location y)))))
+  (unless (world-morphp morph)
+    (setf (location morph)
+          (let ((owner-morph-location (~> morph owner location)))
+            (make-instance 'location
+                           :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                           :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                           :x (~> morph location x)
+                           :y (~> morph location y))))))
 
 (defmethod refresh-locations ((morph morph))
+  "Refresh LOCATION and children."
   (refresh-location morph))
 
 (defmethod refresh-locations :after ((morph morph))
@@ -43,9 +45,7 @@
 ;;; ============= render =======================================================
 
 (defmethod render :before ((morph morph))
-  ;;   (absolute-coordinates morph)
-  (unless (world-morphp morph)
-    (refresh-location morph)))
+  (refresh-location morph))
 
 (defmethod render ((morph morph))
   (gui-color:set-rgba "yellow")
