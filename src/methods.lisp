@@ -3,10 +3,10 @@
 (in-package #:basic-morphenator)
 
 (defmethod init-gui ((model basic-morphenator-model))
-  (let ((model-world (world model))
+  (let ((world (world model))
         (first-box (make-instance 'morph :location (build-location 10 20)))
         (second-box (make-instance 'morph :location (build-location 50 50))))
-    (add-submorph model-world first-box)
+    (add-submorph world first-box)
     (add-submorph first-box second-box)))
 
 (defun build-location (x y)
@@ -19,27 +19,23 @@
 
 (defmethod refresh-location ((morph morph))
   (setf (location morph)
-        (let ((owner-morph-location-absolute-x (if (world-morphp morph) 0
-                                                   (~> morph owner location absolute-x)))
-              (owner-morph-location-absolute-y (if (world-morphp morph) 0
-                                                   (~> morph owner location absolute-y))))
+        (let ((owner-morph-location (~> morph owner location)))
           (make-instance 'location
-                         :absolute-x (+ owner-morph-location-absolute-x (~> morph location x))
-                         :absolute-y (+ owner-morph-location-absolute-y (~> morph location y))
+                         :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                         :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
                          :x (~> morph location x)
                          :y (~> morph location y)))))
 
-(defmethod refresh-location :after ((morph morph))
+(defmethod refresh-locations ((morph morph))
+  (refresh-location morph))
+
+(defmethod refresh-locations :after ((morph morph))
   (loop for m in (submorphs morph)
         do (refresh-location m)))
 
 (defmethod add-submorph ((morph morph) (submorph morph) )
   (setf (owner submorph) morph)
-  (setf (submorphs morph) (if (submorphs morph)
-                              ;; then add morph to submorph collection
-                              (append (submorphs morph) (list submorph))
-                              ;; else create a collection with one submorph
-                              (list submorph))))
+  (setf (submorphs morph) (append (submorphs morph) (list submorph))))
 
 (defmethod add-submorph :after ((morph morph) (submorph morph) )
   (refresh-location submorph))
@@ -49,13 +45,7 @@
 (defmethod render :before ((morph morph))
   ;;   (absolute-coordinates morph)
   (unless (world-morphp morph)
-    (let ((owner-location (~> morph owner location)))
-      (when owner-location
-        (let ((owner-absolute-x (~> owner-location absolute-x))
-              (owner-absolute-y (~> owner-location absolute-y)))
-
-          (setf (~> morph location absolute-x) (+ owner-absolute-x  (~> morph location x)))
-          (setf (~> morph location absolute-y) (+ owner-absolute-y  (~> morph location y))))))))
+    (refresh-location morph)))
 
 (defmethod render ((morph morph))
   (gui-color:set-rgba "yellow")
@@ -71,6 +61,15 @@
 
 ;;; ------------ world ---------------------------------------------------------
 
+(defmethod initialize-instance :after ((morph world-morph) &key)
+  (setf (owner morph) nil
+        (scale-factor morph) 1.0
+        (location morph) (make-instance 'location
+                                        :absolute-x 0
+                                        :absolute-y 0
+                                        :x 0
+                                        :y 0)))
+
 (defmethod render-world   ((morph world-morph) (window basic-morphenator-window))
   ;; actual morph
   (gui-color:set-rgba "red")
@@ -81,13 +80,3 @@
   (cairo:fill-path)
   ;; render children
   (loop for m in (submorphs morph) do (render m)))
-
-(defmethod initialize-instance :after ((morph world-morph) &key)
-  (warn "setting the world data")
-  (setf (owner morph) nil
-        (scale-factor morph) 1.0
-        (location morph) (make-instance 'location
-                                        :absolute-x 0
-                                        :absolute-y 0
-                                        :x 0
-                                        :y 0)))
