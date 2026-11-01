@@ -112,21 +112,21 @@
    (source)))
 
 (defclass/std drop-event (morphic-event)
-  ((position)
+  ((position2)
    (contents)
    (was-handled)
    (former-owner)
    (former-position)))
 
 (defclass/std drop-files-event (morphic-event)
-  ((position)
+  ((position2)
    (was-handled)
    (number-of-files)))
 
 (defclass/std user-input-event (morphic-event)
-  ((type)
+  ((type2)
    (buttons)
-   (position)
+   (position2)
    (was-handled)))
 
 (defclass/std keyboard-event (user-input-event)
