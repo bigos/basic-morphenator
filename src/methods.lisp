@@ -18,9 +18,13 @@
   (typep morph 'world-morph))
 
 (defmethod refresh-location ((morph morph))
+  (break "examine morph ~s and owner ~s" morph (owner morph))
+
   (setf (location morph)
-        (let ((owner-morph-location-absolute-x (if (world-morphp morph) 0 (~> morph owner location absolute-x)))
-              (owner-morph-location-absolute-y (if (world-morphp morph) 0 (~> morph owner location absolute-y))))
+        (let ((owner-morph-location-absolute-x (if (world-morphp morph) 0
+                                                   (~> morph owner location absolute-x)))
+              (owner-morph-location-absolute-y (if (world-morphp morph) 0
+                                                   (~> morph owner location absolute-y))))
           (make-instance 'location
                          :absolute-x (+ owner-morph-location-absolute-x (~> morph location x))
                          :absolute-y (+ owner-morph-location-absolute-y (~> morph location y))
