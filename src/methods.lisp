@@ -4,11 +4,11 @@
 
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
-  (let* ((view )                     ;column
-         (row )
-         (input)
-         (greeting-label)
-         (button))
+  (let* ((view (make-instance 'layout-morph :direction :vertical))
+         (row  (make-instance 'layout-morph :direction :horizontal))
+         (input (make-instance 'text-model-morph))
+         (greeting-label (make-instance 'label-morph))
+         (button (make-instance 'pluggable-button-morph)))
 
     (add-morph row 333)
     (add-morph row input)
