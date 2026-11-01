@@ -93,7 +93,8 @@
   ;; render children
   (loop for m in (submorphs morph) do (render m)))
 
-(defmethod initialize :after ((morph world-morph))
+(defmethod initialize-instance :after ((morph world-morph))
+  (warn "setting the world data")
   (setf (owner morph) nil
         (scale-factor morph) 1.0
         (location morph) (make-instance 'location
