@@ -10,29 +10,53 @@
    (absolute-y)
    (x)
    (y)))
+;;; kernel - objects -----------------------------------------------------------
+(defclass/std message-send ()
+  ((receiver)
+   (selector)
+   (arguments)))
 
 ;;; morphic - kernel -----------------------------------------------------------
+(defclass/std drop-files-action ()
+  ((drop-files-event)
+   (selected-file-entry)
+   (should-ask-to-stop)
+   (stop-here-block)))
+
 (defclass/std morph ()
   ((owner)
    (submorphs)
    (properties)
    (id)
-   (location)
-   (layout-spec)
    (private-display-bounds)
    (last-morph-id :allocation :class)))
 
-;; (defclass/std placed-morph (morph)
-;;   ((location)
-;;    (layout-spec)))
+(defclass/std placed-morph (morph)
+  ((location)
+   (layout-spec)))
 
-(defclass/std box-morph (morph)
-  ((extent)))
+(defclass/std boxed-morph (placed-morph)
+  ((extent)
+   (color)
+   (border-width)
+   (border-color)))
 
-(defclass/std colored-box-morph (box-morph)
-  ((color)))
+(defclass/std hand-morph (boxed-morph)
+  ((mouse-focus)
+   (keyboard-focus)
+   (mouse-click-state)
+   (mouse-over-handler)
+   (last-mouse-event)
+   (has-changed)
+   (saved-patch)
+   (last-event-buffer)
+   (last-key-down-value)
+   (last-mouse-event-time)
+   (prev-full-bounds)
+   (grab-morph-data)
+   (last-position)))
 
-(defclass/std paste-up-morph (colored-box-morph)
+(defclass/std paste-up-morph (boxed-morph)
   ((background-image)
    (background-image-data)))
 
@@ -53,18 +77,85 @@
    (scale-factor :allocation :class)))
 
 ;;; morphic - layouts ----------------------------------------------------------
-(defclass/std layout ()
-  (()))
+(defclass/std layout-adjusting-morph (boxed-morph)
+  ((hand)))
 
-(defclass/std form-layout (layout)
-  (()))
+(defclass/std window-edge-adjusting-morph (layout-adjusting-morph)
+  ((selector)
+   (cursor-key)))
 
-(defclass/std linear-layout (layout)
-  ((gap)
-   (axis-edge-weight)))
+(defclass/std layout-morph (boxed-morph)
+  ((direction)
+   (separation)
+   (axis-edge-weight)
+   (do-adopt-widgets-colour)))
 
-(defclass/std column-layout (linear-layout)
-  (()))
+(defclass/std layout-spec ()
+  ((morph)
+   (fixed-width)
+   (fixed-height)
+   (off-axis-edge-weidth)
+   (proportional-width)
+   (proportional-height)))
 
-(defclass/std row-layout (linear-layout)
-  (()))
+;;; morphic - events -----------------------------------------------------------
+(defclass/std morphic-alarm (message-send)
+  ((schedule-time)
+   (num-args)))
+
+(defclass/std step-message (morphic-alarm)
+  ((step-time)
+   (last-evaluation-time)))
+
+(defclass/std morphic-event ()
+  ((timestamp)
+   (source)))
+
+(defclass/std drop-event (morphic-event)
+  ((position)
+   (contents)
+   (was-handled)
+   (former-owner)
+   (former-position)))
+
+(defclass/std drop-files-event (morphic-event)
+  ((position)
+   (was-handled)
+   (number-of-files)))
+
+(defclass/std user-input-event (morphic-event)
+  ((type)
+   (buttons)
+   (position)
+   (was-handled)))
+
+(defclass/std keyboard-event (user-input-event)
+  ((key-value)))
+
+(defclass/std mouse-event (user-input-event)
+  ())
+
+(defclass/std mouse-button-event (mouse-event)
+  ((which-button)
+   (event-handler)))
+
+(defclass/std mouse-move-event (mouse-event)
+  ())
+
+(defclass/std mouse-scroll-event (mouse-event)
+  ((direction)
+   (event-handler)))
+
+(defclass/std window-event (morphic-event)
+  ((action)
+   (rectangle)))
+
+(defclass/std mouse-over-handler ()
+  ((mouse-over-morphs)
+   (entered-morphs)
+   (over-morphs)
+   (left-morphs)))
+
+;;; morphic - widgets ----------------------------------------------------------
+
+;;; morphic - composite widgets ------------------------------------------------
