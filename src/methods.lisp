@@ -2,6 +2,7 @@
 
 (in-package #:basic-morphenator)
 
+;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
   (let ((world (world model))
         (first-box (make-instance 'morph :location (build-location 10 20)))
@@ -16,6 +17,8 @@
 
 (defun world-morphp (morph)
   (typep morph 'world-morph))
+
+;;; ============= location and add submorph ====================================
 
 (defmethod refresh-location ((morph morph))
   (unless (world-morphp morph)
@@ -44,7 +47,6 @@
 
 (defmethod render :before ((morph morph))
   (refresh-location morph))
-
 (defmethod render ((morph morph))
   (gui-color:set-rgba "yellow")
   (cairo:rectangle   (~> morph location absolute-x)
@@ -52,7 +54,6 @@
                      50
                      30)
   (cairo:fill-path))
-
 (defmethod render :after ((morph morph))
   (loop for m in (submorphs morph)
         do (render m)))
