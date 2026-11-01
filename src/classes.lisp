@@ -157,5 +157,44 @@
    (left-morphs)))
 
 ;;; morphic - widgets ----------------------------------------------------------
+(defclass/std label-morph (boxed-morph)
+  ((font)
+   (emphasis)
+   (contents)))
+
+(defclass/std pluggable-morph (boxed-morph)
+  ((model)
+   (menu-n-shortcuts-key)))
+
+(defclass/std pluggable-button-morph (pluggable-morph)
+  ((label)
+   (font)
+   (icon)
+   (state-selector)
+   (enable-selector)
+   (action-selector)
+   (is-pressed)
+   (mouse-is-over)
+   (magnified-icon)
+   (act-when)
+   (round-button-style)
+   (icon-name)
+   (secondary-action-selector)
+   (state-argument)
+   (action-argument)
+   (mouse-over-color)))
+
+(defclass/std pluggable-scroll-pane (pluggable-morph)
+  ((scroll-pane)
+   (scroller)
+   (h-scroll-bar)
+   (hides-scroll-bars)
+   (draw-keyboard-focus-indicator)
+   (scroller-scale)
+   (scroller-radians)
+   (the-scroller-extent)))
+
+(defclass/std text-model-morph (pluggable-scroll-pane)
+  ())
 
 ;;; morphic - composite widgets ------------------------------------------------
