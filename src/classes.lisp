@@ -3,10 +3,8 @@
 (in-package #:basic-morphenator)
 
 (defclass/std basic-morphenator-model (boxes:model)
-  ((world :std (make-instance 'world-morph
-                              :owner nil
-                              :location (cons 0 0)
-                              :scale-factor 1.0))))
+  ((world :std (make-instance 'world-morph))))
+
 (defclass/std location ()
   ((absolute-x)
    (absolute-y)

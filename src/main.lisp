@@ -187,12 +187,8 @@
    ;; gui-window-gtk:*client-fn-save-file* 'basic-morphenator:save-file
    ;; gui-window-gtk:*client-fn-cancel-save-file* 'basic-morphenator:cancel-save-file
 
-   *basic-morphenator-model* (make-instance 'basic-morphenator-model
-                                            :location (make-instance 'location
-                                                                     :absolute-x 0
-                                                                     :absolute-y 0
-                                                                     :x 0
-                                                                     :y 0))
+   *basic-morphenator-model* (make-instance 'basic-morphenator-model)
+
    boxes:*model* *basic-morphenator-model*)
 
   (init-gui *basic-morphenator-model*)
