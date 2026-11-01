@@ -27,6 +27,10 @@
                          :x (~> morph location x)
                          :y (~> morph location y)))))
 
+(defmethod refresh-location :after ((morph morph))
+  (loop for m in (submorphs morph)
+        do (refresh-location m)))
+
 (defmethod add-submorph ((morph morph) (submorph morph) )
   (setf (owner submorph) morph)
   (setf (submorphs morph) (if (submorphs morph)
