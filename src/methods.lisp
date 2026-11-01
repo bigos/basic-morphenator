@@ -17,21 +17,35 @@
 (defun world-morphp (morph)
   (typep morph 'world-morph))
 
+(defmethod refresh-location ((morph morph))
+  (setf (location morph)
+        (let ((owner-morph-location-absolute-x (if (world-morphp morph) 0 (~> morph owner location absolute-x)))
+              (owner-morph-location-absolute-y (if (world-morphp morph) 0 (~> morph owner location absolute-y))))
+          (make-instance 'location
+                         :absolute-x (+ owner-morph-location-absolute-x (~> morph location x))
+                         :absolute-y (+ owner-morph-location-absolute-y (~> morph location y))
+                         :x (~> morph location x)
+                         :y (~> morph location y)))))
+
 (defmethod add-submorph ((morph morph) (submorph morph) )
   (setf (owner submorph) morph)
   (setf (submorphs morph) (if (submorphs morph)
                               ;; then add morph to submorph collection
                               (append (submorphs morph) (list submorph))
                               ;; else create a collection with one submorph
-                              (list submorph)))
-  (setf (location submorph)
-        (let ((morph-location-absolute-x (if (world-morphp morph) 0 (~> morph location absolute-x)))
-              (morph-location-absolute-y (if (world-morphp morph) 0 (~> morph location absolute-y))))
-            (make-instance 'location
-                           :absolute-x (+ morph-location-absolute-x (~> submorph location x))
-                           :absolute-y (+ morph-location-absolute-y (~> submorph location y))
-                           :x (~> submorph location x)
-                           :y (~> submorph location y)))))
+                              (list submorph))))
+
+(defmethod add-submorph :after ((morph morph) (submorph morph) )
+  (refresh-location submorph)
+  ;; (setf (location submorph)
+  ;;       (let ((morph-location-absolute-x (if (world-morphp morph) 0 (~> morph location absolute-x)))
+  ;;             (morph-location-absolute-y (if (world-morphp morph) 0 (~> morph location absolute-y))))
+  ;;         (make-instance 'location
+  ;;                        :absolute-x (+ morph-location-absolute-x (~> submorph location x))
+  ;;                        :absolute-y (+ morph-location-absolute-y (~> submorph location y))
+  ;;                        :x (~> submorph location x)
+  ;;                        :y (~> submorph location y))))
+  )
 
 ;;; ============= render =======================================================
 
