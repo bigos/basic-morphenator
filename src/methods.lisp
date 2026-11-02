@@ -10,7 +10,7 @@
          (greeting-label (make-instance 'label-morph))
          (button (make-instance 'pluggable-button-morph)))
 
-    (add-morph row 333)
+    (add-morph row (make-instance 'label-morph))
     (add-morph row input)
     (add-morph row button)
 
@@ -38,13 +38,15 @@
 
 (defmethod refresh-location ((morph morph))
   (unless (world-morphp morph)
-    (setf (location morph)
-          (let ((owner-morph-location (~> morph owner location)))
-            (make-instance 'location
-                           :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                           :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                           :x (~> morph location x)
-                           :y (~> morph location y))))))
+    (let ((owner-morph-location (~> morph owner location)))
+      (when (and (typep owner-morph-location 'location)
+                 (~> morph location))
+        (setf (location morph)
+              (make-instance 'location
+                             :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                             :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                             :x (~> morph location x)
+                             :y (~> morph location y)))))))
 
 (defmethod refresh-locations ((morph morph))
   "Refresh LOCATION and children."
@@ -65,10 +67,11 @@
   (refresh-location morph))
 (defmethod render ((morph morph))
   (gui-color:set-rgba "yellow")
-  (cairo:rectangle   (~> morph location absolute-x)
-                     (~> morph location absolute-y)
-                     50
-                     30)
+  (cairo:rectangle
+   0    ;;    (~> morph location absolute-x)
+   0    ;; (~> morph location absolute-y)
+   50
+   30)
   (cairo:fill-path))
 (defmethod render :after ((morph morph))
   (loop for m in (submorphs morph)
