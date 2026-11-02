@@ -10,6 +10,11 @@
    (absolute-y)
    (x)
    (y)))
+
+(defclass/std extent ()
+  ((x :documentation "x is the width of the widget")
+   (y :documentation "y is the height of the widget")))
+
 ;;; kernel - objects -----------------------------------------------------------
 (defclass/std message-send ()
   ((receiver)
@@ -36,7 +41,7 @@
    (layout-spec)))
 
 (defclass/std boxed-morph (placed-morph)
-  ((extent)
+  ((extent)                             ;width and height
    (color)
    (border-width)
    (border-color)))
