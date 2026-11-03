@@ -61,29 +61,19 @@
 (defmethod refresh-location ((morph morph))
   (warn "doing refresh location")
   (unless (world-morphp morph)
-    (if (world-morphp (owner morph))
-        (progn
-          (warn "doing then")
-          (let ((owner-morph-location (~> morph owner location)))
-            (setf (location morph)
-                  (make-instance 'location
-                                 :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                                 :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                                 :x (~> morph location x)
-                                 :y (~> morph location y)))))
-        (progn
-          (assert (not (null (owner morph))))
-          (warn "doing else")
-          (warn "with owner ~s" (~> morph owner))
-          (warn "with loaction ~s" (~> morph owner location))
-          (let ((owner-morph-location (~> morph owner location)))
-            (warn "got owner location ~s" owner-morph-location)
-            (setf (location morph)
-                  (make-instance 'location
-                                 :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                                 :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                                 :x (~> morph location x)
-                                 :y (~> morph location y))))))))
+    (progn
+      (assert (not (null (owner morph))))
+      (warn "doing else")
+      (warn "with owner ~s" (~> morph owner))
+      (warn "with loaction ~s" (~> morph owner location))
+      (let ((owner-morph-location (~> morph owner location)))
+        (warn "got owner location ~s" owner-morph-location)
+        (setf (location morph)
+              (make-instance 'location
+                             :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                             :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                             :x (~> morph location x)
+                             :y (~> morph location y)))))))
 
 (defmethod refresh-locations ((morph morph))
   "Refresh LOCATION and children."
