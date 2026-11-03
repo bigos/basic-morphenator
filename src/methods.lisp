@@ -7,29 +7,29 @@
   (let* ((view (make-instance 'layout-morph
                               :color "pink"
                               :direction :vertical
-                              :location (make-instance 'location :x 5 :y 5)
+                              :location (make-instance 'location :x 25 :y 25)
                               :extent (make-instance 'extent :x 200 :y 100) ))
          (row  (make-instance 'layout-morph
                               :color "orange"
                               :direction :horizontal
                               :location (make-instance 'location :x 5 :y 5)
-                              :extent (make-instance 'extent :x 180 :y 80)))
+                              :extent (make-instance 'extent :x 180 :y 50)))
+         (label (make-instance 'label-morph
+                               :color "brown"
+                               :location (make-instance 'location :x 80 :y 15)
+                               :extent (make-instance 'extent :x 60 :y 10)))
          (input (make-instance 'text-model-morph
                                :color "white"
                                :location (make-instance 'location :x 15 :y 15)
                                :extent (make-instance 'extent :x 50 :y 10)))
-         (greeting-label (make-instance 'label-morph
-                                        :color "blue"
-                                        :location (make-instance 'location :x 85 :y 15)
-                                        :extent (make-instance 'extent :x 50 :y 10)))
          (button (make-instance 'pluggable-button-morph
                                 :color "green"
                                 :location (make-instance 'location :x 155 :y 15)
                                 :extent (make-instance 'extent :x 20 :y 10)))
-         (label (make-instance 'label-morph
-                               :color "brown"
-                               :location (make-instance 'location :x 90 :y 41)
-                               :extent (make-instance 'extent :x 60 :y 10))))
+         (greeting-label (make-instance 'label-morph
+                                        :color "blue"
+                                        :location (make-instance 'location :x 85 :y 65)
+                                        :extent (make-instance 'extent :x 50 :y 10))))
 
     (add-morph (world model) view)
     (add-morph view row)
@@ -63,11 +63,8 @@
   (unless (world-morphp morph)
     (progn
       (assert (not (null (owner morph))))
-      (warn "doing else")
-      (warn "with owner ~s" (~> morph owner))
-      (warn "with loaction ~s" (~> morph owner location))
       (let ((owner-morph-location (~> morph owner location)))
-        (warn "got owner location ~s" owner-morph-location)
+        (assert (not (null owner-morph-location)))
         (setf (location morph)
               (make-instance 'location
                              :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
@@ -89,10 +86,6 @@
   (warn "after add morph")
   (refresh-location morph))
 
-(defmethod add-morph ((morph layout-morph) (submorph morph))
-  (setf (owner submorph) morph)
-  (setf (submorphs morph) (append (submorphs morph) (list submorph))))
-
 (defmethod add-morph :after ((morph layout-morph) (submorph morph))
   (ecase (direction morph)
     (:vertical)
@@ -102,7 +95,8 @@
 ;;; ============= render =======================================================
 
 (defmethod render :before ((morph morph))
-  (refresh-location morph))
+  ;; (refresh-location morph)
+  )
 (defmethod render ((morph placed-morph))
   (gui-color:set-rgba (if (color morph)
                           (color morph)
