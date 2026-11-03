@@ -82,25 +82,18 @@
   (loop for m in (submorphs morph)
         do (refresh-locations m)))
 
-(defmethod add-morph ((morph morph) (submorph morph) )
-  (warn "adding morph")
+(defmethod add-morph ((morph morph) (submorph morph))
   (setf (owner submorph) morph)
   (setf (submorphs morph) (append (submorphs morph) (list submorph))))
 (defmethod add-morph :after ((morph morph) (submorph morph) )
   (warn "after add morph")
-  (refresh-locations morph))
+  (refresh-location morph))
 
 (defmethod add-morph ((morph layout-morph) (submorph morph))
-  ;; do naive left-right or top-down
-  (warn "adding morph to layout-morph ~s" (direction morph))
-  (assert (not (null (location morph))))
   (setf (owner submorph) morph)
-  (assert (not (null (owner submorph))))
   (setf (submorphs morph) (append (submorphs morph) (list submorph))))
 
 (defmethod add-morph :after ((morph layout-morph) (submorph morph))
-  (assert (not (null (owner morph))))
-  (assert (not (null (owner submorph))))
   (ecase (direction morph)
     (:vertical)
     (:horizontal))
