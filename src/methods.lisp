@@ -4,20 +4,42 @@
 
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
-  (let* ((view (make-instance 'layout-morph :direction :vertical))
-         (row  (make-instance 'layout-morph :direction :horizontal))
-         (input (make-instance 'text-model-morph))
-         (greeting-label (make-instance 'label-morph))
-         (button (make-instance 'pluggable-button-morph)))
+  (let* ((view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :location (make-instance 'location :x 5 :y 5)
+                              :extent (make-instance 'extent :x 200 :y 100) ))
+         (row  (make-instance 'layout-morph
+                              :color "orange"
+                              :direction :horizontal
+                              :location (make-instance 'location :x 5 :y 5)
+                              :extent (make-instance 'extent :x 180 :y 80)))
+         (input (make-instance 'text-model-morph
+                               :color "white"
+                               :location (make-instance 'location :x 15 :y 15)
+                               :extent (make-instance 'extent :x 50 :y 10)))
+         (greeting-label (make-instance 'label-morph
+                                        :color "blue"
+                                        :location (make-instance 'location :x 85 :y 15)
+                                        :extent (make-instance 'extent :x 50 :y 10)))
+         (button (make-instance 'pluggable-button-morph
+                                :color "green"
+                                :location (make-instance 'location :x 155 :y 15)
+                                :extent (make-instance 'extent :x 20 :y 10)))
+         (label (make-instance 'label-morph
+                               :color "brown"
+                               :location (make-instance 'location :x 90 :y 41)
+                               :extent (make-instance 'extent :x 60 :y 10))))
 
-    (add-morph row (make-instance 'label-morph))
+    (add-morph (world model) view)
+    (add-morph view row)
+    (add-morph row label)
     (add-morph row input)
     (add-morph row button)
-
-    (add-morph view row)
     (add-morph view greeting-label)
 
-    (add-morph (world model) view)))
+
+    ))
 
 ;; (defmethod init-gui ((model basic-morphenator-model))
 ;;   (let ((world (world model))
@@ -37,41 +59,76 @@
 ;;; ============= location and add submorph ====================================
 
 (defmethod refresh-location ((morph morph))
+  (warn "doing refresh location")
   (unless (world-morphp morph)
-    (let ((owner-morph-location (~> morph owner location)))
-      (when (and (typep owner-morph-location 'location)
-                 (~> morph location))
-        (setf (location morph)
-              (make-instance 'location
-                             :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                             :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                             :x (~> morph location x)
-                             :y (~> morph location y)))))))
+    (if (world-morphp (owner morph))
+        (progn
+          (warn "doing then")
+          (let ((owner-morph-location (~> morph owner location)))
+            (setf (location morph)
+                  (make-instance 'location
+                                 :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                                 :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                                 :x (~> morph location x)
+                                 :y (~> morph location y)))))
+        (progn
+          (assert (not (null (owner morph))))
+          (warn "doing else")
+          (warn "with owner ~s" (~> morph owner))
+          (warn "with loaction ~s" (~> morph owner location))
+          (let ((owner-morph-location (~> morph owner location)))
+            (warn "got owner location ~s" owner-morph-location)
+            (setf (location morph)
+                  (make-instance 'location
+                                 :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                                 :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                                 :x (~> morph location x)
+                                 :y (~> morph location y))))))))
 
 (defmethod refresh-locations ((morph morph))
   "Refresh LOCATION and children."
   (refresh-location morph))
 (defmethod refresh-locations :after ((morph morph))
   (loop for m in (submorphs morph)
-        do (refresh-location m)))
+        do (refresh-locations m)))
 
 (defmethod add-morph ((morph morph) (submorph morph) )
+  (warn "adding morph")
   (setf (owner submorph) morph)
   (setf (submorphs morph) (append (submorphs morph) (list submorph))))
 (defmethod add-morph :after ((morph morph) (submorph morph) )
-  (refresh-location submorph))
+  (warn "after add morph")
+  (refresh-locations morph))
+
+(defmethod add-morph ((morph layout-morph) (submorph morph))
+  ;; do naive left-right or top-down
+  (warn "adding morph to layout-morph ~s" (direction morph))
+  (assert (not (null (location morph))))
+  (setf (owner submorph) morph)
+  (assert (not (null (owner submorph))))
+  (setf (submorphs morph) (append (submorphs morph) (list submorph))))
+
+(defmethod add-morph :after ((morph layout-morph) (submorph morph))
+  (assert (not (null (owner morph))))
+  (assert (not (null (owner submorph))))
+  (ecase (direction morph)
+    (:vertical)
+    (:horizontal))
+  (refresh-locations morph))
 
 ;;; ============= render =======================================================
 
 (defmethod render :before ((morph morph))
   (refresh-location morph))
-(defmethod render ((morph morph))
-  (gui-color:set-rgba "yellow")
+(defmethod render ((morph placed-morph))
+  (gui-color:set-rgba (if (color morph)
+                          (color morph)
+                          "yellow"))
   (cairo:rectangle
-   0    ;;    (~> morph location absolute-x)
-   0    ;; (~> morph location absolute-y)
-   50
-   30)
+   (~> morph location absolute-x)
+   (~> morph location absolute-y)
+   (~> morph extent x)
+   (~> morph extent y))
   (cairo:fill-path))
 (defmethod render :after ((morph morph))
   (loop for m in (submorphs morph)
