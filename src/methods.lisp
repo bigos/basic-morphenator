@@ -97,8 +97,7 @@
 ;;; ============= render =======================================================
 
 (defmethod render :before ((morph morph))
-  ;; (refresh-location morph)
-  )
+  (refresh-location morph))
 (defmethod render ((morph placed-morph))
   (gui-color:set-rgba (if (color morph)
                           (color morph)
