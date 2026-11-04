@@ -88,9 +88,11 @@
 
 (defmethod add-morph :after ((morph layout-morph) (submorph morph))
   (ecase (direction morph)
-    (:vertical)
-    (:horizontal))
-  (refresh-locations morph))
+    (:vertical
+     (warn "in vertical layout"))
+    (:horizontal
+     (warn "in horizontal layout")))
+  (refresh-location morph))
 
 ;;; ============= render =======================================================
 
