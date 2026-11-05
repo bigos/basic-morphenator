@@ -59,18 +59,27 @@
 ;;; ============= location and add submorph ====================================
 
 (defmethod refresh-location ((morph morph))
-  (warn "doing refresh location")
+  (warn "doing refresh location for ~s" (type-of morph))
   (unless (world-morphp morph)
     (progn
       (assert (not (null (owner morph))))
       (let ((owner-morph-location (~> morph owner location)))
         (assert (not (null owner-morph-location)))
         (setf (location morph)
-              (make-instance 'location
-                             :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                             :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                             :x (~> morph location x)
-                             :y (~> morph location y)))))))
+              (ecase (type-of morph)
+                ('layout-morph
+                 ;; we need to know what is the nth of the morph in relation to parent
+                 (make-instance 'location
+                                :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                                :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                                :x (~> morph location x)
+                                :y (~> morph location y)))
+                (otherwise
+                 (make-instance 'location
+                                :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                                :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                                :x (~> morph location x)
+                                :y (~> morph location y))))))))
 
 (defmethod refresh-locations ((morph morph))
   "Refresh LOCATION and children."
