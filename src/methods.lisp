@@ -87,12 +87,14 @@
   (refresh-location morph))
 
 (defmethod add-morph :after ((morph layout-morph) (submorph morph))
-  (ecase (direction morph)
-    (:vertical
-     (warn "in vertical layout"))
-    (:horizontal
-     (warn "in horizontal layout")))
+  (add-morph-inner morph (direction morph))
   (refresh-location morph))
+
+(defmethod add-morph-inner ((morph layout-morph) (direction (eql :horizontal)))
+  (warn "adding layout element ~s" direction))
+
+(defmethod add-morph-inner ((morph layout-morph) (direction (eql :vertical)))
+  (warn "adding layout element ~s" direction))
 
 ;;; ============= render =======================================================
 
