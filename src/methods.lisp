@@ -79,7 +79,8 @@
                                 :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
                                 :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
                                 :x (~> morph location x)
-                                :y (~> morph location y))))))))
+                                :y (~> morph location y)))))))))
+
 
 (defmethod refresh-locations ((morph morph))
   "Refresh LOCATION and children."
