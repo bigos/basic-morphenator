@@ -66,8 +66,8 @@
       (let ((owner-morph-location (~> morph owner location)))
         (assert (not (null owner-morph-location)))
         (setf (location morph)
-              (ecase (type-of morph)
-                ('layout-morph
+              (typecase morph
+                (layout-morph
                  ;; we need to know what is the nth of the morph in relation to parent
                  (make-instance 'location
                                 :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
