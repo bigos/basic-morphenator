@@ -93,9 +93,11 @@
       (let ((owner-morph (~> morph owner))
             (owner-morph-location (~> morph owner location)))
         (assert (not (null owner-morph-location)))
-        (warn "Owner has ~s submorphs on the nth is ~s"
+        (warn "Owner has ~s submorphs on the nth is ~s -- prev widths ~s-- prev heights ~s"
               (length (submorphs owner-morph))
-              (nth-sibling morph))
+              (nth-sibling morph)
+              (prev-sibling-widths morph)
+              (prev-sibling-heights morph))
         (setf (location morph)
               (typecase morph
                 (layout-morph
@@ -110,6 +112,21 @@
                                 :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
                                 :x (~> morph location x)
                                 :y (~> morph location y)))))))))
+(defmethod prev-sibling-widths ((morph morph))
+  (loop
+    for m in (submorphs (owner morph))
+    until (eq (id m)
+              (id morph))
+    collect (~> m extent x) into zzz
+    finally (return zzz)))
+
+(defmethod prev-sibling-heights ((morph morph))
+  (loop
+    for m in (submorphs (owner morph))
+    until (eq (id m)
+              (id morph))
+    collect (~> m extent y) into zzz
+    finally (return zzz)))
 
 (defmethod nth-sibling ((morph morph))
   (loop
