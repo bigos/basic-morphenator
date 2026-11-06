@@ -77,7 +77,7 @@
 
 (defmethod initialize-instance :after ((morph morph) &key)
   (let ((last-id (if (null (last-morph-id morph))
-                     0
+                     0                  ;make sure we have a number on the first morph
                      (last-morph-id morph))))
     (setf (id morph) (1+ last-id)))
   (setf (last-morph-id morph) (id morph)))
