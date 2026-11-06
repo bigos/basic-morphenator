@@ -76,7 +76,8 @@
   (typep morph 'world-morph))
 
 (defmethod initialize-instance :after ((morph morph) &key)
-  (let ((last-id (if (null (last-morph-id morph))
+  (let ((last-id (if (or (null (last-morph-id morph))
+                         (typep morph 'world-morph))
                      0                  ;make sure we have a number on the first morph
                      (last-morph-id morph))))
     (setf (id morph) (1+ last-id)))
