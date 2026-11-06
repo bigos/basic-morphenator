@@ -12,8 +12,8 @@
                                     (format nil "~S" (slot-value obj slot-name))
                                     (format nil "---unbound---" )))))))
 
-;; (defmethod print-object ((obj zzz) stream)
-;;   (print-object-inner obj stream))
+(defmethod print-object ((obj location) stream)
+  (print-object-inner obj stream))
 
 (defmethod print-object ((obj morph) stream)
   (print-unreadable-object (obj stream :type t :identity t)
@@ -89,13 +89,15 @@
   (unless (world-morphp morph)
     (progn
       (assert (not (null (owner morph))))
-      (let ((owner-morph-location (~> morph owner location)))
+      (let ((owner-morph (~> morph owner))
+            (owner-morph-location (~> morph owner location)))
         (assert (not (null owner-morph-location)))
+        (warn "Owner has ~s submorphs on the nth is ~s"
+              (length (submorphs owner-morph))
+              (nth-sibling morph))
         (setf (location morph)
               (typecase morph
                 (layout-morph
-                 ;; we need to know what is the nth of the morph in relation to parent
-                 ;; (break "We need (owner morph) submorphs")
                  (make-instance 'location
                                 :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
                                 :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
@@ -108,6 +110,13 @@
                                 :x (~> morph location x)
                                 :y (~> morph location y)))))))))
 
+(defmethod nth-sibling ((morph morph))
+  (loop
+    for nth = 0 then (1+ nth)
+    for m in (submorphs (owner morph))
+    until (eq (id m)
+              (id morph))
+    finally (return nth)))
 
 (defmethod refresh-locations ((morph morph))
   "Refresh LOCATION and children."
