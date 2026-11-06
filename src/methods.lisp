@@ -76,8 +76,11 @@
   (typep morph 'world-morph))
 
 (defmethod initialize-instance :after ((morph morph) &key)
-  (setf (id morph) (gensym (format nil "~A-" (type-of morph)))
-       ))
+  (let ((last-id (if (null (last-morph-id morph))
+                     0
+                     (last-morph-id morph))))
+    (setf (id morph) (1+ last-id)))
+  (setf (last-morph-id morph) (id morph)))
 
 ;;; ============= location and add submorph ====================================
 
@@ -149,8 +152,10 @@
         do (render m)))
 
 ;;; ------------ world ---------------------------------------------------------
-
+(defparameter *the-world* nil)
 (defmethod initialize-instance :after ((morph world-morph) &key)
+  (setf *the-world* morph)
+
   (setf (owner morph) nil
         (scale-factor morph) 1.0
         (location morph) (make-instance 'location
