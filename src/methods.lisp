@@ -2,6 +2,25 @@
 
 (in-package #:basic-morphenator)
 
+(defun print-object-inner (obj  stream)
+  (print-unreadable-object (obj stream :type t :identity t)
+    (format stream "~a"
+            (loop for sl in (sb-mop:class-slots (class-of obj))
+                  for slot-name = (sb-mop:slot-definition-name sl)
+                  collect (cons slot-name
+                                (if (slot-boundp obj slot-name)
+                                    (format nil "~S" (slot-value obj slot-name))
+                                    (format nil "---unbound---" )))))))
+
+(defmethod print-object ((obj location) stream)
+  (print-object-inner obj stream))
+
+(defmethod print-object ((obj morph) stream)
+  (print-unreadable-object (obj stream :type t :identity t)
+    (format stream "~s" (list
+                         :id
+                         (id obj)))))
+
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
   (let* ((view (make-instance 'layout-morph
@@ -56,21 +75,64 @@
 (defun world-morphp (morph)
   (typep morph 'world-morph))
 
+(defmethod initialize-instance :after ((morph morph) &key)
+  (let ((last-id (if (or (null (last-morph-id morph))
+                         (typep morph 'world-morph))
+                     0                  ;make sure we have a number on the first morph
+                     (last-morph-id morph))))
+    (setf (id morph) (1+ last-id)))
+  (setf (last-morph-id morph) (id morph)))
+
 ;;; ============= location and add submorph ====================================
 
 (defmethod refresh-location ((morph morph))
-  (warn "doing refresh location")
+  (warn "doing refresh location for ~s"  morph)
   (unless (world-morphp morph)
     (progn
       (assert (not (null (owner morph))))
-      (let ((owner-morph-location (~> morph owner location)))
+      (let ((owner-morph (~> morph owner))
+            (owner-morph-location (~> morph owner location)))
         (assert (not (null owner-morph-location)))
+        (warn "Owner has ~s submorphs on the nth is ~s -- prev widths sum ~s-- prev heights sum ~s"
+              (length (submorphs owner-morph))
+              (nth-sibling morph)
+              (prev-sibling-widths-sum morph)
+              (prev-sibling-heights-sum morph))
         (setf (location morph)
-              (make-instance 'location
-                             :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                             :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                             :x (~> morph location x)
-                             :y (~> morph location y)))))))
+              (typecase morph
+                (layout-morph
+                 (make-instance 'location
+                                :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                                :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                                :x (~> morph location x)
+                                :y (~> morph location y)))
+                (otherwise
+                 (make-instance 'location
+                                :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                                :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                                :x (~> morph location x)
+                                :y (~> morph location y)))))))))
+(defmethod prev-sibling-widths-sum ((morph morph))
+  (loop
+    for m in (submorphs (owner morph))
+    until (eq (id m)
+              (id morph))
+    sum (~> m extent x)))
+
+(defmethod prev-sibling-heights-sum ((morph morph))
+  (loop
+    for m in (submorphs (owner morph))
+    until (eq (id m)
+              (id morph))
+    sum (~> m extent y)))
+
+(defmethod nth-sibling ((morph morph))
+  (loop
+    for nth = 0 then (1+ nth)
+    for m in (submorphs (owner morph))
+    until (eq (id m)
+              (id morph))
+    finally (return nth)))
 
 (defmethod refresh-locations ((morph morph))
   "Refresh LOCATION and children."
@@ -87,16 +149,19 @@
   (refresh-location morph))
 
 (defmethod add-morph :after ((morph layout-morph) (submorph morph))
-  (ecase (direction morph)
-    (:vertical)
-    (:horizontal))
-  (refresh-locations morph))
+  (add-morph-inner morph (direction morph))
+  (refresh-location morph))
+
+(defmethod add-morph-inner ((morph layout-morph) (direction (eql :horizontal)))
+  (warn "adding layout element ~s" direction))
+
+(defmethod add-morph-inner ((morph layout-morph) (direction (eql :vertical)))
+  (warn "adding layout element ~s" direction))
 
 ;;; ============= render =======================================================
 
 (defmethod render :before ((morph morph))
-  ;; (refresh-location morph)
-  )
+  (refresh-location morph))
 (defmethod render ((morph placed-morph))
   (gui-color:set-rgba (if (color morph)
                           (color morph)
@@ -112,8 +177,10 @@
         do (render m)))
 
 ;;; ------------ world ---------------------------------------------------------
-
+(defparameter *the-world* nil)
 (defmethod initialize-instance :after ((morph world-morph) &key)
+  (setf *the-world* morph)
+
   (setf (owner morph) nil
         (scale-factor morph) 1.0
         (location morph) (make-instance 'location
