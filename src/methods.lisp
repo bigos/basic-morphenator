@@ -13,31 +13,26 @@
 
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
-  (let* ((view (make-instance 'layout-morph
-                              :color "pink"
-                              :direction :vertical
-                              :location (make-instance 'location :x 0 :y 0)
-                              :extent (make-instance 'extent :x 200 :y 100) ))
-         (row  (make-instance 'layout-morph
-                              :color "orange"
-                              :direction :horizontal
-                              :location (make-instance 'location :x 0 :y 0)
-                              :extent (make-instance 'extent :x 180 :y 50)))
-         (label (make-instance 'label-morph
-                               :color "brown"
-                               :extent (make-instance 'extent :x 60 :y 10)))
-         (input (make-instance 'text-model-morph
-                               :color "white"
-                               :location (make-instance 'location :x 0 :y 0)
-                               :extent (make-instance 'extent :x 50 :y 10)))
-         (button (make-instance 'pluggable-button-morph
-                                :color "green"
-                                :location (make-instance 'location :x 0 :y 0)
-                                :extent (make-instance 'extent :x 20 :y 10)))
-         (greeting-label (make-instance 'label-morph
-                                        :color "blue"
-                                        :location (make-instance 'location :x 0 :y 0)
-                                        :extent (make-instance 'extent :x 50 :y 10))))
+  (let ((view (make-instance 'layout-morph
+                             :color "pink"
+                             :direction :vertical
+                             :extent (make-instance 'extent :x 200 :y 50) ))
+        (row  (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :extent (make-instance 'extent :x 180 :y 30)))
+        (label (make-instance 'label-morph
+                              :color "brown"
+                              :extent (make-instance 'extent :x 60 :y 10)))
+        (input (make-instance 'text-model-morph
+                              :color "white"
+                              :extent (make-instance 'extent :x 50 :y 10)))
+        (button (make-instance 'pluggable-button-morph
+                               :color "green"
+                               :extent (make-instance 'extent :x 20 :y 10)))
+        (greeting-label (make-instance 'label-morph
+                                       :color "blue"
+                                       :extent (make-instance 'extent :x 50 :y 10))))
 
     (add-morph (world model) view)
     (add-morph view row)
@@ -135,15 +130,14 @@
                             :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
                             :x (~> morph morph-location-x)
                             :y (~> morph morph-location-y)))))))
-
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
   (let ((owner-morph-location (~> owner-morph location)))
     (setf (location morph)
           (make-instance 'location
-                         :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                         :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                         :x (~> morph location x)
-                         :y (~> morph location y)))))
+                         :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph morph-location-x))
+                         :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
+                         :x (~> morph morph-location-x)
+                         :y (~> morph morph-location-y)))))
 
 ;;; ============= render =======================================================
 (defmethod render :before ((morph morph))
