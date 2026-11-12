@@ -94,9 +94,6 @@
               (id morph))
     finally (return nth)))
 
-(defmethod refresh-location ((morph world-morph))
-  (warn "world morph --------------------")
-  (when (owner morph)))
 (defmethod refresh-location ((morph layout-morph))
   (warn "layout morph -------------------- ~S" morph)
   (when (owner morph)
