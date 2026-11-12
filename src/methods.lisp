@@ -124,13 +124,10 @@
 (defmethod add-morph ((morph morph) (submorph morph))
   (setf (owner submorph) morph)
   (setf (submorphs morph) (append (submorphs morph) (list submorph))))
-(defmethod add-morph :after ((morph morph) (submorph morph) )
-  (warn "after add morph")
-  (refresh-location morph))
+(defmethod add-morph :after ((morph morph) (submorph morph) ))
 
 (defmethod add-morph :after ((morph layout-morph) (submorph morph))
-  (add-morph-inner morph (direction morph))
-  (refresh-location morph))
+  (add-morph-inner morph (direction morph)))
 
 (defmethod add-morph-inner ((morph layout-morph) (direction (eql :horizontal)))
   (warn "adding layout element ~s" direction))
