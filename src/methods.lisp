@@ -92,13 +92,13 @@
                                 :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
                                 :x (~> morph location x)
                                 :y (~> morph location y)))))))))
+
 (defmethod prev-sibling-widths-sum ((morph morph))
   (loop
     for m in (submorphs (owner morph))
     until (eq (id m)
               (id morph))
     sum (~> m extent x)))
-
 (defmethod prev-sibling-heights-sum ((morph morph))
   (loop
     for m in (submorphs (owner morph))
