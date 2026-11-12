@@ -2,6 +2,12 @@
 
 (in-package #:basic-morphenator)
 
+(defmethod handle-key-pressed (entered key-name key-code mods lisp-window)
+  (cond ((null mods)
+         (cond ((equal entered "r")
+                (warn "refresh the init-ui")
+                (init-gui *basic-morphenator-model*))))))
+
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
   (unless (member event '(:timeout :motion))
     ;; (unless (eq *environment* :testing) (warn "event ~S ~S" event args))
@@ -78,12 +84,11 @@
        ;;                 bwidth)))
        ;;         (reload-text-structure model)))))
        ))
-    (:key--pressed
+    (:key-pressed
           (destructuring-bind ((entered key-name key-code mods)) args
             ;; example of accessing gtk window object
             (format t "~&>>> key pressed ~S~%" (list entered key-name key-code mods))
-            ;; (handle-key-pressed entered key-name key-code mods lisp-window)
-            ))
+            (handle-key-pressed entered key-name key-code mods lisp-window)))
     (:menu-simple
           (destructuring-bind ((action)) args
             (cond

@@ -16,11 +16,11 @@
   (let ((view (make-instance 'layout-morph
                              :color "pink"
                              :direction :vertical
-                             :extent (make-instance 'extent :x 200 :y 50) ))
+                             :extent (make-instance 'extent :x 180 :y 20) ))
         (row  (make-instance 'layout-morph
                              :color "orange"
                              :direction :horizontal
-                             :extent (make-instance 'extent :x 180 :y 30)))
+                             :extent (make-instance 'extent :x 180 :y 10)))
         (label (make-instance 'label-morph
                               :color "brown"
                               :extent (make-instance 'extent :x 60 :y 10)))
@@ -34,6 +34,7 @@
                                        :color "blue"
                                        :extent (make-instance 'extent :x 50 :y 10))))
 
+    (setf (submorphs (world model)) nil)
     (add-morph (world model) view)
     (add-morph view row)
     (add-morph row label)
@@ -151,14 +152,15 @@
   (let ((owner-morph-location (location owner-morph))
         (owner-morph-extent   (extent owner-morph))
         (morph-location (location morph) )
-        (morph-extent   (extent-morph)))
-    (when (or (< (~> morph-location absolute-x) (~> owner-morph-location abslolute-x))
-              (< (~> morph-location absolute-y) (~> owner-morph-location abslolute-y))
-              (> (+ (~> morph-location absolute-x) (~> morph-location extent x))
-                 (+ (~> owner-morph-location abslolute-x) (~> owner-morph-extent x)))
-              (> (+ (~> morph-location absolute-y) (~> morph-location extent y))
-                 (+ (~> owner-morph-location abslolute-y) (~> owner-morph-extent y))))
-        (warn "morph ~s is has elements outside its owner"))))
+        (morph-extent   (extent morph)))
+    (when (or (< (~> morph-location absolute-x) (~> owner-morph-location absolute-x))
+              (< (~> morph-location absolute-y) (~> owner-morph-location absolute-y))
+              (> (+ (~> morph-location absolute-x) (~> morph-extent x))
+                 (+ (~> owner-morph-location absolute-x) (~> owner-morph-extent x)))
+              (> (+ (~> morph-location absolute-y) (~> morph-extent y))
+                 (+ (~> owner-morph-location absolute-y) (~> owner-morph-extent y))))
+      ;; (warn "morph ~s is has elements outside its owner" morph)
+      )))
 
 ;;; ============= render =======================================================
 (defmethod render :before ((morph morph))
