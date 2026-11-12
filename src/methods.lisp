@@ -86,8 +86,7 @@
       sum (+
            (~> m extent x)
            (~> m location x)
-           gap
-           ))))
+           gap))))
 (defmethod prev-sibling-heights-sum ((morph morph))
   (let ((gap 0))
     (loop
@@ -112,24 +111,30 @@
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
   (let ((owner-morph-location (~> owner-morph location)))
+    (refresh-location-with-owner-direction morph owner-morph (direction owner-morph))))
+
+(defmethod refresh-location-with-owner-direction ((morph morph) (owner-morph layout-morph) (direction (eql :vertical)))
+  (let ((owner-morph-location (~> owner-morph location)))
     (setf (location morph)
-          (case (direction owner-morph)
-            (:vertical
-             (make-instance 'location
-                            :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph morph-location-x))
-                            :absolute-y (+ (prev-sibling-heights-sum morph)
-                                           (~> owner-morph-location absolute-y)
-                                           0)
-                            :x (~> morph morph-location-x)
-                            :y (~> morph morph-location-y)))
-            (:horizontal
-             (make-instance 'location
-                            :absolute-x (+ (prev-sibling-widths-sum morph)
-                                           (~> owner-morph-location absolute-x)
-                                           0)
-                            :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
-                            :x (~> morph morph-location-x)
-                            :y (~> morph morph-location-y)))))))
+          (make-instance 'location
+                         :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph morph-location-x))
+                         :absolute-y (+ (prev-sibling-heights-sum morph)
+                                        (~> owner-morph-location absolute-y)
+                                        0)
+                         :x (~> morph morph-location-x)
+                         :y (~> morph morph-location-y)))))
+
+(defmethod refresh-location-with-owner-direction ((morph morph) (owner-morph layout-morph) (direction (eql :horizontal)))
+  (let ((owner-morph-location (~> owner-morph location)))
+    (setf (location morph)
+          (make-instance 'location
+                         :absolute-x (+ (prev-sibling-widths-sum morph)
+                                        (~> owner-morph-location absolute-x)
+                                        0)
+                         :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
+                         :x (~> morph morph-location-x)
+                         :y (~> morph morph-location-y)))))
+
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
   (let ((owner-morph-location (~> owner-morph location)))
     (setf (location morph)
