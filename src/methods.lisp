@@ -64,7 +64,41 @@
   (setf (last-morph-id morph) (id morph)))
 
 ;;; ============= location and add submorph ====================================
+(defmethod prev-sibling-widths-sum ((morph morph))
+  (loop
+    for m in (submorphs (owner morph))
+    until (eq (id m)
+              (id morph))
+    sum (~> m extent x)))
+(defmethod prev-sibling-heights-sum ((morph morph))
+  (loop
+    for m in (submorphs (owner morph))
+    until (eq (id m)
+              (id morph))
+    sum (~> m extent y)))
+(defmethod nth-sibling ((morph morph))
+  (loop
+    for nth = 0 then (1+ nth)
+    for m in (submorphs (owner morph))
+    until (eq (id m)
+              (id morph))
+    finally (return nth)))
 
+(defmethod add-morph ((morph morph) (submorph morph))
+  (setf (owner submorph) morph)
+  (setf (submorphs morph) (append (submorphs morph) (list submorph))))
+(defmethod add-morph :after ((morph morph) (submorph morph) ))
+
+(defmethod add-morph :after ((morph layout-morph) (submorph morph))
+  (add-morph-inner morph (direction morph)))
+
+(defmethod add-morph-inner ((morph layout-morph) (direction (eql :horizontal)))
+  (warn "adding layout element ~s" direction))
+
+(defmethod add-morph-inner ((morph layout-morph) (direction (eql :vertical)))
+  (warn "adding layout element ~s" direction))
+
+;;; ============= render =======================================================
 (defmethod refresh-location ((morph morph))
   (warn "doing refresh location for ~s"  morph)
   (unless (world-morphp morph)
@@ -92,50 +126,6 @@
                                 :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
                                 :x (~> morph location x)
                                 :y (~> morph location y)))))))))
-
-(defmethod prev-sibling-widths-sum ((morph morph))
-  (loop
-    for m in (submorphs (owner morph))
-    until (eq (id m)
-              (id morph))
-    sum (~> m extent x)))
-(defmethod prev-sibling-heights-sum ((morph morph))
-  (loop
-    for m in (submorphs (owner morph))
-    until (eq (id m)
-              (id morph))
-    sum (~> m extent y)))
-
-(defmethod nth-sibling ((morph morph))
-  (loop
-    for nth = 0 then (1+ nth)
-    for m in (submorphs (owner morph))
-    until (eq (id m)
-              (id morph))
-    finally (return nth)))
-
-(defmethod refresh-locations ((morph morph))
-  "Refresh LOCATION and children."
-  (refresh-location morph))
-(defmethod refresh-locations :after ((morph morph))
-  (loop for m in (submorphs morph)
-        do (refresh-locations m)))
-
-(defmethod add-morph ((morph morph) (submorph morph))
-  (setf (owner submorph) morph)
-  (setf (submorphs morph) (append (submorphs morph) (list submorph))))
-(defmethod add-morph :after ((morph morph) (submorph morph) ))
-
-(defmethod add-morph :after ((morph layout-morph) (submorph morph))
-  (add-morph-inner morph (direction morph)))
-
-(defmethod add-morph-inner ((morph layout-morph) (direction (eql :horizontal)))
-  (warn "adding layout element ~s" direction))
-
-(defmethod add-morph-inner ((morph layout-morph) (direction (eql :vertical)))
-  (warn "adding layout element ~s" direction))
-
-;;; ============= render =======================================================
 
 (defmethod render :before ((morph morph))
   (refresh-location morph))
