@@ -113,27 +113,29 @@
   (let ((owner-morph-location (~> owner-morph location)))
     (refresh-location-with-owner-direction morph owner-morph (direction owner-morph))))
 
+
 (defmethod refresh-location-with-owner-direction ((morph morph) (owner-morph layout-morph) (direction (eql :vertical)))
   (let ((owner-morph-location (~> owner-morph location)))
-    (setf (location morph)
-          (make-instance 'location
-                         :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph morph-location-x))
-                         :absolute-y (+ (prev-sibling-heights-sum morph)
-                                        (~> owner-morph-location absolute-y)
-                                        0)
-                         :x (~> morph morph-location-x)
-                         :y (~> morph morph-location-y)))))
-
+    (let ((new-location
+            (make-instance 'location
+                           :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph morph-location-x))
+                           :absolute-y (+ (prev-sibling-heights-sum morph)
+                                          (~> owner-morph-location absolute-y)
+                                          0)
+                           :x (~> morph morph-location-x)
+                           :y (~> morph morph-location-y))))
+      (setf (location morph) new-location))))
 (defmethod refresh-location-with-owner-direction ((morph morph) (owner-morph layout-morph) (direction (eql :horizontal)))
   (let ((owner-morph-location (~> owner-morph location)))
-    (setf (location morph)
-          (make-instance 'location
-                         :absolute-x (+ (prev-sibling-widths-sum morph)
-                                        (~> owner-morph-location absolute-x)
-                                        0)
-                         :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
-                         :x (~> morph morph-location-x)
-                         :y (~> morph morph-location-y)))))
+    (let ((new-location
+            (make-instance 'location
+                           :absolute-x (+ (prev-sibling-widths-sum morph)
+                                          (~> owner-morph-location absolute-x)
+                                          0)
+                           :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
+                           :x (~> morph morph-location-x)
+                           :y (~> morph morph-location-y))))
+      (setf (location morph) new-location))))
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
   (let ((owner-morph-location (~> owner-morph location)))
@@ -143,6 +145,20 @@
                          :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
                          :x (~> morph morph-location-x)
                          :y (~> morph morph-location-y)))))
+
+(defmethod refresh-location-with-owner :after ((morph morph) (owner-morph layout-morph))
+  ;; warn when absolute coordinates and extent are outside owner
+  (let ((owner-morph-location (location owner-morph))
+        (owner-morph-extent   (extent owner-morph))
+        (morph-location (location morph) )
+        (morph-extent   (extent-morph)))
+    (when (or (< (~> morph-location absolute-x) (~> owner-morph-location abslolute-x))
+              (< (~> morph-location absolute-y) (~> owner-morph-location abslolute-y))
+              (> (+ (~> morph-location absolute-x) (~> morph-location extent x))
+                 (+ (~> owner-morph-location abslolute-x) (~> owner-morph-extent x)))
+              (> (+ (~> morph-location absolute-y) (~> morph-location extent y))
+                 (+ (~> owner-morph-location abslolute-y) (~> owner-morph-extent y))))
+        (warn "morph ~s is has elements outside its owner"))))
 
 ;;; ============= render =======================================================
 (defmethod render :before ((morph morph))
