@@ -25,15 +25,15 @@
                               :extent (make-instance 'extent :x 180 :y 50)))
          (label (make-instance 'label-morph
                                :color "brown"
-                               :location (make-instance 'location :x 80 :y 15)
+                               :location (make-instance 'location :x 5 :y 15)
                                :extent (make-instance 'extent :x 60 :y 10)))
          (input (make-instance 'text-model-morph
                                :color "white"
-                               :location (make-instance 'location :x 15 :y 15)
+                               :location (make-instance 'location :x 5 :y 15)
                                :extent (make-instance 'extent :x 50 :y 10)))
          (button (make-instance 'pluggable-button-morph
                                 :color "green"
-                                :location (make-instance 'location :x 155 :y 15)
+                                :location (make-instance 'location :x 5 :y 15)
                                 :extent (make-instance 'extent :x 20 :y 10)))
          (greeting-label (make-instance 'label-morph
                                         :color "blue"
@@ -75,17 +75,24 @@
 
 ;;; ================== location ================================================
 (defmethod prev-sibling-widths-sum ((morph morph))
-  (loop
-    for m in (submorphs (owner morph))
-    until (eq (id m)
-              (id morph))
-    sum (~> m extent x)))
+  (let ((gap 0))
+    (loop
+      for m in (submorphs (owner morph))
+      until (eq (id m)
+                (id morph))
+      sum (+
+           (~> m extent x)
+           (~> m location x)
+           gap
+           ))))
 (defmethod prev-sibling-heights-sum ((morph morph))
   (loop
     for m in (submorphs (owner morph))
     until (eq (id m)
               (id morph))
-    sum (~> m extent y)))
+    sum (+
+         (~> m extent y)
+         (~> m location y))))
 (defmethod nth-sibling ((morph morph))
   (loop
     for nth = 0 then (1+ nth)
@@ -98,16 +105,28 @@
   (when (owner morph)
     (refresh-location-with-owner morph (owner morph))))
 
-(defmethod refresh-location-with-owner ((morph layout-morph) (owner-morph morph))
+(defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
   (let ((owner-morph-location (~> owner-morph location)))
     (setf (location morph)
-          (make-instance 'location
-                         :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                         :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                         :x (~> morph location x)
-                         :y (~> morph location y)))))
+          (case (direction owner-morph)
+            (:vertical
+             (make-instance 'location
+                            :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                            :absolute-y (+ (prev-sibling-heights-sum morph)
+                                           (~> owner-morph-location absolute-y)
+                                           0)
+                            :x (~> morph location x)
+                            :y (~> morph location y)))
+            (:horizontal
+             (make-instance 'location
+                            :absolute-x (+ (prev-sibling-widths-sum morph)
+                                           (~> owner-morph-location absolute-x)
+                                           5)
+                            :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                            :x (~> morph location x)
+                            :y (~> morph location y)))))))
 
-(defmethod refresh-location-with-owner ((morph T) (owner-morph morph))
+(defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
   (let ((owner-morph-location (~> owner-morph location)))
     (setf (location morph)
           (make-instance 'location
