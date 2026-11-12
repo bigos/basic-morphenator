@@ -62,10 +62,10 @@
 (defmethod add-morph :after ((morph morph) (submorph morph) ))
 
 (defmethod add-morph :after ((morph layout-morph) (submorph morph))
-  (add-morph-inner morph (direction morph)))
-(defmethod add-morph-inner ((morph layout-morph) (direction (eql :horizontal)))
+  (add-morph-after% morph (direction morph)))
+(defmethod add-morph-after% ((morph layout-morph) (direction (eql :horizontal)))
   (warn "adding layout element ~s" direction))
-(defmethod add-morph-inner ((morph layout-morph) (direction (eql :vertical)))
+(defmethod add-morph-after% ((morph layout-morph) (direction (eql :vertical)))
   (warn "adding layout element ~s" direction))
 
 ;;; ================== location ================================================
