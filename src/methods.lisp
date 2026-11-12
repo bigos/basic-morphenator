@@ -23,24 +23,27 @@
                              :extent (make-instance 'extent :x 180 :y 20)))
         (label (make-instance 'label-morph
                               :color "brown"
-                              :extent (make-instance 'extent :x 60 :y 20)))
+                              :extent (make-instance 'extent :x 60 :y 20)
+                              :contents "Name:"))
         (input (make-instance 'text-model-morph
                               :color "white"
                               :extent (make-instance 'extent :x 50 :y 20)))
         (button (make-instance 'pluggable-button-morph
                                :color "green"
-                               :extent (make-instance 'extent :x 20 :y 20)))
+                               :extent (make-instance 'extent :x 20 :y 20)
+                               :label "Greet"))
         (greeting-label (make-instance 'label-morph
                                        :color "blue"
                                        :extent (make-instance 'extent :x 50 :y 20))))
 
-    (setf (submorphs (world model)) nil)
-    (add-morph (world model) view)
-    (add-morph view row)
-    (add-morph row label)
-    (add-morph row input)
-    (add-morph row button)
-    (add-morph view greeting-label)))
+    (progn
+      (setf (submorphs (world model)) nil)
+      (add-morph (world model) view)
+      (add-morph view row)
+      (add-morph row label)
+      (add-morph row input)
+      (add-morph row button)
+      (add-morph view greeting-label))))
 
 (defun build-location (x y)
   (make-instance 'location

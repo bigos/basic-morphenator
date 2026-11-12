@@ -3,7 +3,9 @@
 (in-package #:basic-morphenator)
 
 (defclass/std basic-morphenator-model (boxes:model)
-  ((world :std (make-instance 'world-morph))))
+  ((world :std (make-instance 'world-morph))
+   (entered)
+   (greeted)))
 
 (defclass/std location ()
   ((absolute-x)
