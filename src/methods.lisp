@@ -55,17 +55,7 @@
     (add-morph row label)
     (add-morph row input)
     (add-morph row button)
-    (add-morph view greeting-label)
-
-
-    ))
-
-;; (defmethod init-gui ((model basic-morphenator-model))
-;;   (let ((world (world model))
-;;         (first-box (make-instance 'morph :location (build-location 10 20)))
-;;         (second-box (make-instance 'morph :location (build-location 50 50))))
-;;     (add-submorph world first-box)
-;;     (add-submorph first-box second-box)))
+    (add-morph view greeting-label)))
 
 (defun build-location (x y)
   (make-instance 'location
