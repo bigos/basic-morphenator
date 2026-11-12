@@ -52,9 +52,6 @@
                  :x x
                  :y y))
 
-(defun world-morphp (morph)
-  (typep morph 'world-morph))
-
 (defmethod initialize-instance :after ((morph morph) &key)
   (let ((last-id (if (or (null (last-morph-id morph))
                          (typep morph 'world-morph))
@@ -98,30 +95,23 @@
     finally (return nth)))
 
 (defmethod refresh-location ((morph morph))
-  (warn "doing refresh location for ~s"  morph)
-  (unless (world-morphp morph)
-    (progn
-      (assert (not (null (owner morph))))
-      (let ((owner-morph-location (~> morph owner location)))
-        (assert (not (null owner-morph-location)))
-        (warn "the nth is ~s -- prev widths sum ~s-- prev heights sum ~s"
-              (nth-sibling morph)
-              (prev-sibling-widths-sum morph)
-              (prev-sibling-heights-sum morph))
-        (setf (location morph)
-              (typecase morph
-                (layout-morph
-                 (make-instance 'location
-                                :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                                :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                                :x (~> morph location x)
-                                :y (~> morph location y)))
-                (otherwise
-                 (make-instance 'location
-                                :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                                :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                                :x (~> morph location x)
-                                :y (~> morph location y)))))))))
+  (when (owner morph)
+    (let ((owner-morph-location (~> morph owner location)))
+      (assert (not (null owner-morph-location)))
+      (setf (location morph)
+            (typecase morph
+              (layout-morph
+               (make-instance 'location
+                              :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                              :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                              :x (~> morph location x)
+                              :y (~> morph location y)))
+              (otherwise
+               (make-instance 'location
+                              :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                              :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                              :x (~> morph location x)
+                              :y (~> morph location y))))))))
 
 ;;; ============= render =======================================================
 (defmethod render :before ((morph morph))
