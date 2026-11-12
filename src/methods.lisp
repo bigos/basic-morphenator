@@ -63,7 +63,20 @@
     (setf (id morph) (1+ last-id)))
   (setf (last-morph-id morph) (id morph)))
 
-;;; ============= location and add submorph ====================================
+;;; =============== add morph ==================================================
+(defmethod add-morph ((morph morph) (submorph morph))
+  (setf (owner submorph) morph)
+  (setf (submorphs morph) (append (submorphs morph) (list submorph))))
+(defmethod add-morph :after ((morph morph) (submorph morph) ))
+
+(defmethod add-morph :after ((morph layout-morph) (submorph morph))
+  (add-morph-inner morph (direction morph)))
+(defmethod add-morph-inner ((morph layout-morph) (direction (eql :horizontal)))
+  (warn "adding layout element ~s" direction))
+(defmethod add-morph-inner ((morph layout-morph) (direction (eql :vertical)))
+  (warn "adding layout element ~s" direction))
+
+;;; ================== location ================================================
 (defmethod prev-sibling-widths-sum ((morph morph))
   (loop
     for m in (submorphs (owner morph))
@@ -84,21 +97,6 @@
               (id morph))
     finally (return nth)))
 
-(defmethod add-morph ((morph morph) (submorph morph))
-  (setf (owner submorph) morph)
-  (setf (submorphs morph) (append (submorphs morph) (list submorph))))
-(defmethod add-morph :after ((morph morph) (submorph morph) ))
-
-(defmethod add-morph :after ((morph layout-morph) (submorph morph))
-  (add-morph-inner morph (direction morph)))
-
-(defmethod add-morph-inner ((morph layout-morph) (direction (eql :horizontal)))
-  (warn "adding layout element ~s" direction))
-
-(defmethod add-morph-inner ((morph layout-morph) (direction (eql :vertical)))
-  (warn "adding layout element ~s" direction))
-
-;;; ============= render =======================================================
 (defmethod refresh-location ((morph morph))
   (warn "doing refresh location for ~s"  morph)
   (unless (world-morphp morph)
@@ -127,6 +125,7 @@
                                 :x (~> morph location x)
                                 :y (~> morph location y)))))))))
 
+;;; ============= render =======================================================
 (defmethod render :before ((morph morph))
   (refresh-location morph))
 (defmethod render ((morph placed-morph))
