@@ -16,23 +16,23 @@
   (let ((view (make-instance 'layout-morph
                              :color "pink"
                              :direction :vertical
-                             :extent (make-instance 'extent :x 180 :y 20) ))
+                             :extent (make-instance 'extent :x 180 :y 50) ))
         (row  (make-instance 'layout-morph
                              :color "orange"
                              :direction :horizontal
-                             :extent (make-instance 'extent :x 180 :y 10)))
+                             :extent (make-instance 'extent :x 180 :y 20)))
         (label (make-instance 'label-morph
                               :color "brown"
-                              :extent (make-instance 'extent :x 60 :y 10)))
+                              :extent (make-instance 'extent :x 60 :y 20)))
         (input (make-instance 'text-model-morph
                               :color "white"
-                              :extent (make-instance 'extent :x 50 :y 10)))
+                              :extent (make-instance 'extent :x 50 :y 20)))
         (button (make-instance 'pluggable-button-morph
                                :color "green"
-                               :extent (make-instance 'extent :x 20 :y 10)))
+                               :extent (make-instance 'extent :x 20 :y 20)))
         (greeting-label (make-instance 'label-morph
                                        :color "blue"
-                                       :extent (make-instance 'extent :x 50 :y 10))))
+                                       :extent (make-instance 'extent :x 50 :y 20))))
 
     (setf (submorphs (world model)) nil)
     (add-morph (world model) view)
@@ -79,7 +79,7 @@
       0))
 
 (defmethod prev-sibling-widths-sum ((morph morph))
-  (let ((gap 0))
+  (let ((gap 10))
     (loop
       for m in (submorphs (owner morph))
       until (eq (id m)
@@ -89,7 +89,7 @@
            (~> m location x)
            gap))))
 (defmethod prev-sibling-heights-sum ((morph morph))
-  (let ((gap 0))
+  (let ((gap 10))
     (loop
       for m in (submorphs (owner morph))
       until (eq (id m)
@@ -159,7 +159,7 @@
                  (+ (~> owner-morph-location absolute-x) (~> owner-morph-extent x)))
               (> (+ (~> morph-location absolute-y) (~> morph-extent y))
                  (+ (~> owner-morph-location absolute-y) (~> owner-morph-extent y))))
-      ;; (warn "morph ~s is has elements outside its owner" morph)
+      (warn "morph ~s is has elements outside its owner" morph)
       )))
 
 ;;; ============= render =======================================================
