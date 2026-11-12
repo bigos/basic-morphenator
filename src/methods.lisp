@@ -1,16 +1,6 @@
-(declaim (optimize (speed 0) (safety 3) (debug 3)))
+(declaim (optimize (speed 2) (safety 3) (debug 3)))
 
 (in-package #:basic-morphenator)
-
-(defun print-object-inner (obj  stream)
-  (print-unreadable-object (obj stream :type t :identity t)
-    (format stream "~a"
-            (loop for sl in (sb-mop:class-slots (class-of obj))
-                  for slot-name = (sb-mop:slot-definition-name sl)
-                  collect (cons slot-name
-                                (if (slot-boundp obj slot-name)
-                                    (format nil "~S" (slot-value obj slot-name))
-                                    (format nil "---unbound---" )))))))
 
 (defmethod print-object ((obj location) stream)
   (print-object-inner obj stream))
