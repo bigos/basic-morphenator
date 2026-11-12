@@ -96,14 +96,13 @@
 
 (defmethod refresh-location ((morph layout-morph))
   (warn "layout morph -------------------- ~S" morph)
-  (when (owner morph)
-    (let ((owner-morph-location (~> morph owner location)))
-      (setf (location morph)
-            (make-instance 'location
-                           :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
-                           :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                           :x (~> morph location x)
-                           :y (~> morph location y))))))
+  (let ((owner-morph-location (~> morph owner location)))
+    (setf (location morph)
+          (make-instance 'location
+                         :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                         :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
+                         :x (~> morph location x)
+                         :y (~> morph location y)))))
 (defmethod refresh-location ((morph morph))
   (warn "regular morph -------------------- ~s" morph)
   (when (owner morph)
