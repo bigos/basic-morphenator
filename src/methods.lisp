@@ -16,28 +16,27 @@
   (let* ((view (make-instance 'layout-morph
                               :color "pink"
                               :direction :vertical
-                              :location (make-instance 'location :x 25 :y 25)
+                              :location (make-instance 'location :x 0 :y 0)
                               :extent (make-instance 'extent :x 200 :y 100) ))
          (row  (make-instance 'layout-morph
                               :color "orange"
                               :direction :horizontal
-                              :location (make-instance 'location :x 5 :y 5)
+                              :location (make-instance 'location :x 0 :y 0)
                               :extent (make-instance 'extent :x 180 :y 50)))
          (label (make-instance 'label-morph
                                :color "brown"
-                               :location (make-instance 'location :x 5 :y 15)
                                :extent (make-instance 'extent :x 60 :y 10)))
          (input (make-instance 'text-model-morph
                                :color "white"
-                               :location (make-instance 'location :x 5 :y 15)
+                               :location (make-instance 'location :x 0 :y 0)
                                :extent (make-instance 'extent :x 50 :y 10)))
          (button (make-instance 'pluggable-button-morph
                                 :color "green"
-                                :location (make-instance 'location :x 5 :y 15)
+                                :location (make-instance 'location :x 0 :y 0)
                                 :extent (make-instance 'extent :x 20 :y 10)))
          (greeting-label (make-instance 'label-morph
                                         :color "blue"
-                                        :location (make-instance 'location :x 85 :y 65)
+                                        :location (make-instance 'location :x 0 :y 0)
                                         :extent (make-instance 'extent :x 50 :y 10))))
 
     (add-morph (world model) view)
@@ -74,6 +73,15 @@
   (warn "adding layout element ~s" direction))
 
 ;;; ================== location ================================================
+(defmethod morph-location-x ((morph morph))
+  (if (location morph)
+      (x (location morph))
+      0))
+(defmethod morph-location-y ((morph morph))
+  (if (location morph)
+      (y (location morph))
+      0))
+
 (defmethod prev-sibling-widths-sum ((morph morph))
   (let ((gap 0))
     (loop
@@ -86,13 +94,15 @@
            gap
            ))))
 (defmethod prev-sibling-heights-sum ((morph morph))
-  (loop
-    for m in (submorphs (owner morph))
-    until (eq (id m)
-              (id morph))
-    sum (+
-         (~> m extent y)
-         (~> m location y))))
+  (let ((gap 0))
+    (loop
+      for m in (submorphs (owner morph))
+      until (eq (id m)
+                (id morph))
+      sum (+
+           (~> m extent y)
+           (~> m location y)
+           gap))))
 (defmethod nth-sibling ((morph morph))
   (loop
     for nth = 0 then (1+ nth)
@@ -111,20 +121,20 @@
           (case (direction owner-morph)
             (:vertical
              (make-instance 'location
-                            :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph location x))
+                            :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph morph-location-x))
                             :absolute-y (+ (prev-sibling-heights-sum morph)
                                            (~> owner-morph-location absolute-y)
                                            0)
-                            :x (~> morph location x)
-                            :y (~> morph location y)))
+                            :x (~> morph morph-location-x)
+                            :y (~> morph morph-location-y)))
             (:horizontal
              (make-instance 'location
                             :absolute-x (+ (prev-sibling-widths-sum morph)
                                            (~> owner-morph-location absolute-x)
-                                           5)
-                            :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph location y))
-                            :x (~> morph location x)
-                            :y (~> morph location y)))))))
+                                           0)
+                            :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
+                            :x (~> morph morph-location-x)
+                            :y (~> morph morph-location-y)))))))
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
   (let ((owner-morph-location (~> owner-morph location)))
