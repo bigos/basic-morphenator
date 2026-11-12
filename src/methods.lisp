@@ -102,11 +102,9 @@
   (unless (world-morphp morph)
     (progn
       (assert (not (null (owner morph))))
-      (let ((owner-morph (~> morph owner))
-            (owner-morph-location (~> morph owner location)))
+      (let ((owner-morph-location (~> morph owner location)))
         (assert (not (null owner-morph-location)))
-        (warn "Owner has ~s submorphs on the nth is ~s -- prev widths sum ~s-- prev heights sum ~s"
-              (length (submorphs owner-morph))
+        (warn "the nth is ~s -- prev widths sum ~s-- prev heights sum ~s"
               (nth-sibling morph)
               (prev-sibling-widths-sum morph)
               (prev-sibling-heights-sum morph))
