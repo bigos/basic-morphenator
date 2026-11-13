@@ -34,7 +34,9 @@
                                :label "Greet"))
         (greeting-label (make-instance 'label-morph
                                        :color "blue"
-                                       :extent (make-instance 'extent :x 50 :y 20))))
+                                       :extent (make-instance 'extent :x 50 :y 20)
+                                       :contents "Hmm..."
+                                       )))
 
     (progn
       (setf (submorphs (world model)) nil)
@@ -183,7 +185,7 @@
         do (render m)))
 
 (defmethod render ((morph label-morph))
-  (progn
+  (progn                                ; background
     (gui-color:set-rgba (if (color morph)
                             (color morph)
                             "yellow"))
@@ -194,12 +196,12 @@
      (~> morph extent y))
     (cairo:fill-path))
 
-  (progn
+  (progn                                ; the text
     ;;"Advaita Mono"   ;; "Liberation Mono"
     (cairo:select-font-face "Ubuntu Mono" :normal :normal)
     (cairo:set-font-size 15)
     (cairo:move-to (~> morph location absolute-x)
-                   (~> morph location absolute-y))
+                   (~> morph location absolute-y (+ _ 15)))
     (gui-color:set-rgba "white")
     (cairo:show-text (contents morph))))
 
