@@ -10,6 +10,10 @@
                ((equal entered "g")
                 (warn "greet by shortcut")
                 (setf (greeted *basic-morphenator-model*) (entered *basic-morphenator-model*)))
+               ((equal entered "c")
+                (warn "clear by shortcut")
+                (setf (greeted *basic-morphenator-model*) ""
+                      (entered *basic-morphenator-model*) ""))
                (T (warn "unknown ALT shortcut"))))
         ((null mods)
          (setf (entered *basic-morphenator-model*)

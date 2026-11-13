@@ -251,7 +251,7 @@
     (cairo:move-to (~> morph location absolute-x)
                    (~> morph location absolute-y (+ _ 15)))
     (gui-color:set-rgba "red")
-    (cairo:show-text (format nil "~S"  (entered *basic-morphenator-model*)))))
+    (cairo:show-text (format nil "~A"  (entered *basic-morphenator-model*)))))
 ;;; ------------ world ---------------------------------------------------------
 (defparameter *the-world* nil)
 (defmethod initialize-instance :after ((morph world-morph) &key)
