@@ -195,7 +195,7 @@
      (~> morph extent y))
     (cairo:fill-path))
 
-  (progn                                ; the text
+  (progn                       ; the text
     ;;"Advaita Mono"   ;; "Liberation Mono"
     (cairo:select-font-face "Ubuntu Mono" :normal :normal)
     (cairo:set-font-size 15)
@@ -203,12 +203,15 @@
                    (~> morph location absolute-y (+ _ 15)))
     (gui-color:set-rgba "white")
     ;; TODO make it better
-    (cairo:show-text (if (equal (color morph) "blue")
-                         (let ((greeted-model (greeted *basic-morphenator-model*)))
-                           (if greeted-model
-                               greeted-model
-                               (contents morph)))
-                         (contents morph)))))
+    (cairo:show-text
+     (if (equal (color morph) "blue")
+         ;; then - greeted label
+         (let ((greeted-model (greeted *basic-morphenator-model*)))
+           (if greeted-model
+               greeted-model
+               (contents morph)))
+         ;; else - normal widget
+         (contents morph)))))
 
 (defmethod render ((morph pluggable-button-morph))
   (progn                                ; background
