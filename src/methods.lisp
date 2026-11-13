@@ -13,30 +13,31 @@
 
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
-  (let ((view (make-instance 'layout-morph
-                             :color "pink"
-                             :direction :vertical
-                             :extent (make-instance 'extent :x 180 :y 50) ))
-        (row  (make-instance 'layout-morph
-                             :color "orange"
-                             :direction :horizontal
-                             :extent (make-instance 'extent :x 180 :y 20)))
-        (label (make-instance 'label-morph
-                              :color "brown"
-                              :extent (make-instance 'extent :x 60 :y 20)
-                              :contents "Name:"))
-        (input (make-instance 'text-model-morph
-                              :color "white"
+  (let
+      ((view (make-instance 'layout-morph
+                            :color "pink"
+                            :direction :vertical
+                            :extent (make-instance 'extent :x 180 :y 50) ))
+       (row  (make-instance 'layout-morph
+                            :color "orange"
+                            :direction :horizontal
+                            :extent (make-instance 'extent :x 180 :y 20)))
+       (label (make-instance 'label-morph
+                             :color "brown"
+                             :extent (make-instance 'extent :x 60 :y 20)
+                             :contents "Name:"))
+       (input (make-instance 'text-model-morph
+                             :color "white"
+                             :extent (make-instance 'extent :x 50 :y 20)
+                             :model model))
+       (button (make-instance 'pluggable-button-morph
+                              :color "green"
                               :extent (make-instance 'extent :x 50 :y 20)
-                              :model model))
-        (button (make-instance 'pluggable-button-morph
-                               :color "green"
-                               :extent (make-instance 'extent :x 50 :y 20)
-                               :label "Greet"))
-        (greeting-label (make-instance 'label-morph
-                                       :color "blue"
-                                       :extent (make-instance 'extent :x 50 :y 20)
-                                       :contents "Hmm...")))
+                              :label "Greet"))
+       (greeting-label (make-instance 'label-morph
+                                      :color "blue"
+                                      :extent (make-instance 'extent :x 50 :y 20)
+                                      :contents "Hmm...")))
 
     (progn
       (setf (submorphs (world model)) nil)
