@@ -119,8 +119,6 @@
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
   (let ((owner-morph-location (~> owner-morph location)))
     (refresh-location-with-owner-direction morph owner-morph (direction owner-morph))))
-
-
 (defmethod refresh-location-with-owner-direction ((morph morph) (owner-morph layout-morph) (direction (eql :vertical)))
   (let ((owner-morph-location (~> owner-morph location)))
     (let ((new-location
@@ -254,10 +252,7 @@
     (gui-color:set-rgba "red")
     (cairo:show-text (format nil "~A"  (entered *basic-morphenator-model*)))))
 ;;; ------------ world ---------------------------------------------------------
-(defparameter *the-world* nil)
 (defmethod initialize-instance :after ((morph world-morph) &key)
-  (setf *the-world* morph)
-
   (setf (owner morph) nil
         (scale-factor morph) 1.0
         (location morph) (make-instance 'location
