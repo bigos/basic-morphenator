@@ -15,7 +15,7 @@
                 (setf (greeted *basic-morphenator-model*) ""
                       (entered *basic-morphenator-model*) ""))
                (T (warn "unknown ALT shortcut"))))
-        ((null mods)
+        (T
          (setf (entered *basic-morphenator-model*)
                (format nil "~A~A" (entered *basic-morphenator-model*) entered)))))
 
