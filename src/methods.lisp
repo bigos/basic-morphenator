@@ -30,7 +30,7 @@
                               :extent (make-instance 'extent :x 50 :y 20)))
         (button (make-instance 'pluggable-button-morph
                                :color "green"
-                               :extent (make-instance 'extent :x 20 :y 20)
+                               :extent (make-instance 'extent :x 50 :y 20)
                                :label "Greet"))
         (greeting-label (make-instance 'label-morph
                                        :color "blue"
@@ -181,6 +181,27 @@
 (defmethod render :after ((morph morph))
   (loop for m in (submorphs morph)
         do (render m)))
+
+(defmethod render ((morph label-morph))
+  (progn
+    (gui-color:set-rgba (if (color morph)
+                            (color morph)
+                            "yellow"))
+    (cairo:rectangle
+     (~> morph location absolute-x)
+     (~> morph location absolute-y)
+     (~> morph extent x)
+     (~> morph extent y))
+    (cairo:fill-path))
+
+  (progn
+    ;;"Advaita Mono"   ;; "Liberation Mono"
+    (cairo:select-font-face "Ubuntu Mono" :normal :normal)
+    (cairo:set-font-size 15)
+    (cairo:move-to (~> morph location absolute-x)
+                   (~> morph location absolute-y))
+    (gui-color:set-rgba "white")
+    (cairo:show-text (contents morph))))
 
 ;;; ------------ world ---------------------------------------------------------
 (defparameter *the-world* nil)
