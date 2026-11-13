@@ -4,8 +4,8 @@
 
 (defclass/std basic-morphenator-model (boxes:model)
   ((world :std (make-instance 'world-morph))
-   (entered)
-   (greeted)))
+   (entered :std "" :type string)
+   (greeted :type (or null string))))
 
 (defclass/std location ()
   ((absolute-x)

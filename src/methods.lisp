@@ -27,7 +27,8 @@
                               :contents "Name:"))
         (input (make-instance 'text-model-morph
                               :color "white"
-                              :extent (make-instance 'extent :x 50 :y 20)))
+                              :extent (make-instance 'extent :x 50 :y 20)
+                              :model model))
         (button (make-instance 'pluggable-button-morph
                                :color "green"
                                :extent (make-instance 'extent :x 50 :y 20)
@@ -35,8 +36,7 @@
         (greeting-label (make-instance 'label-morph
                                        :color "blue"
                                        :extent (make-instance 'extent :x 50 :y 20)
-                                       :contents "Hmm..."
-                                       )))
+                                       :contents "Hmm...")))
 
     (progn
       (setf (submorphs (world model)) nil)
@@ -203,8 +203,55 @@
     (cairo:move-to (~> morph location absolute-x)
                    (~> morph location absolute-y (+ _ 15)))
     (gui-color:set-rgba "white")
-    (cairo:show-text (contents morph))))
+    ;; TODO make it better
+    (cairo:show-text (if (equal (color morph) "blue")
+                         (let ((greeted-model (greeted *basic-morphenator-model*)))
+                           (if greeted-model
+                               greeted-model
+                               (contents morph)))
+                         (contents morph)))))
 
+(defmethod render ((morph pluggable-button-morph))
+  (progn                                ; background
+    (gui-color:set-rgba (if (color morph)
+                            (color morph)
+                            "yellow"))
+    (cairo:rectangle
+     (~> morph location absolute-x)
+     (~> morph location absolute-y)
+     (~> morph extent x)
+     (~> morph extent y))
+    (cairo:fill-path))
+
+  (progn                                ; the text
+    ;;"Advaita Mono"   ;; "Liberation Mono"
+    (cairo:select-font-face "Ubuntu Mono" :normal :normal)
+    (cairo:set-font-size 15)
+    (cairo:move-to (~> morph location absolute-x)
+                   (~> morph location absolute-y (+ _ 15)))
+    (gui-color:set-rgba "white")
+    (cairo:show-text (label morph))))
+
+(defmethod render ((morph text-model-morph))
+  (progn                                ; background
+    (gui-color:set-rgba (if (color morph)
+                            (color morph)
+                            "yellow"))
+    (cairo:rectangle
+     (~> morph location absolute-x)
+     (~> morph location absolute-y)
+     (~> morph extent x)
+     (~> morph extent y))
+    (cairo:fill-path))
+
+  (progn                                ; the text
+    ;;"Advaita Mono"   ;; "Liberation Mono"
+    (cairo:select-font-face "Ubuntu Mono" :normal :normal)
+    (cairo:set-font-size 15)
+    (cairo:move-to (~> morph location absolute-x)
+                   (~> morph location absolute-y (+ _ 15)))
+    (gui-color:set-rgba "red")
+    (cairo:show-text (format nil "~S"  (entered *basic-morphenator-model*)))))
 ;;; ------------ world ---------------------------------------------------------
 (defparameter *the-world* nil)
 (defmethod initialize-instance :after ((morph world-morph) &key)
