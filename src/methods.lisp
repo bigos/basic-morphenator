@@ -112,8 +112,8 @@
     (refresh-location-with-owner morph (owner morph))))
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
-  (refresh-location-with-owner-direction morph owner-morph (direction owner-morph)))
-(defmethod refresh-location-with-owner-direction ((morph morph) (owner-morph layout-morph) (direction (eql :vertical)))
+  (refresh-location-with-owner-direction% morph owner-morph (direction owner-morph)))
+(defmethod refresh-location-with-owner-direction% ((morph morph) (owner-morph layout-morph) (direction (eql :vertical)))
   (let ((owner-morph-location (~> owner-morph location)))
     (let ((new-location
             (make-instance 'location
@@ -124,7 +124,7 @@
                            :x (~> morph morph-location-x)
                            :y (~> morph morph-location-y))))
       (setf (location morph) new-location))))
-(defmethod refresh-location-with-owner-direction ((morph morph) (owner-morph layout-morph) (direction (eql :horizontal)))
+(defmethod refresh-location-with-owner-direction% ((morph morph) (owner-morph layout-morph) (direction (eql :horizontal)))
   (let ((owner-morph-location (~> owner-morph location)))
     (let ((new-location
             (make-instance 'location
