@@ -112,8 +112,7 @@
     (refresh-location-with-owner morph (owner morph))))
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
-  (let ((owner-morph-location (~> owner-morph location)))
-    (refresh-location-with-owner-direction morph owner-morph (direction owner-morph))))
+  (refresh-location-with-owner-direction morph owner-morph (direction owner-morph)))
 (defmethod refresh-location-with-owner-direction ((morph morph) (owner-morph layout-morph) (direction (eql :vertical)))
   (let ((owner-morph-location (~> owner-morph location)))
     (let ((new-location
