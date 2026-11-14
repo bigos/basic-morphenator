@@ -94,7 +94,6 @@
            (~> m extent (funcall axis-fn _))
            (~> m location (funcall axis-fn _))
            gap))))
-
 (defmethod prev-sibling-widths-sum ((morph morph))
   (prev-sibling-axis-sum morph #'x))
 (defmethod prev-sibling-heights-sum ((morph morph))
