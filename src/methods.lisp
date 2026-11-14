@@ -75,14 +75,14 @@
   (warn "adding layout element ~s" direction))
 
 ;;; ================== location ================================================
+(defun morph-location-axis (morph axis-fn)
+  (if (location morph)
+      (funcall axis-fn (location morph))
+      0))
 (defmethod morph-location-x ((morph morph))
-  (if (location morph)
-      (x (location morph))
-      0))
+  (morph-location-axis morph #'x))
 (defmethod morph-location-y ((morph morph))
-  (if (location morph)
-      (y (location morph))
-      0))
+  (morph-location-axis morph #'y))
 
 (defmethod prev-sibling-axis-sum ((morph morph) axis-fn)
   (let ((gap 10))
@@ -98,6 +98,7 @@
   (prev-sibling-axis-sum morph #'x))
 (defmethod prev-sibling-heights-sum ((morph morph))
   (prev-sibling-axis-sum morph #'y))
+;;; UNUSED
 (defmethod nth-sibling ((morph morph))
   (loop
     for nth = 0 then (1+ nth)
