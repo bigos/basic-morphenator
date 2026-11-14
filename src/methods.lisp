@@ -84,26 +84,21 @@
       (y (location morph))
       0))
 
+(defmethod prev-sibling-axis-sum (morph axis-fn)
+  (let ((gap 10))
+    (loop
+      for m in (submorphs (owner morph))
+      until (eq (id m)
+                (id morph))
+      sum (+
+           (~> m extent (funcall axis-fn _))
+           (~> m location (funcall axis-fn _))
+           gap))))
+
 (defmethod prev-sibling-widths-sum ((morph morph))
-  (let ((gap 10))
-    (loop
-      for m in (submorphs (owner morph))
-      until (eq (id m)
-                (id morph))
-      sum (+
-           (~> m extent x)
-           (~> m location x)
-           gap))))
+  (prev-sibling-axis-sum morph #'x))
 (defmethod prev-sibling-heights-sum ((morph morph))
-  (let ((gap 10))
-    (loop
-      for m in (submorphs (owner morph))
-      until (eq (id m)
-                (id morph))
-      sum (+
-           (~> m extent y)
-           (~> m location y)
-           gap))))
+  (prev-sibling-axis-sum morph #'y))
 (defmethod nth-sibling ((morph morph))
   (loop
     for nth = 0 then (1+ nth)
