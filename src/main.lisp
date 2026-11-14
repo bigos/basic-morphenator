@@ -30,8 +30,12 @@
     ((:motion :motion-enter)
      ;; we use simple case with one window so we ignore the window argument
      (destructuring-bind ((x y)) args
-       ;; (print-object-inner gui-app::*lisp-app* T)
-       (gui-app:mouse-motion-enter lisp-window x y)))
+       (gui-app:mouse-motion-enter lisp-window x y)
+       (let ((morph-under-mouse (morph-at (world *basic-morphenator-model*) x y)))
+         (when (and morph-under-mouse
+                    (eq 6
+                        (id morph-under-mouse)))
+           (warn "mouse over the button")))))
     (:motion-leave
      (gui-app:mouse-motion-leave))
     (:focus-enter)
@@ -39,31 +43,7 @@
     (:pressed
      (destructuring-bind ((button x y)) args
        (warn "pressed mouse button ~s at ~s" button (list x y))
-       (warn "morph at ~s" (morph-at (world *basic-morphenator-model*) x y))
-
-       ;; (gui-app:mouse-button-pressed button)
-       ;; (warn "mouse state ~S ~S" (gui-app:mouse-button gui-app:*lisp-app*) (list button x y))
-       ;; (let*
-       ;;     ((children (~> (the-container *basic-morphenator-model*)
-       ;;                    boxes:children))
-       ;;      (first-child-found
-       ;;        (car (loop for c in children
-       ;;                   when (boxes:mouse-over-p c)
-       ;;                     collect c)))
-       ;;      (char-child-found nil))
-       ;;   (warn "model world children under mouse ~S"
-       ;;         first-child-found)
-       ;;   ;; TODO we need overhaul of finding widgets
-       ;;   (if (and children
-       ;;            (null first-child-found))
-       ;;                                  ;then
-       ;;    (let* ((grandchildren (children (first children)))
-       ;;           (first-grandchild-found
-       ;;             (car (loop for c in grandchildren
-       ;;                        when (boxes:mouse-over-p c)
-       ;;                          collect c))))
-       ;;      (setf char-child-found first-grandchild-found))
-       ))
+       (warn "morph at ~s" (morph-at (world *basic-morphenator-model*) x y))))
     (:released
                (destructuring-bind ((button x y)) args
                  ;; (gui-app:mouse-button-released button)
