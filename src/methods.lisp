@@ -195,17 +195,18 @@
 
   (render-prepare-to-show-text morph)
   (gui-color:set-rgba "white")
-    ;; TODO make it better
 
-  (cairo:show-text
-   (if (equal (color morph) "blue")
-       ;; then - greeted label
-       (let ((greeted-model (greeted *basic-morphenator-model*)))
-         (if greeted-model
-             greeted-model
-             (contents morph)))
-       ;; else - normal widget
-       (contents morph))))
+  (cairo:show-text (render-text-for-color morph)))
+
+(defmethod render-text-for-color ((morph label-morph))
+  (if (equal (color morph) "blue")
+      ;; then - greeted label
+      (let ((greeted-model (greeted *basic-morphenator-model*)))
+        (if greeted-model
+            greeted-model
+            (contents morph)))
+      ;; else - normal widget
+      (contents morph)))
 
 (defmethod render ((morph pluggable-button-morph))
   (call-next-method)
