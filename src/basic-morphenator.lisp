@@ -41,8 +41,8 @@
                   for slot-name = (sb-mop:slot-definition-name sl)
                   collect (cons slot-name
                                 (if (slot-boundp obj slot-name)
-                                    (format nil "~S" (slot-value obj slot-name))
-                                    (format nil "---unbound---" )))))))
+                                    (prin1-to-string (slot-value obj slot-name))
+                                     "---unbound---" ))))))
 
 ;;; ============================================================================
 
