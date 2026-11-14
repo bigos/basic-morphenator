@@ -84,7 +84,7 @@
       (y (location morph))
       0))
 
-(defmethod prev-sibling-axis-sum (morph axis-fn)
+(defmethod prev-sibling-axis-sum ((morph morph) axis-fn)
   (let ((gap 10))
     (loop
       for m in (submorphs (owner morph))
