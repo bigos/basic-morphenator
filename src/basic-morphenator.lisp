@@ -45,8 +45,6 @@
                                     (format nil "---unbound---" )))))))
 
 ;;; ============================================================================
-(defclass/std basic-morphenator-model (boxes:model)
-  ((text :std (sy:rope ""))))
 
 (defclass/std basic-morphenator-window (boxes:boxes-window) (()))
 
