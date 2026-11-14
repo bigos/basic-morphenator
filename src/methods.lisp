@@ -167,6 +167,13 @@
       )))
 
 ;;; ============= render =======================================================
+(defmethod render-prepare-to-show-text ((morph placed-morph))
+  ;;"Advaita Mono"   ;; "Liberation Mono"
+  (cairo:select-font-face "Ubuntu Mono" :normal :normal)
+  (cairo:set-font-size 15)
+  (cairo:move-to (~> morph location absolute-x)
+                 (~> morph location absolute-y (+ _ 15))))
+
 (defmethod render :before ((morph morph))
   (refresh-location morph))
 (defmethod render ((morph placed-morph))
@@ -187,11 +194,7 @@
   (call-next-method)
 
   (progn                       ; the text
-    ;;"Advaita Mono"   ;; "Liberation Mono"
-    (cairo:select-font-face "Ubuntu Mono" :normal :normal)
-    (cairo:set-font-size 15)
-    (cairo:move-to (~> morph location absolute-x)
-                   (~> morph location absolute-y (+ _ 15)))
+    (render-prepare-to-show-text morph)
     (gui-color:set-rgba "white")
     ;; TODO make it better
     (cairo:show-text
@@ -208,11 +211,7 @@
   (call-next-method)
 
   (progn                                ; the text
-    ;;"Advaita Mono"   ;; "Liberation Mono"
-    (cairo:select-font-face "Ubuntu Mono" :normal :normal)
-    (cairo:set-font-size 15)
-    (cairo:move-to (~> morph location absolute-x)
-                   (~> morph location absolute-y (+ _ 15)))
+    (render-prepare-to-show-text morph)
     (gui-color:set-rgba "white")
     (cairo:show-text (label morph))))
 
@@ -220,11 +219,7 @@
   (call-next-method)
 
   (progn                                ; the text
-    ;;"Advaita Mono"   ;; "Liberation Mono"
-    (cairo:select-font-face "Ubuntu Mono" :normal :normal)
-    (cairo:set-font-size 15)
-    (cairo:move-to (~> morph location absolute-x)
-                   (~> morph location absolute-y (+ _ 15)))
+    (render-prepare-to-show-text morph)
     (gui-color:set-rgba "red")
     (cairo:show-text (format nil "~A"  (entered *basic-morphenator-model*)))))
 ;;; ------------ world ---------------------------------------------------------
