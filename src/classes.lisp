@@ -101,7 +101,7 @@
   ((morph)
    (fixed-width)
    (fixed-height)
-   (off-axis-edge-weidth)
+   (off-axis-edge-width)
    (proportional-width)
    (proportional-height)))
 
