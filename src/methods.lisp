@@ -184,16 +184,7 @@
         do (render m)))
 
 (defmethod render ((morph label-morph))
-  (progn                                ; background
-    (gui-color:set-rgba (if (color morph)
-                            (color morph)
-                            "yellow"))
-    (cairo:rectangle
-     (~> morph location absolute-x)
-     (~> morph location absolute-y)
-     (~> morph extent x)
-     (~> morph extent y))
-    (cairo:fill-path))
+  (call-next-method)
 
   (progn                       ; the text
     ;;"Advaita Mono"   ;; "Liberation Mono"
@@ -214,16 +205,7 @@
          (contents morph)))))
 
 (defmethod render ((morph pluggable-button-morph))
-  (progn                                ; background
-    (gui-color:set-rgba (if (color morph)
-                            (color morph)
-                            "yellow"))
-    (cairo:rectangle
-     (~> morph location absolute-x)
-     (~> morph location absolute-y)
-     (~> morph extent x)
-     (~> morph extent y))
-    (cairo:fill-path))
+  (call-next-method)
 
   (progn                                ; the text
     ;;"Advaita Mono"   ;; "Liberation Mono"
@@ -235,16 +217,7 @@
     (cairo:show-text (label morph))))
 
 (defmethod render ((morph text-model-morph))
-  (progn                                ; background
-    (gui-color:set-rgba (if (color morph)
-                            (color morph)
-                            "yellow"))
-    (cairo:rectangle
-     (~> morph location absolute-x)
-     (~> morph location absolute-y)
-     (~> morph extent x)
-     (~> morph extent y))
-    (cairo:fill-path))
+  (call-next-method)
 
   (progn                                ; the text
     ;;"Advaita Mono"   ;; "Liberation Mono"

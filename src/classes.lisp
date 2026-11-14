@@ -115,8 +115,8 @@
    (last-evaluation-time)))
 
 (defclass/std morphic-event ()
-  ((timestamp)
-   (source)))
+  ((timestamp :type integer :documentation "The millisecond clock time stamp")
+   (source :documentation "if non nil the hand that generated the event")))
 
 (defclass/std drop-event (morphic-event)
   ((position2)
