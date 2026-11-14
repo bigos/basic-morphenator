@@ -38,6 +38,9 @@
     (:focus-leave)
     (:pressed
      (destructuring-bind ((button x y)) args
+       (warn "pressed mouse button ~s at ~s" button (list x y))
+       (warn "morph at ~s" (morph-at (world *basic-morphenator-model*) x y))
+
        ;; (gui-app:mouse-button-pressed button)
        ;; (warn "mouse state ~S ~S" (gui-app:mouse-button gui-app:*lisp-app*) (list button x y))
        ;; (let*
@@ -51,7 +54,6 @@
        ;;   (warn "model world children under mouse ~S"
        ;;         first-child-found)
        ;;   ;; TODO we need overhaul of finding widgets
-
        ;;   (if (and children
        ;;            (null first-child-found))
        ;;                                  ;then
@@ -61,16 +63,6 @@
        ;;                        when (boxes:mouse-over-p c)
        ;;                          collect c))))
        ;;      (setf char-child-found first-grandchild-found))
-       ;;                                  ;else
-       ;;    (progn
-       ;;      (setf char-child-found first-child-found)))
-
-       ;;   (when (and char-child-found
-       ;;              (typep char-child-found 'basic-morphenator-character))
-       ;;     (warn "clicked ready to move cursor ~S" char-child-found)
-       ;;     (move-cursor-to *basic-morphenator-model*
-       ;;                     (row char-child-found)
-       ;;                     (col char-child-found))))
        ))
     (:released
                (destructuring-bind ((button x y)) args

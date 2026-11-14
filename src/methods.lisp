@@ -165,8 +165,8 @@
   (when (and (location morph) (extent morph))
     (let* ((x-top-left (absolute-x (location morph)))
            (y-top-left (absolute-y (location morph)))
-           (x-bottom-right (+ x-top-left (extent morph)))
-           (y-bottom-right (+ y-top-left (extent morph))))
+           (x-bottom-right (+ x-top-left (x (extent morph))))
+           (y-bottom-right (+ y-top-left (y (extent morph)))))
       (and (<= x-top-left x x-bottom-right)
            (<= y-top-left y y-bottom-right)))))
 
