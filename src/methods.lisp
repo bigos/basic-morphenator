@@ -193,35 +193,33 @@
 (defmethod render ((morph label-morph))
   (call-next-method)
 
-  (progn                       ; the text
-    (render-prepare-to-show-text morph)
-    (gui-color:set-rgba "white")
+  (render-prepare-to-show-text morph)
+  (gui-color:set-rgba "white")
     ;; TODO make it better
-    (cairo:show-text
-     (if (equal (color morph) "blue")
-         ;; then - greeted label
-         (let ((greeted-model (greeted *basic-morphenator-model*)))
-           (if greeted-model
-               greeted-model
-               (contents morph)))
-         ;; else - normal widget
-         (contents morph)))))
+
+  (cairo:show-text
+   (if (equal (color morph) "blue")
+       ;; then - greeted label
+       (let ((greeted-model (greeted *basic-morphenator-model*)))
+         (if greeted-model
+             greeted-model
+             (contents morph)))
+       ;; else - normal widget
+       (contents morph))))
 
 (defmethod render ((morph pluggable-button-morph))
   (call-next-method)
 
-  (progn                                ; the text
-    (render-prepare-to-show-text morph)
-    (gui-color:set-rgba "white")
-    (cairo:show-text (label morph))))
+  (render-prepare-to-show-text morph)
+  (gui-color:set-rgba "white")
+  (cairo:show-text (label morph)))
 
 (defmethod render ((morph text-model-morph))
   (call-next-method)
 
-  (progn                                ; the text
-    (render-prepare-to-show-text morph)
-    (gui-color:set-rgba "red")
-    (cairo:show-text (format nil "~A"  (entered *basic-morphenator-model*)))))
+  (render-prepare-to-show-text morph)
+  (gui-color:set-rgba "red")
+  (cairo:show-text (format nil "~A"  (entered *basic-morphenator-model*))))
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)
   (setf (owner morph) nil
