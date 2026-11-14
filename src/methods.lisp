@@ -160,6 +160,23 @@
       (warn "morph ~s is has elements outside its owner" morph)
       )))
 
+;;; ---------------- mouse location --------------------------------------------
+(defmethod contains-point-p ((morph boxed-morph) x y)
+  (when (and (location morph) (extent morph))
+    (let* ((x-top-left (absolute-x (location morph)))
+           (y-top-left (absolute-y (location morph)))
+           (x-bottom-right (+ x-top-left (extent morph)))
+           (y-bottom-right (+ y-top-left (extent morph))))
+      (and (<= x-top-left x x-bottom-right)
+           (<= y-top-left y y-bottom-right)))))
+
+(defmethod morph-at ((morph morph) x y)
+  (loop for c in (reverse (submorphs morph))
+        for found = (morph-at c x y)
+        when found return found
+          finally (return (when (contains-point-p morph x y)
+                            morph))))
+
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
   ;;"Advaita Mono"   ;; "Liberation Mono"
