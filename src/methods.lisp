@@ -199,12 +199,12 @@
   (cairo:show-text (render-text-for-color morph)))
 
 (defmethod render-text-for-color ((morph label-morph))
+  "Allow render to select text based on widget color"
   (if (equal (color morph) "blue")
       ;; then - greeted label
-      (let ((greeted-model (greeted *basic-morphenator-model*)))
-        (if greeted-model
-            greeted-model
-            (contents morph)))
+      (or                               ; or avoid repeating test and then
+       (greeted *basic-morphenator-model*)
+       (contents morph))
       ;; else - normal widget
       (contents morph)))
 
