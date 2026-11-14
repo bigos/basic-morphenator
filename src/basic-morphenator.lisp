@@ -12,7 +12,7 @@
                 width
                 height
                 )
-  (:local-nicknames (#:sy #:sycamore))
+  ;; (:local-nicknames (#:sy #:sycamore))
   (:export
    main
    draw-window
