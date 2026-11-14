@@ -219,7 +219,6 @@
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)
   (setf (owner morph) nil
-        (scale-factor morph) 1.0
         (location morph) (make-instance 'location
                                         :absolute-x 0
                                         :absolute-y 0
