@@ -157,7 +157,7 @@
                  (+ (~> owner-morph-location absolute-x) (~> owner-morph-extent x)))
               (> (+ (~> morph-location absolute-y) (~> morph-extent y))
                  (+ (~> owner-morph-location absolute-y) (~> owner-morph-extent y))))
-      (warn "morph ~s is has elements outside its owner" morph)
+      (warn "morph ~s it has elements outside its owner" morph)
       )))
 
 ;;; ---------------- mouse location --------------------------------------------
