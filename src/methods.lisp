@@ -68,10 +68,10 @@
 (defmethod add-morph :after ((morph morph) (submorph morph) ))
 
 (defmethod add-morph :after ((morph layout-morph) (submorph morph))
-  (add-morph-after% morph (direction morph)))
-(defmethod add-morph-after% ((morph layout-morph) (direction (eql :horizontal)))
+  (add-morph-after-aux morph (direction morph)))
+(defmethod add-morph-after-aux ((morph layout-morph) (direction (eql :horizontal)))
   (warn "adding layout element ~s" direction))
-(defmethod add-morph-after% ((morph layout-morph) (direction (eql :vertical)))
+(defmethod add-morph-after-aux ((morph layout-morph) (direction (eql :vertical)))
   (warn "adding layout element ~s" direction))
 
 ;;; ================== location ================================================
@@ -112,8 +112,8 @@
     (refresh-location-with-owner morph (owner morph))))
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
-  (refresh-location-with-owner-direction% morph owner-morph (direction owner-morph)))
-(defmethod refresh-location-with-owner-direction% ((morph morph) (owner-morph layout-morph) (direction (eql :vertical)))
+  (refresh-location-with-owner-direction-aux morph owner-morph (direction owner-morph)))
+(defmethod refresh-location-with-owner-direction-aux ((morph morph) (owner-morph layout-morph) (direction (eql :vertical)))
   (let ((owner-morph-location (~> owner-morph location)))
     (let ((new-location
             (make-instance 'location
@@ -124,7 +124,7 @@
                            :x (~> morph morph-location-x)
                            :y (~> morph morph-location-y))))
       (setf (location morph) new-location))))
-(defmethod refresh-location-with-owner-direction% ((morph morph) (owner-morph layout-morph) (direction (eql :horizontal)))
+(defmethod refresh-location-with-owner-direction-aux ((morph morph) (owner-morph layout-morph) (direction (eql :horizontal)))
   (let ((owner-morph-location (~> owner-morph location)))
     (let ((new-location
             (make-instance 'location
