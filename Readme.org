@@ -1,4 +1,5 @@
 * Readme
 Trying to copy elements of [[file:~/Documents/Roams/githubkasten/org-roam/20261020141744-morph.org::*Morph][Morph]]
 
-** zzz
+** helper methods
+Use the convention of adding suffix -aux, -aux2, -aux3 and so on
