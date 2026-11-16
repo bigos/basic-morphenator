@@ -180,13 +180,11 @@
                             morph))))
 
 ;;; ================= events ===================================================
-(defmethod process-event :before ((morph morph) (event symbol))
-  (warn "processing event ~s for morph ~s") event morph)
 (defmethod process-event ((morph morph) (event symbol))
-  (process-event-aux morph event))
+  (warn "processing event for ~S with event ~S" morph event))
 
-(defmethod process-event-aux ((morph morph) (event (eql :motion))))
-(defmethod process-event-aux ((morph morph) (event (eql :motion-enter))))
+;; (defmethod process-event-aux ((morph morph) (event (eql :motion))))
+;; (defmethod process-event-aux ((morph morph) (event (eql :motion-enter))))
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
