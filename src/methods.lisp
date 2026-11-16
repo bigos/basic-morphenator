@@ -182,6 +182,7 @@
 ;;; ================= events ===================================================
 (defmethod handle-event-motion ((morph morph) (event symbol) x y)
   ;; we nee to have the concept of previous motion event to detect mouse leave
+  ;; for that I also need the previous morph
   (warn "handling event motion for ~S with event ~S" morph event)
   (when (eq 6 (id morph))
     (warn "button")))
