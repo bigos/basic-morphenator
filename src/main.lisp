@@ -30,12 +30,11 @@
     ((:motion :motion-enter)
      ;; we use simple case with one window so we ignore the window argument
      (destructuring-bind ((x y)) args
-       (gui-app:mouse-motion-enter lisp-window x y)
+       ;; (gui-app:mouse-motion-enter lisp-window x y)
        (let ((morph-under-mouse (morph-at (world *basic-morphenator-model*) x y)))
          (when (and morph-under-mouse
                     (eq 6
                         (id morph-under-mouse)))
-           (warn "mouse over the button ~s" morph-under-mouse)
            (handle-event morph-under-mouse event args)))))
     (:motion-leave
      (gui-app:mouse-motion-leave))
