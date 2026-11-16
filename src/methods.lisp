@@ -180,7 +180,7 @@
                             morph))))
 
 ;;; ================= events ===================================================
-(defmethod process-event ((morph morph) (event symbol))
+(defmethod process-event ((morph morph) (event T) args)
   (warn "processing event for ~S with event ~S" morph event))
 
 ;; (defmethod process-event-aux ((morph morph) (event (eql :motion))))
