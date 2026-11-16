@@ -36,7 +36,8 @@
    (properties)
    (id)
    (private-display-bounds)
-   (last-morph-id :allocation :class)))
+   (last-morph-id :allocation :class)
+   (last-movement-morph :allocation :class :documentation "Use it to implement mouse enter/leave")))
 
 (defclass/std placed-morph (morph)
   ((location)
