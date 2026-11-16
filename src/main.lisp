@@ -36,7 +36,7 @@
                     (eq 6
                         (id morph-under-mouse)))
            (warn "mouse over the button ~s" morph-under-mouse)
-           (process-event morph-under-mouse event args)))))
+           (handle-event morph-under-mouse event args)))))
     (:motion-leave
      (gui-app:mouse-motion-leave))
     (:focus-enter)
