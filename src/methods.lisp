@@ -174,9 +174,9 @@
 
 (defmethod morph-at ((morph morph) x y)
   (loop for the-submorph in (submorphs morph)
-        for found = (morph-at the-submorph x y)
+        for found = (morph-at the-submorph x y) ; recursively descend over submorphs
         when found return found
-          finally (return (when (contains-point-p morph x y)
+          finally (return (when (contains-point-p morph x y)  ; return the deepest found morph
                             morph))))
 
 ;;; ============= render =======================================================
