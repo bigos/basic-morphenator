@@ -179,6 +179,15 @@
           finally (return (when (contains-point-p morph x y)  ; return the deepest found morph
                             morph))))
 
+;;; ================= events ===================================================
+(defmethod process-event :before ((morph morph) (event symbol))
+  (warn "processing event ~s for morph ~s") event morph)
+(defmethod process-event ((morph morph) (event symbol))
+  (process-event-aux morph event))
+
+(defmethod process-event-aux ((morph morph) (event (eql :motion))))
+(defmethod process-event-aux ((morph morph) (event (eql :motion-enter))))
+
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
   ;;"Advaita Mono"   ;; "Liberation Mono"
