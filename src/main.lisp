@@ -21,7 +21,7 @@
 
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
   (unless (member event '(:timeout :motion))
-    ;; (unless (eq *environment* :testing) (warn "event ~S ~S" event args))
+    (unless (eq *environment* :testing) (warn "!!! event ~S ~S" event args))
     )
   (case event
     (:timeout
