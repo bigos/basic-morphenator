@@ -180,12 +180,10 @@
                             morph))))
 
 ;;; ================= events ===================================================
-(defmethod handle-event ((morph morph) (event symbol) args)
-  (warn "handling event for ~S with event ~S" morph event)
-  (handle-event-aux morph event))
-
-(defmethod handle-event-aux ((morph morph) (event (eql :motion))))
-(defmethod handle-event-aux ((morph morph) (event (eql :motion-enter))))
+(defmethod handle-event-motion ((morph morph) (event symbol) x y)
+  (warn "handling event motion for ~S with event ~S" morph event)
+  (when (eq 6 (id morph))
+    (warn "button")))
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
