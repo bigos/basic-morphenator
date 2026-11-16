@@ -9,7 +9,9 @@
   (print-unreadable-object (obj stream :type t :identity t)
     (format stream "~s" (list
                          :id
-                         (id obj)))))
+                         (id obj)
+                         :color
+                         (color obj)))))
 
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
@@ -171,8 +173,8 @@
            (<= y-top-left y y-bottom-right)))))
 
 (defmethod morph-at ((morph morph) x y)
-  (loop for c in (reverse (submorphs morph))
-        for found = (morph-at c x y)
+  (loop for the-submorph in (submorphs morph)
+        for found = (morph-at the-submorph x y)
         when found return found
           finally (return (when (contains-point-p morph x y)
                             morph))))
