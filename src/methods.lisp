@@ -174,11 +174,14 @@
            (<= y-top-left y y-bottom-right)))))
 
 (defmethod morph-at ((morph morph) x y)
-  (loop for the-submorph in (submorphs morph)
-        for found = (morph-at the-submorph x y) ; recursively descend over submorphs
-        when found return found
-          finally (return (when (contains-point-p morph x y)  ; return the deepest found morph
-                            morph))))
+  (loop
+    for the-morph in (if (typep morph 'world-morph)
+                         (list morph)
+                         (submorphs morph))
+    for found = (morph-at the-morph x y) ; recursively descend over submorphs
+    when found return found
+      finally (return (if (contains-point-p morph x y) ; return the deepest found morph
+                          morph))))
 
 ;;; ================= events ===================================================
 ;;; TODO do leave is not detected when moving onto the world widget
