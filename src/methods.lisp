@@ -184,6 +184,18 @@
   ;; we nee to have the concept of previous motion event to detect mouse leave
   ;; for that I also need the previous morph
   (warn "handling event motion for ~S with event ~S" morph event)
+  ;; find last-movement-morph
+  (if (equal (last-movement-morph morph) morph)
+      (progn ;; then
+        ;; no movement crossing the morph boundary
+        ;; do something 1
+        )
+      (progn ;; else
+        ;; do something 2
+
+        ;; set the last-movement-morph
+        (setf (last-movement-morph morph) morph)))
+
   (when (eq 6 (id morph))
     (warn "button")))
 
