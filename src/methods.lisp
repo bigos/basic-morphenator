@@ -188,10 +188,11 @@
   (if (equal (last-movement-morph morph) morph)
       (progn ;; then
         ;; no movement crossing the morph boundary
-        ;; do something 1
+        ;; do mouse move on morph
         )
       (progn ;; else
-        ;; do something 2
+        ;; do mouse leave on last-movement-morph
+        ;; do mouse enter on morph
 
         ;; set the last-movement-morph
         (setf (last-movement-morph morph) morph)))
