@@ -189,7 +189,7 @@
           (handle-event-motion-do-motion morph event x y))
         (progn ;; else
           ;; (warn "else ~S~S" last-morph morph)
-          (handle-event-motion-do-leave morph event x y)
+          (handle-event-motion-do-leave last-morph event x y)
           (handle-event-motion-do-enter morph event x y)
 
           ;; set the last-movement-morph
@@ -203,6 +203,17 @@
   (warn "motion ~s ~s" event morph))
 (defmethod handle-event-motion-do-leave  ((morph morph) (event symbol) x y)
   (mouse-out morph)
+  (warn "leave ~s ~s" event (last-movement-morph morph)))
+
+(defmethod handle-event-motion-do-enter  ((morph pluggable-button-morph) (event symbol) x y)
+  (mouse-over morph)
+  (setf (mouse-is-over morph) T)
+  (warn "enter ~s ~s" event morph))
+(defmethod handle-event-motion-do-motion ((morph pluggable-button-morph) (event symbol) x y)
+  (warn "motion ~s ~s" event morph))
+(defmethod handle-event-motion-do-leave  ((morph pluggable-button-morph) (event symbol) x y)
+  (mouse-out morph)
+  (setf (mouse-is-over morph) nil)
   (warn "leave ~s ~s" event (last-movement-morph morph)))
 
 (defmethod mouse-over ((morph morph))
