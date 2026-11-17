@@ -187,18 +187,23 @@
   ;; find last-movement-morph
   (if (equal (last-movement-morph morph) morph)
       (progn ;; then
-        ;; no movement crossing the morph boundary
-        ;; do mouse move on morph
-        )
+        (handle-event-motion-do-enter morph event x y))
       (progn ;; else
-        ;; do mouse leave on last-movement-morph
-        ;; do mouse enter on morph
+        (handle-event-motion-do-leave morph event x y)
+        (handle-event-motion-do-enter morph event x y)
 
         ;; set the last-movement-morph
         (setf (last-movement-morph morph) morph)))
 
   (when (eq 6 (id morph))
     (warn "button")))
+
+(defmethod handle-event-motion-do-enter  ((morph morph) (event symbol) x y)
+  (warn "enter"))
+(defmethod handle-event-motion-do-motion ((morph morph) (event symbol) x y)
+  (warn "motion"))
+(defmethod handle-event-motion-do-leave  ((morph morph) (event symbol) x y)
+  (warn "leave"))
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
