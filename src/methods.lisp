@@ -34,6 +34,7 @@
                              :model model))
        (button (make-instance 'pluggable-button-morph
                               :color "green"
+                              :mouse-over-color "lime"
                               :extent (make-instance 'extent :x 50 :y 20)
                               :label "Greet"))
        (greeting-label (make-instance 'label-morph
@@ -194,12 +195,23 @@
           ;; set the last-movement-morph
           (setf (last-movement-morph morph) morph)))))
 
+  ;; if over the green button id 6 then change button color for enter leave
 (defmethod handle-event-motion-do-enter  ((morph morph) (event symbol) x y)
+  (mouse-over morph)
   (warn "enter ~s ~s" event morph))
 (defmethod handle-event-motion-do-motion ((morph morph) (event symbol) x y)
   (warn "motion ~s ~s" event morph))
 (defmethod handle-event-motion-do-leave  ((morph morph) (event symbol) x y)
+  (mouse-out morph)
   (warn "leave ~s ~s" event (last-movement-morph morph)))
+
+(defmethod mouse-over ((morph morph))
+  (if (eq (id morph) 6)
+      (setf (mouse-over morph) T)))
+
+(defmethod mouse-out ((morph morph))
+  (if (eq (id morph) 6)
+      (setf (mouse-over morph) nil)))
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
@@ -244,7 +256,16 @@
       (contents morph)))
 
 (defmethod render ((morph pluggable-button-morph))
-  (call-next-method)
+  (gui-color:set-rgba (cond ((mouse-is-over morph) (mouse-over-color morph))
+                            ((is-pressed morph) "red")
+                            ((color morph) (color morph))
+                            (T "yellow")))
+  (cairo:rectangle
+   (~> morph location absolute-x)
+   (~> morph location absolute-y)
+   (~> morph extent x)
+   (~> morph extent y))
+  (cairo:fill-path)
 
   (render-prepare-to-show-text morph)
   (gui-color:set-rgba "white")
