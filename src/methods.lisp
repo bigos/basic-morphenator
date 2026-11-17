@@ -190,7 +190,8 @@
           (handle-event-motion-do-motion morph event x y))
         (progn ;; else
           ;; (warn "else ~S~S" last-morph morph)
-          (handle-event-motion-do-leave last-morph event x y)
+          (when last-morph
+            (handle-event-motion-do-leave last-morph event x y))
           (handle-event-motion-do-enter morph event x y)
 
           ;; set the last-movement-morph
