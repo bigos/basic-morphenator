@@ -181,6 +181,7 @@
                             morph))))
 
 ;;; ================= events ===================================================
+;;; TODO do leave is not detected when moving onto the world widget
 (defmethod handle-event-motion ((morph morph) (event symbol) x y)
   (let ((last-morph (last-movement-morph morph)))
     (if (equal last-morph morph)
@@ -265,7 +266,7 @@
        (contents morph))
       ;; else - normal widget
       (contents morph)))
-
+;;; TODO add handling and rendering of mouse key presses
 (defmethod render ((morph pluggable-button-morph))
   (gui-color:set-rgba (cond ((mouse-is-over morph) (mouse-over-color morph))
                             ((is-pressed morph) "red")
