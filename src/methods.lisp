@@ -181,29 +181,25 @@
 
 ;;; ================= events ===================================================
 (defmethod handle-event-motion ((morph morph) (event symbol) x y)
-  ;; we nee to have the concept of previous motion event to detect mouse leave
-  ;; for that I also need the previous morph
-  (warn "handling event motion for ~S with event ~S" morph event)
-  ;; find last-movement-morph
-  (if (equal (last-movement-morph morph) morph)
-      (progn ;; then
-        (handle-event-motion-do-enter morph event x y))
-      (progn ;; else
-        (handle-event-motion-do-leave morph event x y)
-        (handle-event-motion-do-enter morph event x y)
+  (let ((last-morph (last-movement-morph morph)))
+    (if (equal last-morph morph)
+        (progn ;; then
+          ;; (warn "then ~S~S" last-morph morph)
+          (handle-event-motion-do-motion morph event x y))
+        (progn ;; else
+          ;; (warn "else ~S~S" last-morph morph)
+          (handle-event-motion-do-leave morph event x y)
+          (handle-event-motion-do-enter morph event x y)
 
-        ;; set the last-movement-morph
-        (setf (last-movement-morph morph) morph)))
-
-  (when (eq 6 (id morph))
-    (warn "button")))
+          ;; set the last-movement-morph
+          (setf (last-movement-morph morph) morph)))))
 
 (defmethod handle-event-motion-do-enter  ((morph morph) (event symbol) x y)
-  (warn "enter"))
+  (warn "enter ~s ~s" event morph))
 (defmethod handle-event-motion-do-motion ((morph morph) (event symbol) x y)
-  (warn "motion"))
+  (warn "motion ~s ~s" event morph))
 (defmethod handle-event-motion-do-leave  ((morph morph) (event symbol) x y)
-  (warn "leave"))
+  (warn "leave ~s ~s" event (last-movement-morph morph)))
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
