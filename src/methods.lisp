@@ -204,7 +204,10 @@
   (mouse-over morph)
   (warn "enter ~s ~s" event morph))
 (defmethod handle-event-motion-do-motion ((morph morph) (event symbol) x y)
-  (warn "motion ~s ~s" event morph))
+  (typecase morph
+    (world-morph)
+    (otherwise
+     (warn "motion ~s ~s" event morph))))
 (defmethod handle-event-motion-do-leave  ((morph morph) (event symbol) x y)
   (mouse-out morph)
   (warn "leave ~s ~s" event (last-movement-morph morph)))

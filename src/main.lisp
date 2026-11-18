@@ -39,7 +39,8 @@
     (:focus-leave)
     (:pressed
      (destructuring-bind ((button x y)) args
-              (warn "pressed mouse button ~s at ~s" button (list x y))
+       (warn "pressed mouse button ~s at ~s" button (list x y))
+       ;; TODO add (handle-event-mouse-clicked the-morph button x y)
        (warn "morph at ~s" (morph-at (world *basic-morphenator-model*) x y))))
     (:released
      (destructuring-bind ((button x y)) args
