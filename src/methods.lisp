@@ -268,7 +268,7 @@
   (if (equal (color morph) "blue")
       ;; then - greeted label
       (or                               ; or avoid repeating test and then
-       (greeted *basic-morphenator-model*)
+       (greeted (the-model))
        (contents morph))
       ;; else - normal widget
       (contents morph)))
@@ -294,7 +294,7 @@
 
   (render-prepare-to-show-text morph)
   (gui-color:set-rgba "red")
-  (cairo:show-text (format nil "~A"  (entered *basic-morphenator-model*))))
+  (cairo:show-text (format nil "~A"  (entered (the-model)))))
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)
   (setf (owner morph) nil

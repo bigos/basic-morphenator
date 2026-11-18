@@ -6,18 +6,18 @@
   (cond ((equal mods '(:ALT))
          (cond ((equal entered "r")
                 (warn "refresh the init-ui")
-                (init-gui *basic-morphenator-model*))
+                (init-gui (the-model)))
                ((equal entered "g")
                 (warn "greet by shortcut")
-                (setf (greeted *basic-morphenator-model*) (entered *basic-morphenator-model*)))
+                (setf (greeted (the-model)) (entered (the-model))))
                ((equal entered "c")
                 (warn "clear by shortcut")
-                (setf (greeted *basic-morphenator-model*) ""
-                      (entered *basic-morphenator-model*) ""))
+                (setf (greeted (the-model)) ""
+                      (entered (the-model)) ""))
                (T (warn "unknown ALT shortcut"))))
         (T
-         (setf (entered *basic-morphenator-model*)
-               (format nil "~A~A" (entered *basic-morphenator-model*) entered)))))
+         (setf (entered (the-model))
+               (format nil "~A~A" (entered (the-model)) entered)))))
 
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
   (unless (member event '(:timeout :motion))
@@ -30,7 +30,7 @@
     ((:motion :motion-enter)
      ;; we use simple case with one window so we ignore the window argument
      (destructuring-bind ((x y)) args
-       (let ((the-morph (morph-at (world *basic-morphenator-model*) x y )))
+       (let ((the-morph (morph-at (world (the-model)) x y )))
          (when the-morph
            (handle-event-motion the-morph event x y)))))
     (:motion-leave
@@ -41,7 +41,7 @@
      (destructuring-bind ((button x y)) args
        (warn "pressed mouse button ~s at ~s" button (list x y))
        ;; TODO add (handle-event-mouse-clicked the-morph button x y)
-       (warn "morph at ~s" (morph-at (world *basic-morphenator-model*) x y))))
+       (warn "morph at ~s" (morph-at (world (the-model)) x y))))
     (:released
      (destructuring-bind ((button x y)) args
                         ;; (gui-app:mouse-button-released button)
@@ -53,7 +53,7 @@
               (gui-window:window-resize w h lisp-window)
        (setf (width lisp-window) w
              (height lisp-window) h)
-       (resize (world *basic-morphenator-model*) w h)))
+       (resize (world (the-model)) w h)))
     (:key-pressed
      (destructuring-bind ((entered key-name key-code mods)) args
                    ;; example of accessing gtk window object
@@ -65,7 +65,7 @@
                      ;; File
                      ((equalp action "new")
                       (format T "menu selected new~%")
-                      (new-file *basic-morphenator-model*))
+                      (new-file (the-model)))
                      ;; ((equalp action "open")
                      ;;  (format T "menu selected open~%")
                      ;;  (gui-window-gtk:present-file-open-dialog))
@@ -77,7 +77,7 @@
                       (gui-window-gtk:close-all-windows-and-quit))
                      ;; View
                      ;; ((equalp action "toggle-line-numbers")
-                     ;;  (line-numbers-toggle *basic-morphenator-model*))
+                     ;;  (line-numbers-toggle (the-model)))
                      ;; Help
                      ((equalp action "about")
                       (format T "menu selected about~%")
@@ -98,7 +98,7 @@
   ;; paint background
   (let ((cv 0.95)) (cairo:set-source-rgb  cv cv cv))
   (cairo:paint)
-  (render-world (world *basic-morphenator-model*) window))
+  (render-world (world (the-model)) window))
 
 ;;; main =======================================================================
 (defun menu-bar (app lisp-window)
@@ -162,9 +162,9 @@
 
    *basic-morphenator-model* (make-instance 'basic-morphenator-model)
 
-   boxes:*model* *basic-morphenator-model*)
+   boxes:*model* (the-model))
 
-  (init-gui *basic-morphenator-model*)
+  (init-gui (the-model))
 
   (if testing
       ;; then
