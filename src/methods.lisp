@@ -170,18 +170,25 @@
            (y-top-left (absolute-y (location morph)))
            (x-bottom-right (+ x-top-left (x (extent morph))))
            (y-bottom-right (+ y-top-left (y (extent morph)))))
-      (and (<= x-top-left x x-bottom-right)
-           (<= y-top-left y y-bottom-right)))))
-
+      (let ((cp (and (<= x-top-left x x-bottom-right)
+                     (<= y-top-left y y-bottom-right))))
+        (when cp (warn "we have ~s at ~s ~s" morph x y))
+        cp))))
+;;; aaargh - world morph had nil extent
 (defmethod morph-at ((morph morph) x y)
+  (let ((fs (morph-at-aux morph x y)))
+    (if fs
+        fs
+        (when (contains-point-p morph x y)
+          morph))))
+
+(defmethod morph-at-aux ((morph morph) x y)
   (loop
-    for the-morph in (if (typep morph 'world-morph)
-                         (list morph)
-                         (submorphs morph))
+    for the-morph in (submorphs morph)
     for found = (morph-at the-morph x y) ; recursively descend over submorphs
     when found return found
-      finally (return (if (contains-point-p morph x y) ; return the deepest found morph
-                          morph))))
+      finally (return (when (contains-point-p morph x y) ; return the deepest found morph
+                        morph))))
 
 ;;; ================= events ===================================================
 ;;; TODO do leave is not detected when moving onto the world widget
