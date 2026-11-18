@@ -170,21 +170,11 @@
            (y-top-left (absolute-y (location morph)))
            (x-bottom-right (+ x-top-left (x (extent morph))))
            (y-bottom-right (+ y-top-left (y (extent morph)))))
-      (let ((cp (and (<= x-top-left x x-bottom-right)
-                     (<= y-top-left y y-bottom-right))))
-        (when cp (warn "we have ~s at ~s ~s" morph x y))
-        cp))
+      (and (<= x-top-left x x-bottom-right)
+           (<= y-top-left y y-bottom-right)))
     (error "missing location or extent for ~s" morph)))
 
-;;; aaargh - world morph had nil extent
 (defmethod morph-at ((morph morph) x y)
-  (let ((fs (morph-at-aux morph x y)))
-    (if fs
-        fs
-        (when (contains-point-p morph x y)
-          morph))))
-
-(defmethod morph-at-aux ((morph morph) x y)
   (loop
     for the-morph in (submorphs morph)
     for found = (morph-at the-morph x y) ; recursively descend over submorphs
