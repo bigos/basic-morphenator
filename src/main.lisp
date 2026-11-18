@@ -95,9 +95,6 @@
   (gui-window:redraw-canvas lisp-window (format  nil "EVENT_~A" event)))
 
 (defmethod draw-window ((window basic-morphenator-window))
-  ;; paint background
-  (let ((cv 0.95)) (cairo:set-source-rgb  cv cv cv))
-  (cairo:paint)
   (render-world (world (the-model)) window))
 
 ;;; main =======================================================================
