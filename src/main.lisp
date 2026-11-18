@@ -52,17 +52,7 @@
               (gui-window:window-resize w h lisp-window)
        (setf (width lisp-window) w
              (height lisp-window) h)
-       ;; (let ((model *basic-morphenator-model*))
-       ;;   (when (world model)
-       ;;     (let ((bwidth (calculate-bwidth model)))
-       ;;       (when (> bwidth 0)
-       ;;         (setf (wrap-at-column model)
-       ;;               (floor
-       ;;                (/
-       ;;                 (width (the-container model))
-       ;;                 bwidth)))
-       ;;         (reload-text-structure model)))))
-       ))
+       (resize (world *basic-morphenator-model*) w h)))
     (:key-pressed
      (destructuring-bind ((entered key-name key-code mods)) args
                    ;; example of accessing gtk window object

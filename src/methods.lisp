@@ -165,7 +165,7 @@
 
 ;;; ---------------- mouse location --------------------------------------------
 (defmethod contains-point-p ((morph boxed-morph) x y)
-  (when (and (location morph) (extent morph))
+  (if (and (location morph) (extent morph))
     (let* ((x-top-left (absolute-x (location morph)))
            (y-top-left (absolute-y (location morph)))
            (x-bottom-right (+ x-top-left (x (extent morph))))
@@ -173,7 +173,9 @@
       (let ((cp (and (<= x-top-left x x-bottom-right)
                      (<= y-top-left y y-bottom-right))))
         (when cp (warn "we have ~s at ~s ~s" morph x y))
-        cp))))
+        cp))
+    (error "missing location or extent for ~s" morph)))
+
 ;;; aaargh - world morph had nil extent
 (defmethod morph-at ((morph morph) x y)
   (let ((fs (morph-at-aux morph x y)))
@@ -319,3 +321,12 @@
   (cairo:fill-path)
   ;; render children
   (loop for m in (submorphs morph) do (render m)))
+
+(defmethod resize ((morph world-morph) w h)
+  "Resize the world on window resize"
+  (if (extent morph)
+      (progn
+        (setf (x (extent morph)) w)
+        (setf (y (extent morph)) h))
+      (progn
+        (setf (extent morph) (make-instance 'extent :x w :y h)))))
