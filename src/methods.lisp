@@ -230,7 +230,11 @@
   (if (eq (id morph) 6)
       (setf (mouse-over morph) nil)))
 
-(defmethod handle-event-mouse-button ((morph morph) (event symbol) x y)
+(defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) x y)
+  (setf (is-pressed morph)
+        (case event
+          (:pressed  T)
+          (:released nil)))
   (warn "mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
 
 (defmethod handle-event-leave ((morph morph))
@@ -284,10 +288,11 @@
       (contents morph)))
 ;;; TODO add handling and rendering of mouse key presses
 (defmethod render ((morph pluggable-button-morph))
-  (gui-color:set-rgba (cond ((mouse-is-over morph) (mouse-over-color morph))
-                            ((is-pressed morph) "red")
-                            ((color morph) (color morph))
-                            (T "yellow")))
+  (gui-color:set-rgba (cond
+                        ((is-pressed morph) "red")
+                        ((mouse-is-over morph) (mouse-over-color morph))
+                        ((color morph) (color morph))
+                        (T "yellow")))
   (cairo:rectangle
    (~> morph location absolute-x)
    (~> morph location absolute-y)
