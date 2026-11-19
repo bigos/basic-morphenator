@@ -239,6 +239,8 @@
           (:released nil)))
   (warn "mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
 
+(defmethod handle-event-leave ((morph null))
+  (warn "leaving before moving over any morph"))
 (defmethod handle-event-leave ((morph morph))
   (warn "mouse left the window ~s -last morph is ~s" morph (last-movement-morph morph))
   (typecase morph
