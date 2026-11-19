@@ -272,9 +272,8 @@
        (setf (pressed-morph morph) nil))
      ;; TODO call the action on clicked button, when the mouse is still over the button
      (when (contains-point-p morph x y)
-       (warn "going to perform the expected action !!!!!!!!!!!!!!!!!")
-       (funcall (action-selector morph)))))
-  (warn "mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
+       ;; (warn "going to perform the expected action !!!!!!!!!!!!!!!!!")
+       (funcall (action-selector morph))))))
 
 (defmethod handle-event-leave ((morph null))
   (warn "leaving before moving over any morph"))
