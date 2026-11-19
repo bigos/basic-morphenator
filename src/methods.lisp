@@ -230,6 +230,8 @@
   (if (eq (id morph) 6)
       (setf (mouse-over morph) nil)))
 
+(defmethod handle-event-mouse-button ((morph morph) (event symbol) x y)
+  (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
 (defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) x y)
   (setf (is-pressed morph)
         (case event
