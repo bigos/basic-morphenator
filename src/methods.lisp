@@ -280,7 +280,8 @@
   (warn "mouse left the window ~s -last morph is ~s" morph (last-movement-morph morph))
   (typecase morph
     (pluggable-button-morph
-     (setf (mouse-is-over morph) nil))
+     (setf (mouse-is-over morph) nil)
+     (setf (last-movement-morph morph) nil))
     (otherwise
      (warn "morph without mouse over"))))
 
