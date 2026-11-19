@@ -265,15 +265,15 @@
   (case event
     (:pressed
      (setf (is-pressed morph) T)
-     (setf (pressed-morph morph) morph))
+     (setf (pressed-morph morph) morph)
+     (when (contains-point-p morph x y)
+       (funcall (action-selector morph))))
     (:released
      (when (pressed-morph morph)
        (setf (is-pressed (pressed-morph morph)) nil)
        (setf (pressed-morph morph) nil))
-     ;; TODO call the action on clicked button, when the mouse is still over the button
      (when (contains-point-p morph x y)
-       ;; (warn "going to perform the expected action !!!!!!!!!!!!!!!!!")
-       (funcall (action-selector morph))))))
+       (funcall (secondary-action-selector morph))))))
 
 (defmethod handle-event-leave ((morph null))
   (warn "leaving before moving over any morph"))
