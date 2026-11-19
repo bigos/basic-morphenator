@@ -33,6 +33,7 @@
                              :extent (make-instance 'extent :x 50 :y 20)
                              :model model))
        (button (make-instance 'pluggable-button-morph
+                              :action-selector (lambda () (warn "clicked the greet button"))
                               :color "green"
                               :mouse-over-color "lime"
                               :extent (make-instance 'extent :x 50 :y 20)
@@ -271,7 +272,8 @@
        (setf (pressed-morph morph) nil))
      ;; TODO call the action on clicked button, when the mouse is still over the button
      (when (contains-point-p morph x y)
-       (warn "going to perform the expected action !!!!!!!!!!!!!!!!!"))))
+       (warn "going to perform the expected action !!!!!!!!!!!!!!!!!")
+       (funcall (action-selector morph)))))
   (warn "mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
 
 (defmethod handle-event-leave ((morph null))
