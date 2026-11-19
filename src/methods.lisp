@@ -266,13 +266,15 @@
     (:pressed
      (setf (is-pressed morph) T)
      (setf (pressed-morph morph) morph)
-     (when (contains-point-p morph x y)
+     (when (and (contains-point-p morph x y)
+                (action-selector morph))
        (funcall (action-selector morph))))
     (:released
      (when (pressed-morph morph)
        (setf (is-pressed (pressed-morph morph)) nil)
        (setf (pressed-morph morph) nil))
-     (when (contains-point-p morph x y)
+     (when (and (contains-point-p morph x y)
+                (secondary-action-selector morph))
        (funcall (secondary-action-selector morph))))))
 
 (defmethod handle-event-leave ((morph null))
@@ -320,7 +322,7 @@
 
 (defmethod render-text-for-color ((morph label-morph))
   "Allow render to select text based on widget color"
-  (if (equal (color morph) "blue")
+  (if (equal (id morph) 6)
       ;; then - greeted label
       (or                               ; or avoid repeating test and then
        (greeted (the-model))
