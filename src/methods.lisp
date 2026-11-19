@@ -233,10 +233,15 @@
 (defmethod handle-event-mouse-button ((morph morph) (event symbol) x y)
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
 (defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) x y)
-  (setf (is-pressed morph)
-        (case event
-          (:pressed  T)
-          (:released nil)))
+  (case event
+    (:pressed
+     (setf (is-pressed morph) T)
+     (setf (pressed-morph morph) morph))
+    (:released
+     ;; TODO call the action on clicked button, when the mouse is still over the button
+     (when (pressed-morph morph)
+       (setf (is-pressed (pressed-morph morph)) nil)
+       (setf (pressed-morph morph) nil))))
   (warn "mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
 
 (defmethod handle-event-leave ((morph null))
