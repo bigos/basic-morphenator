@@ -216,6 +216,7 @@
   (setf (mouse-is-over morph) T)
   (warn "enter ~s ~s" event morph))
 (defmethod handle-event-motion-do-motion ((morph pluggable-button-morph) (event symbol) x y)
+  (setf (mouse-is-over morph) T)
   (warn "motion ~s ~s" event morph))
 (defmethod handle-event-motion-do-leave  ((morph pluggable-button-morph) (event symbol) x y)
   (mouse-out morph)
@@ -231,6 +232,14 @@
 
 (defmethod handle-event-mouse-button ((morph morph) (event symbol) x y)
   (warn "mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
+
+(defmethod handle-event-leave ((morph morph))
+  (warn "mouse left the window ~s -last morph is ~s" morph (last-movement-morph morph))
+  (typecase morph
+    (pluggable-button-morph
+     (setf (mouse-is-over morph) nil))
+    (otherwise
+     (warn "morph without mouse over"))))
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))

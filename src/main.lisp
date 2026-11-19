@@ -36,6 +36,7 @@
        (handle-event-motion (find-the-morph x y)
                             event x y)))
     (:motion-leave
+     (handle-event-leave (last-movement-morph (world (the-model))))
      (gui-app:mouse-motion-leave))
     (:focus-enter)
     (:focus-leave)
