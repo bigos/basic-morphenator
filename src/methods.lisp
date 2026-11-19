@@ -231,6 +231,9 @@
   (if (eq (id morph) 6)
       (setf (mouse-over morph) nil)))
 
+(defmethod handle-event-mouse-button ((morph morph) (event symbol) x y)
+  (warn "mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
+
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
   ;;"Advaita Mono"   ;; "Liberation Mono"
