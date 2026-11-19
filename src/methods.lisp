@@ -231,7 +231,14 @@
       (setf (mouse-over morph) nil)))
 
 (defmethod handle-event-mouse-button ((morph morph) (event symbol) x y)
-  (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
+  (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
+  (warn "pressed is ~S" (pressed-morph morph))
+  (when (and (eq event :released)
+             (pressed-morph morph))
+    (warn "releasing the button")
+    (setf (is-pressed (pressed-morph morph)) nil)
+    (setf (pressed-morph morph) nil)
+    (warn "after releasing ~s" (pressed-morph morph))))
 (defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) x y)
   (case event
     (:pressed
