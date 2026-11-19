@@ -19,6 +19,9 @@
          (setf (entered (the-model))
                (format nil "~A~A" (entered (the-model)) entered)))))
 
+(defun find-the-morph (x y)
+  (morph-at (world (the-model)) x y))
+
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
   (unless (member event '(:timeout :motion))
     (unless (eq *environment* :testing) (warn "!!! event ~S ~S" event args))
@@ -30,23 +33,20 @@
     ((:motion :motion-enter)
      ;; we use simple case with one window so we ignore the window argument
      (destructuring-bind ((x y)) args
-       (let ((the-morph (morph-at (world (the-model)) x y )))
-         (when the-morph
-           (handle-event-motion the-morph event x y)))))
+       (handle-event-motion (find-the-morph x y)
+                            event x y)))
     (:motion-leave
      (gui-app:mouse-motion-leave))
     (:focus-enter)
     (:focus-leave)
     (:pressed
      (destructuring-bind ((button x y)) args
-       (warn "pressed mouse button ~s at ~s" button (list x y))
-       ;; TODO add (handle-event-mouse-clicked the-morph button x y)
-       (warn "morph at ~s" (morph-at (world (the-model)) x y))))
+       (handle-event-mouse-button (find-the-morph x y)
+                                  event x y)))
     (:released
      (destructuring-bind ((button x y)) args
-                        ;; (gui-app:mouse-button-released button)
-       ;; (warn "mouse state released ~S ~S" (gui-app:mouse-button gui-app:*lisp-app*) (list button x y))
-       ))
+       (handle-event-mouse-button (find-the-morph x y)
+                                  event x y)))
     (:scroll)
     (:resize
      (destructuring-bind ((w h)) args
