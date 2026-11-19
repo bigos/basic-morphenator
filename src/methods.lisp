@@ -266,10 +266,12 @@
      (setf (is-pressed morph) T)
      (setf (pressed-morph morph) morph))
     (:released
-     ;; TODO call the action on clicked button, when the mouse is still over the button
      (when (pressed-morph morph)
        (setf (is-pressed (pressed-morph morph)) nil)
-       (setf (pressed-morph morph) nil))))
+       (setf (pressed-morph morph) nil))
+     ;; TODO call the action on clicked button, when the mouse is still over the button
+     (when (contains-point-p morph x y)
+       (warn "going to perform the expected action !!!!!!!!!!!!!!!!!"))))
   (warn "mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph))
 
 (defmethod handle-event-leave ((morph null))
