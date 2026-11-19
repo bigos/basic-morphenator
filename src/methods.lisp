@@ -183,7 +183,6 @@
                         morph))))
 
 ;;; ================= events ===================================================
-;;; TODO do leave is not detected when moving onto the world widget
 (defmethod handle-event-motion ((morph morph) (event symbol) x y)
   (let ((last-morph (last-movement-morph morph)))
     (if (equal last-morph morph)
@@ -226,7 +225,6 @@
 (defmethod mouse-over ((morph morph))
   (if (eq (id morph) 6)
       (setf (mouse-over morph) T)))
-
 (defmethod mouse-out ((morph morph))
   (if (eq (id morph) 6)
       (setf (mouse-over morph) nil)))
