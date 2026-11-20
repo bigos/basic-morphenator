@@ -3,7 +3,7 @@
 (in-package #:basic-morphenator)
 
 (defclass/std basic-morphenator-model (boxes:model)
-  ((world :std (make-instance 'world-morph))
+  ((world)
    (entered :std "" :type string)
    (greeted :type (or null string))))
 

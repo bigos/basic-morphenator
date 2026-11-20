@@ -16,7 +16,9 @@
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
   (let
-      ((view (make-instance 'layout-morph
+      ((world (make-instance 'world-morph
+                             :last-morph-id 0)) ; so id will start at 1
+       (view (make-instance 'layout-morph
                             :color "pink"
                             :direction :vertical
                             :extent (make-instance 'extent :x 180 :y 50) ))
@@ -44,8 +46,7 @@
                                       :contents "Hmm...")))
 
     (progn
-      (setf (submorphs (world model)) nil)
-      (setf (last-morph-id (world model)) 1)
+      (setf (world model) world)
       (add-morph (world model) view)
       (add-morph view row)
       (add-morph row label)
@@ -59,6 +60,7 @@
                  :y y))
 
 (defmethod initialize-instance :after ((morph morph) &key)
+  (warn "after initialize ~S with ~S" morph (last-morph-id morph))
   (setf (id morph) (1+ (last-morph-id morph)))
   (setf (last-morph-id morph) (id morph)))
 
@@ -351,10 +353,9 @@
   (gui-color:set-rgba "red")
   (cairo:show-text (format nil "~A"  (entered (the-model)))))
 ;;; ------------ world ---------------------------------------------------------
-(defmethod initialize-instance :before ((morph world-morph) &key)
-  (setf (last-morph-id morph) 1
-        (id morph) 1))
 (defmethod initialize-instance :after ((morph world-morph) &key)
+  (assert (eq (id morph) 1))
+  (assert (eq (last-morph-id morph) 1))
   (setf (owner morph) nil
         (location morph) (make-instance 'location
                                         :absolute-x 0
