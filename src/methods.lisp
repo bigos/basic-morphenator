@@ -356,6 +356,8 @@
   (setf (last-morph-id morph) 1
         (id morph) 1)
   (setf (owner morph) nil
+        (last-movement-morph morph) nil
+        (pressed-morph morph) nil
         (location morph) (make-instance 'location
                                         :absolute-x 0
                                         :absolute-y 0
