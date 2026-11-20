@@ -60,7 +60,6 @@
                  :y y))
 
 (defmethod initialize-instance :after ((morph morph) &key)
-  (warn "after initialize ~S with ~S" morph (last-morph-id morph))
   (setf (id morph) (1+ (last-morph-id morph)))
   (setf (last-morph-id morph) (id morph)))
 
@@ -321,7 +320,7 @@
 
 (defmethod render-text-for-color ((morph label-morph))
   "Allow render to select text based on widget color"
-  (if (equal (id morph) 7)
+  (if (equal (id morph) 6)
       ;; then - greeted label
       (or                               ; or avoid repeating test and then
        (greeted (the-model))
