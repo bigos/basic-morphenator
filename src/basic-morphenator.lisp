@@ -31,6 +31,7 @@
 
 (defparameter *basic-morphenator-model* nil)
 (defparameter *environment* nil)
+(defparameter *window-size* nil)
 
 ;;; ============================================================================
 

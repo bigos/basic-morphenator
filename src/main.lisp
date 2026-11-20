@@ -53,7 +53,8 @@
      (destructuring-bind ((w h)) args
               (gui-window:window-resize w h lisp-window)
        (setf (width lisp-window) w
-             (height lisp-window) h)
+             (height lisp-window) h
+             *window-size* (cons w h))
        (resize (world (the-model)) w h)))
     (:key-pressed
      (destructuring-bind ((entered key-name key-code mods)) args
