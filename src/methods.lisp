@@ -45,6 +45,7 @@
 
     (progn
       (setf (submorphs (world model)) nil)
+      (setf (last-morph-id (world model)) 1)
       (add-morph (world model) view)
       (add-morph view row)
       (add-morph row label)
@@ -58,11 +59,7 @@
                  :y y))
 
 (defmethod initialize-instance :after ((morph morph) &key)
-  (let ((last-id (if (or (null (last-morph-id morph))
-                         (typep morph 'world-morph))
-                     0                  ;make sure we have a number on the first morph
-                     (last-morph-id morph))))
-    (setf (id morph) (1+ last-id)))
+  (setf (id morph) (1+ (last-morph-id morph)))
   (setf (last-morph-id morph) (id morph)))
 
 ;;; =============== add morph ==================================================
@@ -354,6 +351,9 @@
   (gui-color:set-rgba "red")
   (cairo:show-text (format nil "~A"  (entered (the-model)))))
 ;;; ------------ world ---------------------------------------------------------
+(defmethod initialize-instance :before ((morph world-morph) &key)
+  (setf (last-morph-id morph) 1
+        (id morph) 1))
 (defmethod initialize-instance :after ((morph world-morph) &key)
   (setf (owner morph) nil
         (location morph) (make-instance 'location
