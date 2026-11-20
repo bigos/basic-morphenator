@@ -327,7 +327,7 @@
        (contents morph))
       ;; else - normal widget
       (contents morph)))
-;;; TODO add handling and rendering of mouse key presses
+
 (defmethod render ((morph pluggable-button-morph))
   (gui-color:set-rgba (cond
                         ((is-pressed morph) "red")
