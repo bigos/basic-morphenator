@@ -297,6 +297,9 @@
   (cairo:move-to (~> morph location absolute-x)
                  (~> morph location absolute-y (+ _ 15))))
 
+;;; apparently tere is function cairo:traslate tx ty
+;;; that may allow to get rid of absolute-x absolute-y
+
 (defmethod render :before ((morph morph))
   (refresh-location morph))
 (defmethod render ((morph placed-morph))
