@@ -299,6 +299,7 @@
 
 ;;; apparently tere is function cairo:traslate tx ty
 ;;; that may allow to get rid of absolute-x absolute-y
+;; https://www.cairographics.org/manual-1.17.2/cairo-Transformations.html#cairo-translate
 
 (defmethod render :before ((morph morph))
   (refresh-location morph))
