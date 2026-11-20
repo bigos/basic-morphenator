@@ -13,6 +13,9 @@
                          :color
                          (color obj)))))
 
+(defmethod greet-me ((model basic-morphenator-model))
+  (setf (greeted (the-model)) (entered (the-model))))
+
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
   (let
@@ -34,7 +37,7 @@
                              :extent (make-instance 'extent :x 50 :y 20)
                              :model model))
        (button (make-instance 'pluggable-button-morph
-                              :action-selector (lambda () (warn "clicked the greet button"))
+                              :action-selector (lambda () (greet-me (the-model)))
                               :color "green"
                               :mouse-over-color "lime"
                               :extent (make-instance 'extent :x 50 :y 20)

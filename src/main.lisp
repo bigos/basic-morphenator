@@ -8,9 +8,7 @@
                 (warn "refresh the init-ui")
                 (init-gui (the-model)))
                ((equal entered "g")
-                (warn "greet by shortcut entered ~s" (entered (the-model)))
-                (setf (greeted (the-model)) (entered (the-model)))
-                (warn "with greeted ~S" (greeted (the-model))))
+                (greet-me (the-model)))
                ((equal entered "c")
                 (warn "clear by shortcut")
                 (setf (greeted (the-model)) ""
