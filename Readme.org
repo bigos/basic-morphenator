@@ -1,5 +1,8 @@
 * Readme
-Trying to copy elements of [[file:~/Documents/Roams/githubkasten/org-roam/20261020141744-morph.org::*Morph][Morph]]
+I am trying to copy elements of Cuis Smalltalk Morphic GUI framework.
 
-** helper methods
-Use the convention of adding suffix -aux, -aux2, -aux3 and so on
+At the moment this project is at very early stages. I have only implemented
+button handling, and very crude layout. There is no proper focused text input
+and keystrokes handling.
+
+I can only do a basic Greeter UI that needs further improvements.
