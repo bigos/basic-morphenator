@@ -296,8 +296,7 @@
 (defmethod render :before ((morph morph))
   (refresh-location morph))             ;TODO move refreshing locations to layout morphs, with ad-morph/remove-morph etc
 (defmethod render ((morph placed-morph))
-  (gui-color:set-rgba (if (color morph)
-                          (color morph)
+  (gui-color:set-rgba (or (color morph)
                           "yellow"))
   (cairo:rectangle
    (~> morph location absolute-x)
