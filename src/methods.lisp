@@ -280,18 +280,7 @@
 
   (render-prepare-to-show-text morph)
   (gui-color:set-rgba "white")
-
-  (cairo:show-text (render-text-for-color morph)))
-
-(defmethod render-text-for-color ((morph label-morph))
-  "Allow render to select text based on widget color"
-  (if (equal (id morph) 7)
-      ;; then - greeted label
-      (or                               ; or avoid repeating test and then
-       (greeted (the-model))
-       (contents morph))
-      ;; else - normal widget
-      (contents morph)))
+  (cairo:show-text (label-text morph)))
 
 (defmethod render ((morph pluggable-button-morph))
   (gui-color:set-rgba (cond
