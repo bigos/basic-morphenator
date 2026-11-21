@@ -158,15 +158,26 @@
       )))
 
 ;;; ---------------- mouse location --------------------------------------------
-(defmethod contains-point-p ((morph placed-morph) x y)
-  (if (and (location morph) (extent morph))
-    (let* ((x-top-left (absolute-x (location morph)))
-           (y-top-left (absolute-y (location morph)))
-           (x-bottom-right (+ x-top-left (x (extent morph))))
-           (y-bottom-right (+ y-top-left (y (extent morph)))))
-      (and (<= x-top-left x x-bottom-right)
-           (<= y-top-left y y-bottom-right)))
-    (error "missing location or extent for ~s" morph)))
+;; (defmethod contains-point-p ((morph placed-morph) x y)
+;;   (if (and (location morph) (extent morph))
+;;     (let* ((x-top-left (absolute-x (location morph)))
+;;            (y-top-left (absolute-y (location morph)))
+;;            (x-bottom-right (+ x-top-left (x (extent morph))))
+;;            (y-bottom-right (+ y-top-left (y (extent morph)))))
+;;       (and (<= x-top-left x x-bottom-right)
+;;            (<= y-top-left y y-bottom-right)))
+;;     (error "missing location or extent for ~s" morph)))
+
+(defmethod contains-point-p ((morph boxed-morph) x y)
+  (let ((loc (location morph))
+        (ext (extent morph)))
+    (when (and loc ext
+               (absolute-x loc) (absolute-y loc)
+               (x ext) (y ext))
+      (let ((left (absolute-x loc))
+            (top  (absolute-y loc)))
+        (and (<= left x) (< x (+ left (x ext)))
+             (<= top  y) (< y (+ top  (y ext))))))))
 
 (defmethod morph-at ((morph placed-morph) x y)
   (loop
