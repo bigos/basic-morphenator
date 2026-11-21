@@ -36,11 +36,9 @@
    (properties)
    (id)
    (private-display-bounds)
-   (mouse-over)
    (last-morph-id :allocation :class :documentation "last-id for new morph creation" )
    (focused-morph :allocation :class :documentation "morph that has keyboard focus")
-   (pressed-morph :allocation :class :documentation "morph that was clicked")
-   (last-movement-morph :allocation :class :documentation "Use it to implement mouse enter/leave")))
+   (pressed-morph :allocation :class :documentation "morph that was clicked")))
 
 (defclass/std placed-morph (morph)
   ((location)

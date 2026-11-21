@@ -193,17 +193,6 @@
     (setf (mouse-over-morphs handler) new-chain)))
 
 ;;; ================= events ===================================================
-(defmethod handle-event-motion ((morph null) (event symbol) x y)
-  (let ((world-morph (world (the-model))))
-    (let ((last-morph (last-movement-morph world-morph)))
-      (progn ;; else
-        ;; (warn "else ~S~S" last-morph world-morph)
-        (when last-morph
-          (handle-event-motion-do-leave last-morph event x y))
-        (handle-event-motion-do-enter world-morph event x y)
-
-        ;; set the last-movement-morph
-        (setf (last-movement-morph world-morph) nil)))))
 (defmethod handle-event-motion ((morph morph) (event symbol) x y)
   (let ((last-morph (last-movement-morph morph)))
     (if (eq last-morph morph)
@@ -229,22 +218,10 @@
     (otherwise
      (warn "motion ~s ~s" event morph))))
 (defmethod handle-event-motion-do-leave  ((morph morph) (event symbol) x y)
-  (set-mouse-out morph)
   (warn "leave ~s ~s" event (last-movement-morph morph)))
 
-(defmethod handle-event-motion-do-enter  ((morph pluggable-button-morph) (event symbol) x y)
-  (set-mouse-over morph)
-  (setf (mouse-is-over morph) T))
 (defmethod handle-event-motion-do-motion ((morph pluggable-button-morph) (event symbol) x y)
   (setf (mouse-is-over morph) T))
-(defmethod handle-event-motion-do-leave  ((morph pluggable-button-morph) (event symbol) x y)
-  (set-mouse-out morph)
-  (setf (mouse-is-over morph) nil))
-
-(defmethod set-mouse-over ((morph morph))
-  (setf (mouse-over morph) T))
-(defmethod set-mouse-out ((morph morph))
-  (setf (mouse-over morph) nil))
 
 (defmethod handle-event-mouse-button ((morph null) (event symbol) button x y)
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
@@ -281,16 +258,6 @@
                 (secondary-action-selector morph))
        (funcall (secondary-action-selector morph))))))
 
-(defmethod handle-event-leave ((morph null))
-  (warn "leaving before moving over any morph"))
-(defmethod handle-event-leave ((morph morph))
-  (warn "mouse left the window ~s -last morph is ~s" morph (last-movement-morph morph))
-  (typecase morph
-    (pluggable-button-morph
-     (setf (mouse-is-over morph) nil)
-     (setf (last-movement-morph morph) nil))
-    (otherwise
-     (warn "morph without mouse over"))))
 
 (defgeneric handles-mouse-over-p (morph)
   (:method ((morph morph)) nil))
