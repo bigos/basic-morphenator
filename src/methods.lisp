@@ -14,7 +14,7 @@
                          (color obj)))))
 
 (defmethod greet-me ((model basic-morphenator-model))
-  (setf (greeted (the-model)) (entered (the-model))))
+  (setf (greeted model) (entered model)))
 
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
