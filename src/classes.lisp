@@ -137,25 +137,35 @@
 (defclass/std user-input-event (morphic-event)
   ((type2)
    (buttons)
-   (position2)
+   (position)
    (was-handled)))
 
 (defclass/std keyboard-event (user-input-event)
-  ((key-value)))
+  ((key-event-type)
+   (key-value)))
 
 (defclass/std mouse-event (user-input-event)
   ())
 
 (defclass/std mouse-button-event (mouse-event)
-  ((which-button)
-   (event-handler)))
+  ((button-event-type)
+   (which-button)))
+
+(defclass/std mouse-enter-event (mouse-event)
+  ())
+
+(defclass/std mouse-leace-event (mouse-event)
+  ())
 
 (defclass/std mouse-move-event (mouse-event)
   ())
 
+(defclass/std mouse-over-event (mouse-event)
+  ())
+
 (defclass/std mouse-scroll-event (mouse-event)
   ((direction)
-   (event-handler)))
+   (delta)))
 
 (defclass/std window-event (morphic-event)
   ((action)
