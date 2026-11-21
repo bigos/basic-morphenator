@@ -70,7 +70,6 @@
 (defmethod add-morph ((morph morph) (submorph morph))
   (setf (owner submorph) morph)
   (setf (submorphs morph) (append (submorphs morph) (list submorph))))
-(defmethod add-morph :after ((morph morph) (submorph morph) ))
 
 (defmethod add-morph :after ((morph layout-morph) (submorph morph))
   (add-morph-after-aux morph (direction morph)))
@@ -104,6 +103,7 @@
 (defmethod prev-sibling-heights-sum ((morph morph))
   (prev-sibling-axis-sum morph #'y))
 
+;;; in cuis layout children get their locations overwritten by owner
 (defmethod refresh-location ((morph morph))
   (when (owner morph)
     (refresh-location-with-owner morph (owner morph))))
