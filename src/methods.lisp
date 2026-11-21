@@ -45,7 +45,7 @@
        (greeting-label (make-instance 'label-morph
                                       :color "blue"
                                       :extent (make-instance 'extent :x 50 :y 20)
-                                      :contents "Hmm...")))
+                                      :contents (lambda () (or (greeted model) "Hmm...")))))
 
     (progn
       (setf (world model) world)
@@ -196,36 +196,6 @@
     (setf (mouse-over-morphs handler) new-chain)))
 
 ;;; ================= events ===================================================
-;; (defmethod handle-event-motion ((morph morph) (event symbol) x y)
-;;   (let ((last-morph (last-movement-morph morph)))
-;;     (if (eq last-morph morph)
-;;         (progn ;; then
-;;           ;; (warn "then ~S~S" last-morph morph)
-;;           (handle-event-motion-do-motion morph event x y))
-;;         (progn ;; else
-;;           ;; (warn "else ~S~S" last-morph morph)
-;;           (when last-morph
-;;             (handle-event-motion-do-leave last-morph event x y))
-;;           (handle-event-motion-do-enter morph event x y)
-
-;;           ;; set the last-movement-morph
-;;           (setf (last-movement-morph morph) morph)))))
-
-;;   ;; if over the green button id 6 then change button color for enter leave
-;; (defmethod handle-event-motion-do-enter  ((morph morph) (event symbol) x y)
-;;   (set-mouse-over morph)
-;;   (warn "enter ~s ~s" event morph))
-;; (defmethod handle-event-motion-do-motion ((morph morph) (event symbol) x y)
-;;   (typecase morph
-;;     (world-morph)
-;;     (otherwise
-;;      (warn "motion ~s ~s" event morph))))
-;; (defmethod handle-event-motion-do-leave  ((morph morph) (event symbol) x y)
-;;   (warn "leave ~s ~s" event (last-movement-morph morph)))
-
-;; (defmethod handle-event-motion-do-motion ((morph pluggable-button-morph) (event symbol) x y)
-;;   (setf (mouse-is-over morph) T))
-
 (defmethod handle-event-mouse-button ((morph null) (event symbol) button x y)
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
   (setf morph (world (the-model)))
@@ -261,7 +231,6 @@
                 (secondary-action-selector morph))
        (funcall (secondary-action-selector morph))))))
 
-
 (defgeneric handles-mouse-over-p (morph)
   (:method ((morph morph)) nil))
 (defmethod handles-mouse-over-p ((morph pluggable-button-morph)) t)
@@ -272,6 +241,12 @@
   (setf (mouse-is-over morph) t))
 (defmethod mouse-leave ((morph pluggable-button-morph))
   (setf (mouse-is-over morph) nil))
+
+;;; =============== content ====================================================
+;; label-morph contents may be a string or a function
+(defmethod label-text ((morph label-morph))
+  (let ((c (contents morph)))
+    (if (functionp c) (funcall c) c)))
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
