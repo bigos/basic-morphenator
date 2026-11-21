@@ -97,7 +97,7 @@
 
 (defmethod draw-window ((window basic-morphenator-window))
   ;; TODO review drawing window
-  (declare (ignore) window)
+  (declare (ignore window))
   (render-world (world (the-model))))
 
 ;;; main =======================================================================
