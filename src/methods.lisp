@@ -293,12 +293,11 @@
 ;;; that may allow to get rid of absolute-x absolute-y
 ;; https://www.cairographics.org/manual-1.17.2/cairo-Transformations.html#cairo-translate
 
-(defmethod render :before ((morph placed-morph))
-  (refresh-location morph) ;TODO move refreshing locations to layout morphs, with ad-morph/remove-morph etc
-  (gui-color:set-rgba (or (color morph)
-                          "yellow")))
-
+(defmethod render :before ((morph morph))
+  (refresh-location morph))             ;TODO move refreshing locations to layout morphs, with ad-morph/remove-morph etc
 (defmethod render ((morph placed-morph))
+  (gui-color:set-rgba (or (color morph)
+                          "yellow"))
   (cairo:rectangle
    (~> morph location absolute-x)
    (~> morph location absolute-y)
@@ -327,14 +326,17 @@
       ;; else - normal widget
       (contents morph)))
 
-(defmethod render :before ((morph pluggable-button-morph))
+(defmethod render ((morph pluggable-button-morph))
   (gui-color:set-rgba (cond
                         ((is-pressed morph) "red")
                         ((mouse-is-over morph) (mouse-over-color morph))
                         ((color morph) (color morph))
-                        (T "yellow"))))
-(defmethod render ((morph pluggable-button-morph))
-  (call-next-method)
+                        (T "yellow")))
+  (cairo:rectangle
+   (~> morph location absolute-x)
+   (~> morph location absolute-y)
+   (~> morph extent x)
+   (~> morph extent y))
   (cairo:fill-path)
 
   (render-prepare-to-show-text morph)
