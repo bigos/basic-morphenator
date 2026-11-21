@@ -13,9 +13,30 @@
                          :color
                          (color obj)))))
 
+;;; ================= helpers ==================================================
 (defmethod greet-me ((model basic-morphenator-model))
   (setf (greeted model) (entered model)))
 
+(defun draw-box-rect (x y w h color)
+  (gui-color:set-rgba (or color "yellow"))
+  (cairo:rectangle x y w h)
+  (cairo:fill-path))
+
+(defun draw-morph-box (morph &optional color)
+  (let ((loc (location morph))
+        (ext (extent morph)))
+    (draw-box-rect (absolute-x loc)
+                   (absolute-y loc)
+                   (x ext)
+                   (y ext)
+                   (or color (color morph)))))
+
+(defun draw-morph-label (morph text &key (color "white"))
+  (render-prepare-to-show-text morph)
+  (gui-color:set-rgba color)
+  (cairo:show-text (or text "")))
+
+;;; ================= init gui =================================================
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
   (let
@@ -263,48 +284,28 @@
 (defmethod render :before ((morph morph))
   (refresh-location morph))             ;TODO move refreshing locations to layout morphs, with ad-morph/remove-morph etc
 (defmethod render ((morph placed-morph))
-  (gui-color:set-rgba (or (color morph)
-                          "yellow"))
-  (cairo:rectangle
-   (~> morph location absolute-x)
-   (~> morph location absolute-y)
-   (~> morph extent x)
-   (~> morph extent y))
-  (cairo:fill-path))
+  (draw-morph-box morph))
 (defmethod render :after ((morph morph))
   (loop for m in (submorphs morph)
         do (render m)))
 
 (defmethod render ((morph label-morph))
   (call-next-method)
-
-  (render-prepare-to-show-text morph)
-  (gui-color:set-rgba "white")
-  (cairo:show-text (label-text morph)))
+  (draw-morph-label morph (render-text-for-color morph)))
 
 (defmethod render ((morph pluggable-button-morph))
-  (gui-color:set-rgba (cond
-                        ((is-pressed morph) "red")
-                        ((mouse-is-over morph) (mouse-over-color morph))
-                        ((color morph) (color morph))
-                        (T "yellow")))
-  (cairo:rectangle
-   (~> morph location absolute-x)
-   (~> morph location absolute-y)
-   (~> morph extent x)
-   (~> morph extent y))
-  (cairo:fill-path)
-
-  (render-prepare-to-show-text morph)
-  (gui-color:set-rgba "white")
-  (cairo:show-text (label morph)))
+  (let ((fill (cond
+                ((is-pressed morph) "red")
+                ((mouse-is-over morph) (mouse-over-color morph))
+                (t (color morph)))))
+    (draw-morph-box morph fill))
+  (draw-morph-label morph (label morph)))
 
 (defmethod render ((morph text-model-morph))
   (call-next-method)
-
-  (render-prepare-to-show-text morph)
-  (gui-color:set-rgba "red")
-  (cairo:show-text (format nil "~A"  (entered (the-model)))))
+  (draw-morph-label morph
+                    (format nil "~A" (entered (the-model)))
+                    :color "red"))
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)
   (setf (last-morph-id morph) 1
@@ -318,15 +319,9 @@
                                         :y 0)
         (extent morph) (make-instance 'extent :x (car *window-size*) :y (cdr *window-size*))))
 
-(defmethod render-world   ((morph world-morph))
-  ;; actual morph
-  (gui-color:set-rgba "red")
-  (cairo:rectangle   0
-                     0
-                     (~> morph extent x)
-                     (~> morph extent y))
-  (cairo:fill-path)
-  ;; render children
+(defmethod render-world ((morph world-morph))
+  (let ((ext (extent morph)))
+    (draw-box-rect 0 0 (x ext) (y ext) "red"))
   (loop for m in (submorphs morph) do (render m)))
 
 (defmethod resize ((morph world-morph) w h)
