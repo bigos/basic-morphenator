@@ -103,14 +103,6 @@
   (prev-sibling-axis-sum morph #'x))
 (defmethod prev-sibling-heights-sum ((morph morph))
   (prev-sibling-axis-sum morph #'y))
-;;; UNUSED
-(defmethod nth-sibling ((morph morph))
-  (loop
-    for nth = 0 then (1+ nth)
-    for m in (submorphs (owner morph))
-    until (eq (id m)
-              (id morph))
-    finally (return nth)))
 
 (defmethod refresh-location ((morph morph))
   (when (owner morph)
