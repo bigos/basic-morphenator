@@ -158,7 +158,7 @@
       )))
 
 ;;; ---------------- mouse location --------------------------------------------
-(defmethod contains-point-p ((morph boxed-morph) x y)
+(defmethod contains-point-p ((morph placek-morph) x y)
   (if (and (location morph) (extent morph))
     (let* ((x-top-left (absolute-x (location morph)))
            (y-top-left (absolute-y (location morph)))
@@ -168,7 +168,7 @@
            (<= y-top-left y y-bottom-right)))
     (error "missing location or extent for ~s" morph)))
 
-(defmethod morph-at ((morph boxed-morph) x y)
+(defmethod morph-at ((morph placed-morph) x y)
   (loop
     for the-morph in (submorphs morph)
     for found = (morph-at the-morph x y) ; recursively descend over submorphs
