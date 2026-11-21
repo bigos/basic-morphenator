@@ -188,7 +188,7 @@
 
         ;; set the last-movement-morph
         (setf (last-movement-morph world-morph) nil)))))
-(defmethod handle-event-motion (morph (event symbol) x y)
+(defmethod handle-event-motion ((morph morph) (event symbol) x y)
   (let ((last-morph (last-movement-morph morph)))
     (if (equal last-morph morph)
         (progn ;; then
