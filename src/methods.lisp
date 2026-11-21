@@ -181,9 +181,12 @@
         (and (<= left x) (< x (+ left (x ext)))
              (<= top  y) (< y (+ top  (y ext))))))))
 
+(defmethod morph-at ((morph morph) x y)
+  (declare (ignore x y))
+  nil)
 (defmethod morph-at ((morph placed-morph) x y)
   (loop
-    for the-morph in (submorphs morph)
+    for the-morph in (reverse (submorphs morph))
     for found = (morph-at the-morph x y) ; recursively descend over submorphs
     when found return found             ; TODO it my go to deep later, so I may need handlesMouseDown / ignoresMouseDown
       finally (return (when (contains-point-p morph x y) ; return the deepest found morph
