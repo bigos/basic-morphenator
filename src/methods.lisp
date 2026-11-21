@@ -5,7 +5,7 @@
 (defmethod print-object ((obj location) stream)
   (print-object-inner obj stream))
 
-(defmethod print-object ((obj morph) stream)
+(defmethod print-object ((obj boxed-morph) stream)
   (print-unreadable-object (obj stream :type t :identity t)
     (format stream "~s" (list
                          :id
