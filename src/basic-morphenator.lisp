@@ -47,7 +47,7 @@
 
 ;;; ============================================================================
 
-(defclass/std basic-morphenator-window (boxes:boxes-window) (()))
+(defclass/std basic-morphenator-window (boxes:boxes-window) ())
 
 ;;; ============================================================================
 
