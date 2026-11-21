@@ -221,7 +221,7 @@
 
   ;; if over the green button id 6 then change button color for enter leave
 (defmethod handle-event-motion-do-enter  ((morph morph) (event symbol) x y)
-  (mouse-over morph)
+  (set-mouse-over morph)
   (warn "enter ~s ~s" event morph))
 (defmethod handle-event-motion-do-motion ((morph morph) (event symbol) x y)
   (typecase morph
@@ -229,27 +229,22 @@
     (otherwise
      (warn "motion ~s ~s" event morph))))
 (defmethod handle-event-motion-do-leave  ((morph morph) (event symbol) x y)
-  (mouse-out morph)
+  (set-mouse-out morph)
   (warn "leave ~s ~s" event (last-movement-morph morph)))
 
 (defmethod handle-event-motion-do-enter  ((morph pluggable-button-morph) (event symbol) x y)
-  (mouse-over morph)
-  (setf (mouse-is-over morph) T)
-  (warn "enter ~s ~s" event morph))
+  (set-mouse-over morph)
+  (setf (mouse-is-over morph) T))
 (defmethod handle-event-motion-do-motion ((morph pluggable-button-morph) (event symbol) x y)
-  (setf (mouse-is-over morph) T)
-  (warn "motion ~s ~s" event morph))
+  (setf (mouse-is-over morph) T))
 (defmethod handle-event-motion-do-leave  ((morph pluggable-button-morph) (event symbol) x y)
-  (mouse-out morph)
-  (setf (mouse-is-over morph) nil)
-  (warn "leave ~s ~s" event (last-movement-morph morph)))
+  (set-mouse-out morph)
+  (setf (mouse-is-over morph) nil))
 
-(defmethod mouse-over ((morph morph))
-  (if (eq (id morph) 6)
-      (setf (mouse-over morph) T)))
-(defmethod mouse-out ((morph morph))
-  (if (eq (id morph) 6)
-      (setf (mouse-over morph) nil)))
+(defmethod set-mouse-over ((morph morph))
+  (setf (mouse-over morph) T))
+(defmethod set-mouse-out ((morph morph))
+  (setf (mouse-over morph) nil))
 
 (defmethod handle-event-mouse-button ((morph null) (event symbol) button x y)
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
