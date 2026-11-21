@@ -361,13 +361,13 @@
                                         :y 0)
         (extent morph) (make-instance 'extent :x (car *window-size*) :y (cdr *window-size*))))
 
-(defmethod render-world   ((morph world-morph) (window basic-morphenator-window))
+(defmethod render-world   ((morph world-morph))
   ;; actual morph
   (gui-color:set-rgba "red")
   (cairo:rectangle   0
                      0
-                     (width window)
-                     (height window))
+                     (~> morph extent x)
+                     (~> morph extent y))
   (cairo:fill-path)
   ;; render children
   (loop for m in (submorphs morph) do (render m)))
