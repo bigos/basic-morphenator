@@ -21,6 +21,17 @@
 (defun find-the-morph (x y)
   (morph-at (world (the-model)) x y))
 
+;;;
+((:motion :motion-enter)
+ (destructuring-bind ((x y)) args
+   (process-mouse-over (the-handler) (morphs-at (world (the-model)) x y))
+   ))
+(:motion-leave
+ (process-mouse-over (the-handler) nil)
+ )   ; leaves every hovered morph
+;;;
+
+
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
   (unless (member event '(:timeout :motion))
     (unless (eq *environment* :testing) (warn "!!! event ~S ~S" event args))
@@ -32,9 +43,13 @@
     ((:motion :motion-enter)
      ;; we use simple case with one window so we ignore the window argument
      (destructuring-bind ((x y)) args
+       (process-mouse-over (the-handler) (morphs-at (world (the-model)) x y))
+       ;; to delete
        (handle-event-motion (find-the-morph x y)
                             event x y)))
     (:motion-leave
+     (process-mouse-over (the-handler) nil)
+     ;; to delete
      (handle-event-leave (last-movement-morph (world (the-model))))
      (gui-app:mouse-motion-leave))
     (:focus-enter)

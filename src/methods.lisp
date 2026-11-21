@@ -158,15 +158,6 @@
       )))
 
 ;;; ---------------- mouse location --------------------------------------------
-;; (defmethod contains-point-p ((morph placed-morph) x y)
-;;   (if (and (location morph) (extent morph))
-;;     (let* ((x-top-left (absolute-x (location morph)))
-;;            (y-top-left (absolute-y (location morph)))
-;;            (x-bottom-right (+ x-top-left (x (extent morph))))
-;;            (y-bottom-right (+ y-top-left (y (extent morph)))))
-;;       (and (<= x-top-left x x-bottom-right)
-;;            (<= y-top-left y y-bottom-right)))
-;;     (error "missing location or extent for ~s" morph)))
 (defmethod contains-point-p ((morph morph) x y)
   (declare (ignore x y))
   nil)
@@ -181,16 +172,25 @@
         (and (<= left x) (< x (+ left (x ext)))
              (<= top  y) (< y (+ top  (y ext))))))))
 
-(defmethod morph-at ((morph morph) x y)
-  (declare (ignore x y))
-  nil)
-(defmethod morph-at ((morph placed-morph) x y)
-  (loop
-    for the-morph in (reverse (submorphs morph))
-    for found = (morph-at the-morph x y) ; recursively descend over submorphs
-    when found return found             ; TODO it my go to deep later, so I may need handlesMouseDown / ignoresMouseDown
-      finally (return (when (contains-point-p morph x y) ; return the deepest found morph
-                        morph))))
+(defgeneric morphs-at (morph x y)
+  (:documentation "Morphs containing the point, outermost first.")
+  (:method ((morph morph) x y) nil)
+  (:method ((morph boxed-morph) x y)
+    (when (contains-point-p morph x y)
+      (cons morph
+            (loop for sub in (reverse (submorphs morph))
+                  for chain = (morphs-at sub x y)
+                  when chain return chain)))))
+
+(defun process-mouse-over (handler new-chain)
+  (let* ((old (mouse-over-morphs handler))
+         (left    (remove-if (lambda (m) (member m new-chain)) old))
+         (entered (remove-if (lambda (m) (member m old)) new-chain)))
+    (dolist (m (reverse left))
+      (when (handles-mouse-over-p m) (mouse-leave m)))
+    (dolist (m entered)
+      (when (handles-mouse-over-p m) (mouse-enter m)))
+    (setf (mouse-over-morphs handler) new-chain)))
 
 ;;; ================= events ===================================================
 (defmethod handle-event-motion ((morph null) (event symbol) x y)
@@ -291,6 +291,17 @@
      (setf (last-movement-morph morph) nil))
     (otherwise
      (warn "morph without mouse over"))))
+
+(defgeneric handles-mouse-over-p (morph)
+  (:method ((morph morph)) nil))
+(defmethod handles-mouse-over-p ((morph pluggable-button-morph)) t)
+
+(defgeneric mouse-enter (morph))
+(defgeneric mouse-leave (morph))
+(defmethod mouse-enter ((morph pluggable-button-morph))
+  (setf (mouse-is-over morph) t))
+(defmethod mouse-leave ((morph pluggable-button-morph))
+  (setf (mouse-is-over morph) nil))
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
