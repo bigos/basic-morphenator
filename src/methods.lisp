@@ -294,7 +294,7 @@
 ;; https://www.cairographics.org/manual-1.17.2/cairo-Transformations.html#cairo-translate
 
 (defmethod render :before ((morph morph))
-  (refresh-location morph))
+  (refresh-location morph))             ;TODO move refreshing locations to layout morphs, with ad-morph/remove-morph etc
 (defmethod render ((morph placed-morph))
   (gui-color:set-rgba (if (color morph)
                           (color morph)
