@@ -53,4 +53,7 @@
 
 (defun the-model () *basic-morphenator-model*)
 
+(defun the-handler ()
+  (mouse-over-handler (active-hand (world (the-model)))))
+
 ;;; morph classes and methods sit in separate files
