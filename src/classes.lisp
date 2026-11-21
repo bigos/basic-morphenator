@@ -135,9 +135,8 @@
    (number-of-files)))
 
 (defclass/std user-input-event (morphic-event)
-  ((type2)
-   (buttons)
-   (position)
+  ((buttons)
+   (position2)                          ;Lisp does not like position
    (was-handled)))
 
 (defclass/std keyboard-event (user-input-event)
@@ -154,7 +153,7 @@
 (defclass/std mouse-enter-event (mouse-event)
   ())
 
-(defclass/std mouse-leace-event (mouse-event)
+(defclass/std mouse-leave-event (mouse-event)
   ())
 
 (defclass/std mouse-move-event (mouse-event)
