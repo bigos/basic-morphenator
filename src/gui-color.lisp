@@ -24,6 +24,7 @@
           (list valid-color red green blue alpha))))))
 
 (defun set-rgba (color)
+  ;; cache parsed colors
   (let ((parsed-color (color-to-rgba color)))
     (if (first parsed-color)
         (apply 'cairo:set-source-rgba (rest parsed-color))
