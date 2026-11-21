@@ -235,7 +235,7 @@
   (if (eq (id morph) 6)
       (setf (mouse-over morph) nil)))
 
-(defmethod handle-event-mouse-button ((morph null) (event symbol) x y)
+(defmethod handle-event-mouse-button ((morph null) (event symbol) button x y)
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
   (setf morph (world (the-model)))
   (warn "pressed is ~S" (pressed-morph morph))
@@ -245,7 +245,7 @@
     (setf (is-pressed (pressed-morph morph)) nil)
     (setf (pressed-morph morph) nil)
     (warn "after releasing ~s" (pressed-morph morph))))
-(defmethod handle-event-mouse-button ((morph morph) (event symbol) x y)
+(defmethod handle-event-mouse-button ((morph morph) (event symbol) button x y)
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
   (warn "pressed is ~S" (pressed-morph morph))
   (when (and (eq event :released)
@@ -254,7 +254,7 @@
     (setf (is-pressed (pressed-morph morph)) nil)
     (setf (pressed-morph morph) nil)
     (warn "after releasing ~s" (pressed-morph morph))))
-(defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) x y)
+(defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) button x y)
   (case event
     (:pressed
      (setf (is-pressed morph) T)

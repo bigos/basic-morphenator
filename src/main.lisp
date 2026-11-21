@@ -41,11 +41,11 @@
     (:focus-leave)
     (:pressed
      (destructuring-bind ((button x y)) args
-       (handle-event-mouse-button (find-the-morph x y)
+       (handle-event-mouse-button (find-the-morph button x y)
                                   event x y)))
     (:released
      (destructuring-bind ((button x y)) args
-       (handle-event-mouse-button (find-the-morph x y)
+       (handle-event-mouse-button (find-the-morph button x y)
                                   event x y)))
     (:scroll)
     (:resize
