@@ -168,11 +168,11 @@
            (<= y-top-left y y-bottom-right)))
     (error "missing location or extent for ~s" morph)))
 
-(defmethod morph-at ((morph morph) x y)
+(defmethod morph-at ((morph boxed-morph) x y)
   (loop
     for the-morph in (submorphs morph)
     for found = (morph-at the-morph x y) ; recursively descend over submorphs
-    when found return found
+    when found return found             ; TODO it my go to deep later, so I may need handlesMouseDown / ignoresMouseDown
       finally (return (when (contains-point-p morph x y) ; return the deepest found morph
                         morph))))
 
