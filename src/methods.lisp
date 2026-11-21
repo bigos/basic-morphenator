@@ -168,7 +168,7 @@
 ;;            (<= y-top-left y y-bottom-right)))
 ;;     (error "missing location or extent for ~s" morph)))
 
-(defmethod contains-point-p ((morph boxed-morph) x y)
+(defmethod contains-point-p ((morph morph) x y)
   (let ((loc (location morph))
         (ext (extent morph)))
     (when (and loc ext
