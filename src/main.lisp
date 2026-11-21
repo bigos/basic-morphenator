@@ -30,7 +30,6 @@
      ;; do nothing yet
      )
     ((:motion :motion-enter)
-     ;; we use simple case with one window so we ignore the window argument
      (destructuring-bind ((x y)) args
        (process-mouse-over (the-handler) (morphs-at (world (the-model)) x y))))
     (:motion-leave
@@ -85,7 +84,6 @@
                      (T
                       (format T "unhandled menu action ~S~%" action)))
 
-       ;; remember to steal menu focus
        (gui-window:steal-focus lisp-window)))
     (otherwise
      (unless (eq event  :key-released)
