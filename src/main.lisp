@@ -2,6 +2,27 @@
 
 (in-package #:basic-morphenator)
 
+(defun clear-text-morph (text-morph)
+  (setf (widget-text text-morph) ""
+        (cursor-pos text-morph) 0
+        (scroll-x text-morph) 0)
+  (clear-selection text-morph))
+
+(defun handle-alt-shortcut (entered model text-morph)
+  (cond ((equal entered "r")
+         (warn "refresh the init-ui")
+         (init-gui model))
+        ((equal entered "g")
+         (greet-me model))
+        ((equal entered "c")
+         (warn "clear by shortcut")
+         (when model
+           (setf (greeted model) ""))
+         (if text-morph
+             (clear-text-morph text-morph)
+             (when model
+               (setf (entered model) ""))))
+        (t (warn "unknown ALT shortcut"))))
 
 (defun printable-input-p (entered ctrl-p)
   (and (not ctrl-p)
@@ -57,24 +78,7 @@
         (alt-p   (and (listp mods) (member :ALT mods))))
     (cond
       (alt-p
-       (cond ((equal entered "r")
-              (warn "refresh the init-ui")
-              (init-gui model))
-             ((equal entered "g")
-              (greet-me model))
-             ((equal entered "c")
-              (warn "clear by shortcut")
-              (when model
-                (setf (greeted model) ""))
-              (if text-morph
-                  (progn
-                    (setf (widget-text text-morph) ""
-                          (cursor-pos text-morph) 0
-                          (scroll-x text-morph) 0)
-                    (clear-selection text-morph))
-                  (when model
-                    (setf (entered model) ""))))
-             (t (warn "unknown ALT shortcut"))))
+       (handle-alt-shortcut entered model text-morph))
       ((and text-morph
             (handle-text-morph-key text-morph entered key-name shift-p ctrl-p)))
       ((backspace-key-p key-name)
