@@ -255,23 +255,17 @@
   (let ((w (morph-target-world morph)))
     (and w (eq (focused-morph w) morph))))
 
-(defmethod handle-event-mouse-button ((morph null) (event symbol) button x y)
-  (declare (ignore button))
-  (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
-  (let ((w (current-world)))
-    (when (and w (eq event :released))
-      (warn "pressed is ~S" (pressed-morph w))
-      (release-world-pressed-morph w)
-      (warn "after releasing ~s" (pressed-morph w)))))
+(defun handle-unhandled-mouse-button (morph event x y world)
+  (warn "UNHANDLED mouse button event ~s at ~a for ~s"
+        event (format nil "~,2f x ~,2f" x y) morph)
+  (when (and world (eq event :released))
+    (warn "pressed is ~S" (pressed-morph world))
+    (release-world-pressed-morph world)
+    (warn "after releasing ~s" (pressed-morph world))))
 
 (defmethod handle-event-mouse-button ((morph morph) (event symbol) button x y)
   (declare (ignore button))
-  (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
-  (let ((w (morph-target-world morph)))
-    (when (and w (eq event :released))
-      (warn "pressed is ~S" (pressed-morph w))
-      (release-world-pressed-morph w)
-      (warn "after releasing ~s" (pressed-morph w)))))
+  (handle-unhandled-mouse-button morph event x y (morph-target-world morph)))
 
 (defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) button x y)
   (declare (ignore button))
@@ -304,9 +298,7 @@
                  (selection-start morph) idx
                  (is-selecting morph) t))))
       (:released
-       (setf (is-selecting morph) nil)
-       (when (eql (selection-start morph) (cursor-pos morph))
-         (setf (selection-start morph) nil))))))
+       (finish-text-selection morph)))))
 
 (defun update-text-drag-selection (x)
   (let ((fm (let ((w (current-world))) (and w (focused-morph w)))))

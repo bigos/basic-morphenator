@@ -144,3 +144,9 @@
                 return (1- i)
               do (setf prev-w w)
               finally (return len)))))
+
+(defun finish-text-selection (morph)
+  (when (typep morph 'text-model-morph)
+    (setf (is-selecting morph) nil)
+    (when (eql (selection-start morph) (cursor-pos morph))
+      (setf (selection-start morph) nil))))
