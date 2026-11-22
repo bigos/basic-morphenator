@@ -102,8 +102,11 @@
   (morph-location-axis morph #'y))
 
 (defmethod prev-sibling-axis-sum ((morph morph) axis-fn)
-  (let ((gap 10))
-    (loop for m in (submorphs (owner morph))
+  (let* ((own (owner morph))
+         (gap (if (and own (typep own 'layout-morph))
+                  (or (separation own) 10)
+                  10)))
+    (loop for m in (submorphs own)
           until (eq m morph)
           sum (+ (~> m extent (funcall axis-fn _)) gap))))
 
