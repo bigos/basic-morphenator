@@ -32,13 +32,8 @@
   (cairo:fill-path))
 
 (defun draw-morph-box (morph &optional color)
-  (let ((loc (location morph))
-        (ext (extent morph)))
-    (draw-box-rect (absolute-x loc)
-                   (absolute-y loc)
-                   (x ext)
-                   (y ext)
-                   (or color (color morph)))))
+  (let ((ext (extent morph)))
+    (draw-box-rect 0 0 (x ext) (y ext) (or color (color morph)))))
 
 (defun draw-morph-label (morph text &key (color "white"))
   (render-prepare-to-show-text morph)
@@ -308,18 +303,23 @@
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
-  ;;"Advaita Mono"   ;; "Liberation Mono"
   (cairo:select-font-face "Ubuntu Mono" :normal :normal)
   (cairo:set-font-size 15)
-  (cairo:move-to (~> morph location absolute-x)
-                 (~> morph location absolute-y (+ _ 15))))
+  (cairo:move-to 0 15))   ; baseline 15px below local origin
 
 ;;; apparently tere is function cairo:traslate tx ty
 ;;; that may allow to get rid of absolute-x absolute-y
 ;; https://www.cairographics.org/manual-1.17.2/cairo-Transformations.html#cairo-translate
 
+(defmethod render :around ((morph placed-morph))
+  (cairo:save)                                    ; match your binding's style
+  (cairo:translate (x (location morph)) (y (location morph)))
+  (unwind-protect (call-next-method)
+    (cairo:restore)))
+
 (defmethod render :before ((morph morph))
   (refresh-location morph))             ;TODO move refreshing locations to layout morphs, with ad-morph/remove-morph etc
+
 (defmethod render ((morph placed-morph))
   (draw-morph-box morph))
 (defmethod render :after ((morph morph))
