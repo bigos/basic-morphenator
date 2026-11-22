@@ -74,8 +74,6 @@
 (defun find-the-morph (x y)
   (car (last (morphs-at (world (the-model)) x y))))
 
-
-
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
   (unless (member event '(:timeout :motion))
     (unless (eq *environment* :testing) (warn "!!! event ~S ~S" event args))

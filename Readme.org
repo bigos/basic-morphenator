@@ -3,8 +3,7 @@ I am trying to copy elements of Cuis Smalltalk Morphic GUI framework.
 
 https://github.com/Cuis-Smalltalk/Cuis-Smalltalk-UI
 
-At the moment this project is at very early stages. I have only implemented
-button handling, and very crude layout. There is no proper focused text input
-and keystrokes handling.
+At the moment this project is at very early stages.
 
-I can only do a basic Greeter UI that needs further improvements.
+We have a working text field with a caret, selection, drag-select, horizontal
+scrolling and clipping.
