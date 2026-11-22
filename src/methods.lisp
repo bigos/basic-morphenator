@@ -267,7 +267,9 @@
 ;; label-morph contents may be a string or a function
 (defmethod label-text ((morph label-morph))
   (let ((c (contents morph)))
-    (if (functionp c) (funcall c) c)))
+    (if (functionp c)
+        (funcall c)
+        c)))
 
 ;;; ============= render =======================================================
 (defmethod render-prepare-to-show-text ((morph placed-morph))
@@ -294,14 +296,7 @@
   (draw-morph-label morph (render-text-for-color morph)))
 
 (defmethod render-text-for-color ((morph label-morph))
-  "Allow render to select text based on widget color"
-  (if (equal (id morph) 7)
-      ;; then - greeted label
-                (or                 ; or avoid repeating test and then
-                 (greeted (the-model))
-                 (label-text morph))
-                ;; else - normal widget
-                (label-text morph)))
+  (or (label-text morph) ""))
 
 (defmethod render ((morph pluggable-button-morph))
   (let ((fill (cond
