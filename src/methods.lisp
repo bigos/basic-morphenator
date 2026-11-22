@@ -66,33 +66,107 @@
 (defun backspace-key-p (key-name)
   (and (stringp key-name)
        (string-equal key-name "BackSpace")))
+
+(defun make-layout-spec (&key fixed-width fixed-height
+                           proportional-width proportional-height
+                           (off-axis-edge-width 0))
+  (make-instance 'layout-spec
+                 :fixed-width fixed-width
+                 :fixed-height fixed-height
+                 :proportional-width proportional-width
+                 :proportional-height proportional-height
+                 :off-axis-edge-width off-axis-edge-width))
+
+(defmethod layout-submorphs ((morph layout-morph))
+  (let* ((subs (submorphs morph))
+         (n (length subs)))
+    (when (> n 0)
+      (let* ((gap (or (separation morph) 10))
+             (total-gap (* gap (max 0 (1- n))))
+             (dir (direction morph))
+             (avail-w (max 0 (- (x (extent morph))
+                                (if (eq dir :horizontal) total-gap 0))))
+             (avail-h (max 0 (- (y (extent morph))
+                                (if (eq dir :vertical) total-gap 0))))
+             (fixed-sum 0)
+             (prop-sum 0.0))
+        ;; 1. Tally fixed sizes and proportional weights along the main axis
+        (dolist (sub subs)
+          (let ((spec (layout-spec sub)))
+            (if (eq dir :horizontal)
+                (cond
+                  ((and spec (proportional-width spec))
+                   (incf prop-sum (proportional-width spec)))
+                  ((and spec (fixed-width spec))
+                   (incf fixed-sum (fixed-width spec)))
+                  (t
+                   (incf fixed-sum (x (extent sub)))))
+                (cond
+                  ((and spec (proportional-height spec))
+                   (incf prop-sum (proportional-height spec)))
+                  ((and spec (fixed-height spec))
+                   (incf fixed-sum (fixed-height spec)))
+                  (t
+                   (incf fixed-sum (y (extent sub))))))))
+        ;; 2. Resize each child along main and cross axes, then position it
+        (let ((rem (max 0 (- (if (eq dir :horizontal) avail-w avail-h) fixed-sum))))
+          (dolist (sub subs)
+            (let* ((spec (layout-spec sub))
+                   (new-w (cond
+                            ((and (eq dir :horizontal) spec (proportional-width spec) (> prop-sum 0))
+                             (round (* rem (/ (proportional-width spec) prop-sum))))
+                            ((and spec (fixed-width spec))
+                             (fixed-width spec))
+                            ((and (eq dir :vertical) spec (proportional-width spec))
+                             (round (* avail-w (proportional-width spec))))
+                            (t (x (extent sub)))))
+                   (new-h (cond
+                            ((and (eq dir :vertical) spec (proportional-height spec) (> prop-sum 0))
+                             (round (* rem (/ (proportional-height spec) prop-sum))))
+                            ((and spec (fixed-height spec))
+                             (fixed-height spec))
+                            ((and (eq dir :horizontal) spec (proportional-height spec))
+                             (round (* avail-h (proportional-height spec))))
+                            (t (y (extent sub))))))
+              (setf (x (extent sub)) new-w
+                    (y (extent sub)) new-h)
+              (refresh-location sub)
+              (layout-submorphs sub))))))))
+
 ;;; ================= init gui =================================================
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
   (let
       ((world (make-instance 'world-morph))
+
        (view (make-instance 'layout-morph
                             :color "pink"
                             :direction :vertical
-                            :extent (make-instance 'extent :x 180 :y 50) ))
+                            :extent (make-instance 'extent :x 600 :y 400)
+                            :layout-spec (make-layout-spec :proportional-width 1.0
+                                                           :proportional-height 1.0)))
        (row  (make-instance 'layout-morph
                             :color "orange"
                             :direction :horizontal
-                            :extent (make-instance 'extent :x 180 :y 20)))
+                            :extent (make-instance 'extent :x 600 :y 30)
+                            :layout-spec (make-layout-spec :proportional-width 1.0
+                                                           :fixed-height 30)))
        (label (make-instance 'label-morph
                              :color "brown"
-                             :extent (make-instance 'extent :x 60 :y 20)
+                             :extent (make-instance 'extent :x 60 :y 30)
                              :contents "Name:"))
        (input (make-instance 'text-model-morph
                              :color "white"
-                             :extent (make-instance 'extent :x 50 :y 20)
+                             :extent (make-instance 'extent :x 50 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)
                              :model model))
        (button (make-instance 'pluggable-button-morph
                               :action-selector (lambda () (greet-me (the-model)))
                               :color "green"
                               :mouse-over-color "lime"
-                              :extent (make-instance 'extent :x 50 :y 20)
+                              :extent (make-instance 'extent :x 60 :y 30)
                               :label "Greet"))
+
        (greeting-label (make-instance 'label-morph
                                       :color "blue"
                                       :extent (make-instance 'extent :x 50 :y 20)
@@ -268,6 +342,10 @@
      (when (and (contains-point-p morph x y)
                 (secondary-action-selector morph))
        (funcall (secondary-action-selector morph))))))
+(defmethod handle-event-mouse-button ((morph text-model-morph) (event symbol) button x y)
+  (declare (ignore button x y))
+  (when (eq event :pressed)
+    (setf (focused-morph morph) morph)))
 
 (defgeneric handles-mouse-over-p (morph)
   (:method ((morph morph)) nil))
@@ -303,9 +381,6 @@
   (cairo:translate (x (location morph)) (y (location morph)))
   (unwind-protect (call-next-method)
     (cairo:restore)))
-
-(defmethod render :before ((morph morph))
-  (refresh-location morph))             ;TODO move refreshing locations to layout morphs, with ad-morph/remove-morph etc
 
 (defmethod render ((morph placed-morph))
   (draw-morph-box morph))
@@ -359,6 +434,17 @@
   (draw-morph-label morph
                     (format nil "~A" (widget-text morph))
                     :color "red"))
+(defmethod render ((morph text-model-morph))
+  (call-next-method)
+  (when (eq (focused-morph morph) morph)
+    (let ((ext (extent morph)))
+      (gui-color:set-rgba "blue")
+      (cairo:set-line-width 2.0)
+      (cairo:rectangle 1 1 (- (x ext) 2) (- (y ext) 2))
+      (cairo:stroke)))
+  (draw-morph-label morph
+                    (format nil "~A" (widget-text morph))
+                    :color "red"))
 
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)
@@ -379,9 +465,14 @@
 (defmethod resize ((morph world-morph) w h)
   "Resize the world on window resize"
   (if (extent morph)
-      (progn
-        (setf (x (extent morph)) w)
-        (setf (y (extent morph)) h))
+      (setf (x (extent morph)) w
+            (y (extent morph)) h)
       (setf (extent morph) (make-instance 'extent :x w :y h)))
   (dolist (sub (submorphs morph))
+    (let ((spec (layout-spec sub)))
+      (when spec
+        (when (proportional-width spec)
+          (setf (x (extent sub)) (round (* w (proportional-width spec)))))
+        (when (proportional-height spec)
+          (setf (y (extent sub)) (round (* h (proportional-height spec)))))))
     (layout-submorphs sub)))
