@@ -197,43 +197,40 @@
         ;; https://specifications.freedesktop.org/icon-naming-spec/latest/#names
         :logo-icon-name  "applications-development"))
 
+;;; ------------- main GUI ------------------------------------------------------
+(defun configure-gui-hooks ()
+  (setf gui-drawing:*client-fn-draw-objects* 'basic-morphenator:draw-window
+        gui-window-gtk:*client-fn-menu-bar*  'basic-morphenator:menu-bar
+        gui-events:*client-fn-process-event* 'basic-morphenator:process-event
+        gui-window-gtk:*initial-window-width*  600
+        gui-window-gtk:*initial-window-height* 400
+        gui-window-gtk:*initial-title*         "Basic-Morphenator"))
+
+(defun initialize-application-state ()
+  (setf *basic-morphenator-model* (make-instance 'basic-morphenator-model)
+        boxes:*model* (the-model))
+  (init-gui (the-model)))
+
+(defun start-testing-window ()
+  (let ((experimental-window (make-instance 'basic-morphenator-window)))
+    (setf *environment* :testing
+          (gui-window::gir-window experimental-window) :testing
+          gui-app:*lisp-app* (gui-app:make-lisp-app nil))
+    (gui-window-gtk:window-creation-from-simulation :testing experimental-window)
+    experimental-window))
+
 (defun main (&key (testing nil))
-  (setf
-   gui-drawing:*client-fn-draw-objects* 'basic-morphenator:draw-window
-   gui-window-gtk:*client-fn-menu-bar*  'basic-morphenator:menu-bar
-   gui-events:*client-fn-process-event* 'basic-morphenator:process-event
-   gui-window-gtk:*initial-window-width*    600
-   gui-window-gtk:*initial-window-height*   400
-   gui-window-gtk:*initial-title*           "Basic-Morphenator"
-   ;; gui-window-gtk:*client-fn-menu-bar* 'basic-morphenator::menu-bar
-   ;; gui-window-gtk:*client-fn-open-file* 'basic-morphenator:open-file
-   ;; gui-window-gtk:*client-fn-cancel-open-file* 'basic-morphenator:cancel-open-file
-   ;; gui-window-gtk:*client-fn-save-file* 'basic-morphenator:save-file
-   ;; gui-window-gtk:*client-fn-cancel-save-file* 'basic-morphenator:cancel-save-file
-
-   *basic-morphenator-model* (make-instance 'basic-morphenator-model)
-
-   boxes:*model* (the-model))
-
-  (init-gui (the-model))
-
+  (configure-gui-hooks)
+  (initialize-application-state)
   (if testing
-      ;; then
-      (let ((experimental-window (make-instance 'basic-morphenator-window)))
-        (setf *environment* :testing)
-        (setf (gui-window::gir-window experimental-window) :testing)
-        (setf gui-app:*lisp-app* (gui-app:make-lisp-app nil))
-        (gui-window-gtk:window-creation-from-simulation :testing experimental-window) experimental-window)
-      ;; else
+      (start-testing-window)
       (progn
         (setf *environment* :development)
         (gui-window-gtk:window-main (make-instance 'basic-morphenator-window)))))
 
-;; (main)
-;;; type annotations
 (-> experiment () null)
 (defun experiment ()
-  (let ((ew (main :testing T)))
+  (let ((ew (main :testing t)))
     (process-event ew :resize '(400 500))
     (process-event ew :motion-enter '(0 0))
     (process-event ew :motion '(10 10))
