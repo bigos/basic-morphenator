@@ -121,16 +121,19 @@
     (setf (last-morph-id morph) (id morph))))
 
 ;;; =============== add morph ==================================================
+(defgeneric layout-submorphs (morph)
+  (:method ((morph morph)) nil))
+
+(defmethod layout-submorphs ((morph layout-morph))
+  (dolist (sub (submorphs morph))
+    (refresh-location sub)
+    (layout-submorphs sub)))
+
 (defmethod add-morph ((morph morph) (submorph morph))
   (setf (owner submorph) morph)
-  (setf (submorphs morph) (append (submorphs morph) (list submorph))))
-
-(defmethod add-morph :after ((morph layout-morph) (submorph morph))
-  (add-morph-after-aux morph (direction morph)))
-(defmethod add-morph-after-aux ((morph layout-morph) (direction (eql :horizontal)))
-  (warn "adding layout element ~s" direction))
-(defmethod add-morph-after-aux ((morph layout-morph) (direction (eql :vertical)))
-  (warn "adding layout element ~s" direction))
+  (setf (submorphs morph) (append (submorphs morph) (list submorph)))
+  (refresh-location submorph)
+  (layout-submorphs morph))
 
 ;;; ================== location ================================================
 ;;; Ensure every placed-morph starts with a valid (0, 0) location
@@ -182,14 +185,6 @@
   ;; nesting is handled by the cairo translate, nothing to recompute
   (unless (location morph)
     (setf (location morph) (build-location 0 0))))
-
-(defmethod refresh-location-with-owner :after ((morph morph) (owner-morph layout-morph))
-  (let ((oe (extent owner-morph)) (loc (location morph)) (ext (extent morph)))
-    (when (and oe loc ext
-               (or (< (x loc) 0) (< (y loc) 0)
-                   (> (+ (x loc) (x ext)) (x oe))
-                   (> (+ (y loc) (y ext)) (y oe))))
-      (warn "morph ~s has elements outside its owner" morph))))
 
 (defmethod refresh-location-with-owner :after ((morph morph) (owner-morph layout-morph))
   (let ((oe (extent owner-morph)) (loc (location morph)) (ext (extent morph)))
@@ -387,5 +382,6 @@
       (progn
         (setf (x (extent morph)) w)
         (setf (y (extent morph)) h))
-      (progn
-        (setf (extent morph) (make-instance 'extent :x w :y h)))))
+      (setf (extent morph) (make-instance 'extent :x w :y h)))
+  (dolist (sub (submorphs morph))
+    (layout-submorphs sub)))
