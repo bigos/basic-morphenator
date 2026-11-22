@@ -53,6 +53,15 @@
              (focused-morph world))
         (find-text-morph world))))
 
+(defun delete-last-char (str)
+  (let ((s (or str "")))
+    (if (> (length s) 0)
+        (subseq s 0 (1- (length s)))
+        "")))
+
+(defun backspace-key-p (key-name)
+  (and (stringp key-name)
+       (string-equal key-name "BackSpace")))
 ;;; ================= init gui =================================================
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
