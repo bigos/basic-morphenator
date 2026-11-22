@@ -133,6 +133,52 @@
               (refresh-location sub)
               (layout-submorphs sub))))))))
 
+(defun text-advance-width (str)
+  "Return the horizontal pixel advance of STR under the current Cairo font."
+  (multiple-value-bind (a b c d x-adv)
+      (cairo:text-extents str)
+    (if (numberp x-adv)
+        x-adv
+        ;; Fallback if binding returns a text-extents struct/object in A
+        (cairo:text-extents-x-advance a))))
+
+(defun clamp-cursor (morph)
+  (let ((len (length (widget-text morph))))
+    (setf (cursor-pos morph) (max 0 (min (cursor-pos morph) len)))))
+
+(defun insert-at-cursor (morph str)
+  (clamp-cursor morph)
+  (let* ((txt (widget-text morph))
+         (pos (cursor-pos morph)))
+    (setf (widget-text morph)
+          (concatenate 'string (subseq txt 0 pos) str (subseq txt pos)))
+    (incf (cursor-pos morph) (length str))))
+
+(defun delete-before-cursor (morph)
+  (clamp-cursor morph)
+  (let* ((txt (widget-text morph))
+         (pos (cursor-pos morph)))
+    (when (> pos 0)
+      (setf (widget-text morph)
+            (concatenate 'string (subseq txt 0 (1- pos)) (subseq txt pos)))
+      (decf (cursor-pos morph)))))
+
+(defun cursor-index-at-local-x (morph local-x)
+  "Find the closest character index in MORPH for a click at LOCAL-X."
+  (let* ((txt (widget-text morph))
+         (len (length txt))
+         (pad 4)
+         (target-x (+ (- local-x pad) (scroll-x morph))))
+    (if (<= target-x 0)
+        0
+        (loop with prev-w = 0
+              for i from 1 to len
+              for w = (text-advance-width (subseq txt 0 i))
+              when (< target-x (/ (+ prev-w w) 2.0))
+                return (1- i)
+              do (setf prev-w w)
+              finally (return len)))))
+
 ;;; ================= init gui =================================================
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
@@ -338,9 +384,14 @@
                 (secondary-action-selector morph))
        (funcall (secondary-action-selector morph))))))
 (defmethod handle-event-mouse-button ((morph text-model-morph) (event symbol) button x y)
-  (declare (ignore button x y))
+  (declare (ignore button y))
   (when (eq event :pressed)
-    (setf (focused-morph morph) morph)))
+    (setf (focused-morph morph) morph)
+    (multiple-value-bind (dx dy) (morph-global-offset morph)
+      (declare (ignore dy))
+      (render-prepare-to-show-text morph)
+      (setf (cursor-pos morph)
+            (cursor-index-at-local-x morph (- x dx))))))
 
 (defgeneric handles-mouse-over-p (morph)
   (:method ((morph morph)) nil))
@@ -425,21 +476,43 @@
     str))
 
 (defmethod render ((morph text-model-morph))
-  (call-next-method)
-  (draw-morph-label morph
-                    (format nil "~A" (widget-text morph))
-                    :color "red"))
-(defmethod render ((morph text-model-morph))
-  (call-next-method)
+  (draw-morph-box morph)
+  (let* ((ext (extent morph))
+         (w (x ext))
+         (h (y ext))
+         (pad 4)
+         (txt (format nil "~A" (widget-text morph))))
+    (clamp-cursor morph)
+    (cairo:save)
+    (cairo:rectangle pad 0 (max 0 (- w (* 2 pad))) h)
+    (cairo:clip)
+    (render-prepare-to-show-text morph)
+    (let* ((prefix (subseq txt 0 (cursor-pos morph)))
+           (cursor-x (text-advance-width prefix))
+           (inner-w (max 0 (- w (* 2 pad)))))
+      (when (> (- cursor-x (scroll-x morph)) inner-w)
+        (setf (scroll-x morph) (- cursor-x inner-w)))
+      (when (< (- cursor-x (scroll-x morph)) 0)
+        (setf (scroll-x morph) cursor-x))
+      (let ((draw-x (- pad (scroll-x morph))))
+        (gui-color:set-rgba "red")
+        (cairo:move-to draw-x 15)
+        (cairo:show-text txt)
+        (when (eq (focused-morph morph) morph)
+          (let ((caret-x (+ draw-x cursor-x)))
+            (gui-color:set-rgba "black")
+            (cairo:set-line-width 1.5)
+            (cairo:move-to caret-x 3)
+            (cairo:line-to caret-x (- h 3))
+            (cairo:stroke)))))
+    (cairo:restore))
   (when (eq (focused-morph morph) morph)
     (let ((ext (extent morph)))
       (gui-color:set-rgba "blue")
       (cairo:set-line-width 2.0)
       (cairo:rectangle 1 1 (- (x ext) 2) (- (y ext) 2))
-      (cairo:stroke)))
-  (draw-morph-label morph
-                    (format nil "~A" (widget-text morph))
-                    :color "red"))
+      (cairo:stroke))))
+
 
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)
