@@ -306,11 +306,38 @@
     (draw-morph-box morph fill))
   (draw-morph-label morph (label morph)))
 
+(defgeneric widget-text (morph)
+  (:documentation "Return the current text displayed by MORPH."))
+
+(defgeneric (setf widget-text) (value morph)
+  (:documentation "Update the text stored or bound by MORPH."))
+
+(defmethod widget-text ((morph text-model-morph))
+  (cond
+    ((text-getter morph)
+     (funcall (text-getter morph) (model morph)))
+    ((and (model morph) (typep (model morph) 'basic-morphenator-model))
+     (or (entered (model morph)) ""))
+    (t
+     (or (text morph) ""))))
+
+(defmethod (setf widget-text) (value (morph text-model-morph))
+  (let ((str (or value "")))
+    (cond
+      ((text-setter morph)
+       (funcall (text-setter morph) str (model morph)))
+      ((and (model morph) (typep (model morph) 'basic-morphenator-model))
+       (setf (entered (model morph)) str))
+      (t
+       (setf (text morph) str)))
+    str))
+
 (defmethod render ((morph text-model-morph))
   (call-next-method)
   (draw-morph-label morph
-                    (format nil "~A" (entered (the-model)))
+                    (format nil "~A" (widget-text morph))
                     :color "red"))
+
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)
   (setf (last-morph-id morph) 1

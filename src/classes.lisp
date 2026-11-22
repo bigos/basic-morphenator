@@ -213,6 +213,8 @@
    (the-scroller-extent)))
 
 (defclass/std text-model-morph (pluggable-scroll-pane)
-  ())
+  ((text :std "")
+   (text-getter :type (or null function))
+   (text-setter :type (or null function))))
 
 ;;; morphic - composite widgets ------------------------------------------------
