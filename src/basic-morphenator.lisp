@@ -5,9 +5,9 @@
 (in-package #:basic-morphenator)
 ;;; (main)
 
-(defparameter *basic-morphenator-model* nil)
-(defparameter *environment* nil)
-(defparameter *window-size* nil)
+(defvar *basic-morphenator-model* nil)
+(defvar *environment* nil)
+(defvar *window-size* nil)
 
 ;;; ============================================================================
 

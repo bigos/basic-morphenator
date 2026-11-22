@@ -242,10 +242,6 @@
     (setf (mouse-over-morphs handler) new-chain)))
 
 ;;; ================= events ===================================================
-(defun morph-target-world (morph)
-  (or (morph-world morph)
-      (current-world)))
-
 (defun release-world-pressed-morph (world)
   (when (and world (pressed-morph world))
     (setf (is-pressed (pressed-morph world)) nil
