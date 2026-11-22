@@ -14,7 +14,9 @@
                  #:defclass-std
                  )
     :pathname "src/"
-  :components ((:file "basic-morphenator")
+  :components ((:file "packages")
+               (:file "basic-morphenator")
+               (:file "helpers")
                (:file "classes")
                (:file "gui-color")
                (:file "methods")

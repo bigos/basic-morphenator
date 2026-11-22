@@ -1,29 +1,5 @@
 (declaim (optimize (speed 2) (safety 3) (debug 3)))
 
-(defpackage #:basic-morphenator
-  (:use #:cl)
-  (:import-from :serapeum
-                ~>
-                ->)
-  (:import-from :defclass-std
-                defclass/std)
-  (:import-from :boxes
-                boxes-window
-                width
-                height
-                )
-  ;; (:local-nicknames (#:sy #:sycamore))
-  (:export
-   main
-   draw-window
-   process-event
-   menu-bar
-   ;; open-file
-   ;; cancel-open-file
-   ;; save-file
-   ;; cancel-save-file
-   ))
-
 ;;; ============================================================================
 ;; (ql:quickload :basic-morphenator)
 (in-package #:basic-morphenator)
