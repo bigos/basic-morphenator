@@ -34,9 +34,7 @@
    (properties)
    (id)
    (private-display-bounds)
-   (last-morph-id :allocation :class :documentation "last-id for new morph creation" )
-   (focused-morph :allocation :class :documentation "morph that has keyboard focus")
-   (pressed-morph :allocation :class :documentation "morph that was clicked")))
+   (last-morph-id :allocation :class :documentation "last-id for new morph creation" )))
 
 (defclass/std placed-morph (morph)
   ((location)

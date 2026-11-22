@@ -32,4 +32,11 @@
 (defun the-handler ()
   (mouse-over-handler (active-hand (world (the-model)))))
 
-;;; morph classes and methods sit in separate files
+(defun morph-world (morph)
+  (loop for m = morph then (owner m)
+        while m
+        when (typep m 'world-morph) return m))
+
+(defun current-world ()
+  (let ((model (the-model)))
+    (and model (world model))))
