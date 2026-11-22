@@ -16,10 +16,10 @@
     :pathname "src/"
   :components ((:file "packages")
                (:file "basic-morphenator")
-               (:file "helpers")
                (:file "classes")
                (:file "gui-color")
                (:file "methods")
+               (:file "helpers")
                (:file "main")
                )
     :description "basic morphenator for GUI for clops in separate system")
