@@ -85,7 +85,7 @@
     ((:motion :motion-enter)
      (destructuring-bind ((x y)) args
        (update-text-drag-selection x)
-       (process-mouse-over (the-handler) (morphs-at (world (the-model)) x y))))
+       (process-mouse-over (the-handler) (morphs-at (current-model) x y))))
     (:motion-leave
      (process-mouse-over (the-handler) nil)
      (gui-app:mouse-motion-leave))
