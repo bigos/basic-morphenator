@@ -72,7 +72,7 @@
                      (format nil "~A~A" (entered model) entered)))))))))
 
 (defun find-the-morph (x y)
-  (car (last (morphs-at (current-model) x y))))
+  (car (last (morphs-at (current-world) x y))))
 
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
   (unless (member event '(:timeout :motion))
@@ -85,7 +85,7 @@
     ((:motion :motion-enter)
      (destructuring-bind ((x y)) args
        (update-text-drag-selection x)
-       (process-mouse-over (the-handler) (morphs-at (current-model) x y))))
+       (process-mouse-over (the-handler) (morphs-at (current-world) x y))))
     (:motion-leave
      (process-mouse-over (the-handler) nil)
      (gui-app:mouse-motion-leave))
@@ -96,7 +96,7 @@
        (handle-event-mouse-button (find-the-morph x y)
                                   event button x y)))
     (:released
-     (let* ((w (current-model))
+     (let* ((w (current-world))
             (fm (and w (focused-morph w))))
        (finish-text-selection fm))
      (destructuring-bind ((button x y)) args
@@ -109,7 +109,7 @@
        (setf (width lisp-window) w
              (height lisp-window) h
              *window-size* (cons w h))
-       (resize (current-model) w h)))
+       (resize (current-world) w h)))
     (:key-pressed
      (destructuring-bind ((entered key-name key-code mods)) args
        ;; example of accessing gtk window object
@@ -152,7 +152,7 @@
 (defmethod draw-window ((window basic-morphenator-window))
   ;; TODO review drawing window
   (declare (ignore window))
-  (render-world (current-model)))
+  (render-world (current-world)))
 
 ;;; main =======================================================================
 (defun menu-bar (app lisp-window)
