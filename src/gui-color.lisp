@@ -23,9 +23,19 @@
         (cffi:with-foreign-slots ((red green blue alpha) rgba (:struct gdk-rgba))
           (list valid-color red green blue alpha))))))
 
+(defparameter *rgba-cache* (make-hash-table :test #'equal))
+
+(defun rgba-for-color (color)
+  (multiple-value-bind (cached presentp)
+      (gethash color *rgba-cache*)
+    (if presentp
+        cached
+        (let ((parsed (color-to-rgba color)))
+          (unless (first parsed)
+            (error "~S is not a valid color" color))
+          (let ((rgba-values (rest parsed)))
+            (setf (gethash color *rgba-cache*) rgba-values)
+            rgba-values)))))
+
 (defun set-rgba (color)
-  ;; cache parsed colors
-  (let ((parsed-color (color-to-rgba color)))
-    (if (first parsed-color)
-        (apply 'cairo:set-source-rgba (rest parsed-color))
-        (error "~S is not a valid color" color))))
+  (apply #'cairo:set-source-rgba (rgba-for-color color)))
