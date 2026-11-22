@@ -8,9 +8,7 @@
    (greeted :type (or null string))))
 
 (defclass/std location ()
-  ((absolute-x)
-   (absolute-y)
-   (x)
+  ((x)
    (y)))
 
 (defclass/std extent ()

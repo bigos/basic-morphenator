@@ -144,14 +144,10 @@
 
 (defmethod prev-sibling-axis-sum ((morph morph) axis-fn)
   (let ((gap 10))
-    (loop
-      for m in (submorphs (owner morph))
-      until (eq (id m)
-                (id morph))
-      sum (+
-           (~> m extent (funcall axis-fn _))
-           (~> m location (funcall axis-fn _))
-           gap))))
+    (loop for m in (submorphs (owner morph))
+          until (eq m morph)
+          sum (+ (~> m extent (funcall axis-fn _)) gap))))
+
 (defmethod prev-sibling-widths-sum ((morph morph))
   (prev-sibling-axis-sum morph #'x))
 (defmethod prev-sibling-heights-sum ((morph morph))
@@ -164,28 +160,25 @@
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
   (refresh-location-with-owner-direction-aux morph owner-morph (direction owner-morph)))
-(defmethod refresh-location-with-owner-direction-aux ((morph morph) (owner-morph layout-morph) (direction (eql :vertical)))
-  (let ((owner-morph-location (~> owner-morph location)))
-    (let ((new-location
-            (make-instance 'location
-                           :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph morph-location-x))
-                           :absolute-y (+ (prev-sibling-heights-sum morph)
-                                          (~> owner-morph-location absolute-y)
-                                          0)
-                           :x (~> morph morph-location-x)
-                           :y (~> morph morph-location-y))))
-      (setf (location morph) new-location))))
-(defmethod refresh-location-with-owner-direction-aux ((morph morph) (owner-morph layout-morph) (direction (eql :horizontal)))
-  (let ((owner-morph-location (~> owner-morph location)))
-    (let ((new-location
-            (make-instance 'location
-                           :absolute-x (+ (prev-sibling-widths-sum morph)
-                                          (~> owner-morph-location absolute-x)
-                                          0)
-                           :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
-                           :x (~> morph morph-location-x)
-                           :y (~> morph morph-location-y))))
-      (setf (location morph) new-location))))
+
+(defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
+  (ecase (direction owner-morph)
+    (:vertical
+     (setf (location morph)
+           (make-instance 'location
+                          :x (local-x morph)                  ; keep as padding offset
+                          :y (prev-sibling-heights-sum morph))))
+    (:horizontal
+     (setf (location morph)
+           (make-instance 'location
+                          :x (prev-sibling-widths-sum morph)
+                          :y (local-y morph))))))
+
+(defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
+  ;; plain (non-layout) owner: child keeps its own local offset;
+  ;; nesting is handled by the cairo translate, nothing to recompute
+  (unless (location morph)
+    (setf (location morph) (make-instance 'location :x 0 :y 0))))
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
   (let ((owner-morph-location (~> owner-morph location)))
@@ -197,34 +190,31 @@
                          :y (~> morph morph-location-y)))))
 
 (defmethod refresh-location-with-owner :after ((morph morph) (owner-morph layout-morph))
-  ;; warn when absolute coordinates and extent are outside owner
-  (let ((owner-morph-location (location owner-morph))
-        (owner-morph-extent   (extent owner-morph))
-        (morph-location (location morph) )
-        (morph-extent   (extent morph)))
-    (when (or (< (~> morph-location absolute-x) (~> owner-morph-location absolute-x))
-              (< (~> morph-location absolute-y) (~> owner-morph-location absolute-y))
-              (> (+ (~> morph-location absolute-x) (~> morph-extent x))
-                 (+ (~> owner-morph-location absolute-x) (~> owner-morph-extent x)))
-              (> (+ (~> morph-location absolute-y) (~> morph-extent y))
-                 (+ (~> owner-morph-location absolute-y) (~> owner-morph-extent y))))
-      (warn "morph ~s it has elements outside its owner" morph)
-      )))
+  (let ((oe (extent owner-morph)) (loc (location morph)) (ext (extent morph)))
+    (when (and oe loc ext
+               (or (< (x loc) 0) (< (y loc) 0)
+                   (> (+ (x loc) (x ext)) (x oe))
+                   (> (+ (y loc) (y ext)) (y oe))))
+      (warn "morph ~s has elements outside its owner" morph))))
 
 ;;; ---------------- mouse location --------------------------------------------
+(defun morph-global-offset (morph)
+  (values
+   (loop for m = morph then (owner m) while m
+         sum (if (and (location m) (x (location m))) (x (location m)) 0))
+   (loop for m = morph then (owner m) while m
+         sum (if (and (location m) (y (location m))) (y (location m)) 0))))
+
 (defmethod contains-point-p ((morph morph) x y)
   (declare (ignore x y))
   nil)
 (defmethod contains-point-p ((morph boxed-morph) x y)
-  (let ((loc (location morph))
-        (ext (extent morph)))
-    (when (and loc ext
-               (absolute-x loc) (absolute-y loc)
-               (x ext) (y ext))
-      (let ((left (absolute-x loc))
-            (top  (absolute-y loc)))
-        (and (<= left x) (< x (+ left (x ext)))
-             (<= top  y) (< y (+ top  (y ext))))))))
+  (let ((ext (extent morph)))
+    (when ext
+      (multiple-value-bind (dx dy) (morph-global-offset morph)
+        (let ((lx (- x dx)) (ly (- y dy)))
+          (and (<= 0 lx) (< lx (x ext))
+               (<= 0 ly) (< ly (y ext))))))))
 
 (defgeneric morphs-at (morph x y)
   (:documentation "Morphs containing the point, outermost first.")
@@ -380,8 +370,6 @@
   (setf (owner morph) nil
         (pressed-morph morph) nil
         (location morph) (make-instance 'location
-                                        :absolute-x 0
-                                        :absolute-y 0
                                         :x 0
                                         :y 0)
         (extent morph) (make-instance 'extent :x (car *window-size*) :y (cdr *window-size*))))
