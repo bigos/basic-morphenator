@@ -72,15 +72,48 @@
          (setf (entered model)
                (format nil "~A~A" (entered model) entered)))))))
 
+(defun handle-menu-action (action)
+  (cond
+    ((equalp action "new")
+     (format t "menu selected new~%")
+     (new-file (the-model)))
+    ;; ((equalp action "open")
+    ;;  (format t "menu selected open~%")
+    ;;  (gui-window-gtk:present-file-open-dialog))
+    ;; ((equalp action "save-as")
+    ;;  (format t "menu selected save-as~%")
+    ;;  (file-save-selector))
+    ((equalp action "quit")
+     (format t "menu selected quit~%")
+     (gui-window-gtk:close-all-windows-and-quit))
+    ;; ((equalp action "toggle-line-numbers")
+    ;;  (line-numbers-toggle (the-model)))
+    ((equalp action "about")
+     (format t "menu selected about~%")
+     (gui-window-gtk:present-about-dialog (about-dialog)))
+    (t
+     (format t "unhandled menu action ~S~%" action))))
+
+(defun handle-window-resize (lisp-window w h)
+  (gui-window:window-resize w h lisp-window)
+  (setf (width lisp-window) w
+        (height lisp-window) h
+        *window-size* (cons w h))
+  (resize (current-world) w h))
+
+(defun dispatch-mouse-button (event args)
+  (destructuring-bind ((button x y)) args
+    (handle-event-mouse-button (find-the-morph x y)
+                               event button x y)))
 
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
-  (unless (member event '(:timeout :motion))
-    (unless (eq *environment* :testing) (warn "!!! event ~S ~S" event args))
-    )
+  (unless (or (member event '(:timeout :motion))
+              (eq *environment* :testing))
+    (warn "!!! event ~S ~S" event args))
+
   (case event
-    (:timeout
-     ;; do nothing yet
-     )
+    ((:timeout :focus-enter :focus-leave :scroll)
+     nil)
     ((:motion :motion-enter)
      (destructuring-bind ((x y)) args
        (update-text-drag-selection x)
@@ -88,66 +121,31 @@
     (:motion-leave
      (process-mouse-over (the-handler) nil)
      (gui-app:mouse-motion-leave))
-    (:focus-enter)
-    (:focus-leave)
     (:pressed
-     (destructuring-bind ((button x y)) args
-       (handle-event-mouse-button (find-the-morph x y)
-                                  event button x y)))
+     (dispatch-mouse-button event args))
     (:released
      (let* ((w (current-world))
             (fm (and w (focused-morph w))))
        (finish-text-selection fm))
-     (destructuring-bind ((button x y)) args
-       (handle-event-mouse-button (find-the-morph x y)
-                                  event button x y)))
-    (:scroll)
+     (dispatch-mouse-button event args))
     (:resize
      (destructuring-bind ((w h)) args
-       (gui-window:window-resize w h lisp-window)
-       (setf (width lisp-window) w
-             (height lisp-window) h
-             *window-size* (cons w h))
-       (resize (current-world) w h)))
+       (handle-window-resize lisp-window w h)))
     (:key-pressed
      (destructuring-bind ((entered key-name key-code mods)) args
-       ;; example of accessing gtk window object
        (format t "~&>>> key pressed ~S~%" (list entered key-name key-code mods))
        (handle-key-pressed entered key-name key-code mods lisp-window)))
     (:menu-simple
      (destructuring-bind ((action)) args
-       (cond
-         ;; File
-         ((equalp action "new")
-          (format T "menu selected new~%")
-          (new-file (the-model)))
-         ;; ((equalp action "open")
-         ;;  (format T "menu selected open~%")
-         ;;  (gui-window-gtk:present-file-open-dialog))
-         ;; ((equalp action "save-as")
-         ;;  (format T "menu selected save-as~%")
-         ;;  (file-save-selector))
-         ((equalp action "quit")
-          (format T "menu selected quit~%")
-          (gui-window-gtk:close-all-windows-and-quit))
-         ;; View
-         ;; ((equalp action "toggle-line-numbers")
-         ;;  (line-numbers-toggle (the-model)))
-         ;; Help
-         ((equalp action "about")
-          (format T "menu selected about~%")
-          (gui-window-gtk:present-about-dialog (about-dialog)))
-         (T
-          (format T "unhandled menu action ~S~%" action)))
-
+       (handle-menu-action action)
        (gui-window:steal-focus lisp-window)))
     (otherwise
-     (unless (eq event  :key-released)
+     (unless (eq event :key-released)
        (warn "not handled event ~S ~S" event args))))
 
-  ;; redrawing ------------------------------
-  (gui-window:redraw-canvas lisp-window (format  nil "EVENT_~A" event)))
+  (gui-window:redraw-canvas lisp-window (format nil "EVENT_~A" event)))
 
+;;; ========================
 (defmethod draw-window ((window basic-morphenator-window))
   ;; TODO review drawing window
   (declare (ignore window))
