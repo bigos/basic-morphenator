@@ -299,9 +299,9 @@
       ;; then - greeted label
                 (or                 ; or avoid repeating test and then
                  (greeted (the-model))
-                 (contents morph))
+                 (label-text morph))
                 ;; else - normal widget
-                (contents morph)))
+                (label-text morph)))
 
 (defmethod render ((morph pluggable-button-morph))
   (let ((fill (cond
