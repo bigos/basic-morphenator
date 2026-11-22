@@ -73,7 +73,6 @@
   (unless (typep morph 'world-morph)
     (setf (id morph) (1+ (last-morph-id morph)))
     (setf (last-morph-id morph) (id morph))))
-
 ;;; =============== add morph ==================================================
 (defgeneric layout-submorphs (morph)
   (:method ((morph morph)) nil))
@@ -239,55 +238,55 @@
     (setf (mouse-over-morphs handler) new-chain)))
 
 ;;; ================= events ===================================================
+
 (defmethod handle-event-mouse-button ((morph null) (event symbol) button x y)
+  (declare (ignore button))
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
-  (setf morph (world (the-model)))
-  (warn "pressed is ~S" (pressed-morph morph))
-  (when (and (eq event :released)
-             (pressed-morph morph))
-    (warn "releasing the button")
-    (setf (is-pressed (pressed-morph morph)) nil)
-    (setf (pressed-morph morph) nil)
-    (warn "after releasing ~s" (pressed-morph morph))))
+  (let ((w (current-world)))
+    (when (eq event :released)
+      (release-world-pressed-morph w))))
+
 (defmethod handle-event-mouse-button ((morph morph) (event symbol) button x y)
+  (declare (ignore button))
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
-  (warn "pressed is ~S" (pressed-morph morph))
-  (when (and (eq event :released)
-             (pressed-morph morph))
-    (warn "releasing the button")
-    (setf (is-pressed (pressed-morph morph)) nil)
-    (setf (pressed-morph morph) nil)
-    (warn "after releasing ~s" (pressed-morph morph))))
+  (let ((w (morph-target-world morph)))
+    (when (eq event :released)
+      (release-world-pressed-morph w))))
+
 (defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) button x y)
-  (case event
-    (:pressed
-     (setf (is-pressed morph) T)
-     (setf (pressed-morph morph) morph)
-     (when (and (contains-point-p morph x y)
-                (action-selector morph))
-       (funcall (action-selector morph))))
-    (:released
-     (when (pressed-morph morph)
-       (setf (is-pressed (pressed-morph morph)) nil)
-       (setf (pressed-morph morph) nil))
-     (when (and (contains-point-p morph x y)
-                (secondary-action-selector morph))
-       (funcall (secondary-action-selector morph))))))
+  (declare (ignore button))
+  (let ((w (morph-target-world morph)))
+    (case event
+      (:pressed
+       (setf (is-pressed morph) t)
+       (when w
+         (setf (pressed-morph w) morph))
+       (when (and (contains-point-p morph x y)
+                  (action-selector morph))
+         (funcall (action-selector morph))))
+      (:released
+       (release-world-pressed-morph w)
+       (when (and (contains-point-p morph x y)
+                  (secondary-action-selector morph))
+         (funcall (secondary-action-selector morph)))))))
+
 (defmethod handle-event-mouse-button ((morph text-model-morph) (event symbol) button x y)
   (declare (ignore button y))
-  (case event
-    (:pressed
-     (setf (focused-morph morph) morph)
-     (multiple-value-bind (dx dy) (morph-global-offset morph)
-       (declare (ignore dy))
-       (let ((idx (cursor-index-at-local-x morph (- x dx))))
-         (setf (cursor-pos morph) idx
-               (selection-start morph) idx
-               (is-selecting morph) t))))
-    (:released
-     (setf (is-selecting morph) nil)
-     (when (eql (selection-start morph) (cursor-pos morph))
-       (setf (selection-start morph) nil)))))
+  (let ((w (morph-target-world morph)))
+    (case event
+      (:pressed
+       (when w
+         (setf (focused-morph w) morph))
+       (multiple-value-bind (dx dy) (morph-global-offset morph)
+         (declare (ignore dy))
+         (let ((idx (cursor-index-at-local-x morph (- x dx))))
+           (setf (cursor-pos morph) idx
+                 (selection-start morph) idx
+                 (is-selecting morph) t))))
+      (:released
+       (setf (is-selecting morph) nil)
+       (when (eql (selection-start morph) (cursor-pos morph))
+         (setf (selection-start morph) nil))))))
 
 (defun update-text-drag-selection (x)
   (let ((fm (let ((w (world (the-model)))) (and w (focused-morph w)))))
@@ -423,6 +422,7 @@
   (setf (last-morph-id morph) 1
         (id morph) 1)
   (setf (owner morph) nil
+        (focused-morph morph) nil
         (pressed-morph morph) nil
         (location morph) (build-location 0 0)
         (extent morph) (make-instance 'extent

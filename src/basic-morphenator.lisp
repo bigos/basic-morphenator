@@ -40,3 +40,16 @@
 (defun current-world ()
   (let ((model (the-model)))
     (and model (world model))))
+
+(defun morph-target-world (morph)
+  (or (morph-world morph)
+      (current-world)))
+
+(defun release-world-pressed-morph (world)
+  (when (and world (pressed-morph world))
+    (setf (is-pressed (pressed-morph world)) nil
+          (pressed-morph world) nil)))
+
+(defun morph-has-focus-p (morph)
+  (let ((w (morph-target-world morph)))
+    (and w (eq (focused-morph w) morph))))
