@@ -2,11 +2,16 @@
 
 (in-package #:basic-morphenator)
 
-(defun clear-text-morph (text-morph)
-  (setf (widget-text text-morph) ""
-        (cursor-pos text-morph) 0
-        (scroll-x text-morph) 0)
-  (clear-selection text-morph))
+
+(defun printable-input-p (entered ctrl-p)
+  (and (not ctrl-p)
+       entered
+       (stringp entered)
+       (> (length entered) 0)
+       (not (member (char entered 0)
+                    '(#\Escape #\Return #\Newline #\Rubout)
+                    :test #'char=))))
+
 
 (defun handle-alt-shortcut (entered model text-morph)
   (cond ((equal entered "r")
@@ -23,24 +28,6 @@
              (when model
                (setf (entered model) ""))))
         (t (warn "unknown ALT shortcut"))))
-
-(defun delete-char-at-cursor (text-morph)
-  (unless (delete-selection text-morph)
-    (clamp-cursor text-morph)
-    (let* ((txt (widget-text text-morph))
-           (pos (cursor-pos text-morph)))
-      (when (< pos (length txt))
-        (setf (widget-text text-morph)
-              (concatenate 'string (subseq txt 0 pos) (subseq txt (1+ pos))))))))
-
-(defun printable-input-p (entered ctrl-p)
-  (and (not ctrl-p)
-       entered
-       (stringp entered)
-       (> (length entered) 0)
-       (not (member (char entered 0)
-                    '(#\Escape #\Return #\Newline #\Rubout)
-                    :test #'char=))))
 
 (defun handle-text-morph-key (text-morph entered key-name shift-p ctrl-p)
   "Handle keys specific to an active text-morph. Returns T if handled, NIL otherwise."
@@ -96,8 +83,6 @@
          (setf (entered model)
                (format nil "~A~A" (entered model) entered)))))))
 
-(defun find-the-morph (x y)
-  (car (last (morphs-at (current-world) x y))))
 
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
   (unless (member event '(:timeout :motion))

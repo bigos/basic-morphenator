@@ -150,3 +150,22 @@
     (setf (is-selecting morph) nil)
     (when (eql (selection-start morph) (cursor-pos morph))
       (setf (selection-start morph) nil))))
+
+(defun find-the-morph (x y)
+  (car (last (morphs-at (current-world) x y))))
+
+(defun clear-text-morph (text-morph)
+  (setf (widget-text text-morph) ""
+        (cursor-pos text-morph) 0
+        (scroll-x text-morph) 0)
+  (clear-selection text-morph))
+
+
+(defun delete-char-at-cursor (text-morph)
+  (unless (delete-selection text-morph)
+    (clamp-cursor text-morph)
+    (let* ((txt (widget-text text-morph))
+           (pos (cursor-pos text-morph)))
+      (when (< pos (length txt))
+        (setf (widget-text text-morph)
+              (concatenate 'string (subseq txt 0 pos) (subseq txt (1+ pos))))))))
