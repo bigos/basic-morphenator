@@ -169,3 +169,12 @@
       (when (< pos (length txt))
         (setf (widget-text text-morph)
               (concatenate 'string (subseq txt 0 pos) (subseq txt (1+ pos))))))))
+
+(defun printable-input-p (entered ctrl-p)
+  (and (not ctrl-p)
+       entered
+       (stringp entered)
+       (> (length entered) 0)
+       (not (member (char entered 0)
+                    '(#\Escape #\Return #\Newline #\Rubout)
+                    :test #'char=))))

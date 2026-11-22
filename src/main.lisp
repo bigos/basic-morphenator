@@ -2,17 +2,6 @@
 
 (in-package #:basic-morphenator)
 
-
-(defun printable-input-p (entered ctrl-p)
-  (and (not ctrl-p)
-       entered
-       (stringp entered)
-       (> (length entered) 0)
-       (not (member (char entered 0)
-                    '(#\Escape #\Return #\Newline #\Rubout)
-                    :test #'char=))))
-
-
 (defun handle-alt-shortcut (entered model text-morph)
   (cond ((equal entered "r")
          (warn "refresh the init-ui")
