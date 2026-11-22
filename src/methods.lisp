@@ -133,17 +133,13 @@
               (refresh-location sub)
               (layout-submorphs sub))))))))
 
+
 (defun safe-text-advance-width (morph str)
-  "Measure STR width via Cairo when a context is active, otherwise use 15px Ubuntu Mono advance (9.0px/char)."
+  "Measure STR width via cl-cairo2 when a context is active, otherwise use 15px Ubuntu Mono advance (9.0px/char)."
   (if (and (boundp 'cairo:*context*) cairo:*context*)
       (progn
         (render-prepare-to-show-text morph)
-        (multiple-value-bind (a b c d x-adv)
-            (cairo:text-extents str)
-          (declare (ignore b c d))
-          (if (numberp x-adv)
-              x-adv
-              (cairo:text-extents-x-advance a))))
+        (nth-value 4 (cairo:text-extents str)))
       (* (length str) 9.0)))
 
 (defun clamp-cursor (morph)
@@ -535,13 +531,20 @@
     (cairo:clip)
     (render-prepare-to-show-text morph)
     (let* ((prefix (subseq txt 0 (cursor-pos morph)))
-           (cursor-x (text-advance-width prefix))
+           (cursor-x (safe-text-advance-width morph prefix))
            (inner-w (max 0 (- w (* 2 pad)))))
       (when (> (- cursor-x (scroll-x morph)) inner-w)
         (setf (scroll-x morph) (- cursor-x inner-w)))
       (when (< (- cursor-x (scroll-x morph)) 0)
         (setf (scroll-x morph) cursor-x))
       (let ((draw-x (- pad (scroll-x morph))))
+        (multiple-value-bind (sel-s sel-e) (selection-bounds morph)
+          (when sel-s
+            (let* ((x1 (+ draw-x (safe-text-advance-width morph (subseq txt 0 sel-s))))
+                   (x2 (+ draw-x (safe-text-advance-width morph (subseq txt 0 sel-e)))))
+              (gui-color:set-rgba "light blue")
+              (cairo:rectangle x1 3 (- x2 x1) (- h 6))
+              (cairo:fill-path))))
         (gui-color:set-rgba "red")
         (cairo:move-to draw-x 15)
         (cairo:show-text txt)
