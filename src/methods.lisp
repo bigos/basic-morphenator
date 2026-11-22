@@ -293,6 +293,16 @@
   (call-next-method)
   (draw-morph-label morph (render-text-for-color morph)))
 
+(defmethod render-text-for-color ((morph label-morph))
+  "Allow render to select text based on widget color"
+  (if (equal (id morph) 7)
+      ;; then - greeted label
+                (or                 ; or avoid repeating test and then
+                 (greeted (the-model))
+                 (contents morph))
+                ;; else - normal widget
+                (contents morph)))
+
 (defmethod render ((morph pluggable-button-morph))
   (let ((fill (cond
                 ((is-pressed morph) "red")
