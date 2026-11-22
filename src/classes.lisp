@@ -8,12 +8,12 @@
    (greeted :type (or null string))))
 
 (defclass/std location ()
-  ((x)
-   (y)))
+  ((x :std 0)
+   (y :std 0)))
 
 (defclass/std extent ()
-  ((x :documentation "x is the width of the widget")
-   (y :documentation "y is the height of the widget")))
+  ((x :std 0 :documentation "x is the width of the widget")
+   (y :std 0 :documentation "y is the height of the widget")))
 
 ;;; kernel - objects -----------------------------------------------------------
 (defclass/std message-send ()
