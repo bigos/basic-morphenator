@@ -252,8 +252,6 @@
     (and w (eq (focused-morph w) morph))))
 
 (defun handle-unhandled-mouse-button (morph event x y world)
-  (warn "UNHANDLED mouse button event ~s at ~a for ~s"
-        event (format nil "~,2f x ~,2f" x y) morph)
   (when (and world (eq event :released))
     (warn "pressed is ~S" (pressed-morph world))
     (release-world-pressed-morph world)

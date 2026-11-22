@@ -6,7 +6,6 @@
   (:import-from :defclass-std
                 defclass/std)
   (:import-from :boxes
-                boxes-window
                 width
                 height
                 )
