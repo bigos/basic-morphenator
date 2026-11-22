@@ -1,10 +1,9 @@
-(declaim (optimize (speed 2) (safety 3) (debug 0)))
+(declaim (optimize (speed 2) (safety 3) (debug 3)))
 
 (defpackage #:gui-color
   (:use #:cl)
   (:export
-   set-rgba
-   ))
+   set-rgba))
 
 (in-package #:gui-color)
 
