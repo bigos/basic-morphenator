@@ -405,7 +405,6 @@
   (setf (mouse-is-over morph) nil))
 
 ;;; =============== content ====================================================
-;; label-morph contents may be a string or a function
 (defmethod label-text ((morph label-morph))
   (let ((c (contents morph)))
     (if (functionp c)
@@ -417,10 +416,6 @@
   (cairo:select-font-face "Ubuntu Mono" :normal :normal)
   (cairo:set-font-size 15)
   (cairo:move-to 0 15))   ; baseline 15px below local origin
-
-;;; apparently tere is function cairo:traslate tx ty
-;;; that may allow to get rid of absolute-x absolute-y
-;; https://www.cairographics.org/manual-1.17.2/cairo-Transformations.html#cairo-translate
 
 (defmethod render :around ((morph placed-morph))
   (cairo:save)                                    ; match your binding's style
@@ -512,7 +507,6 @@
       (cairo:set-line-width 2.0)
       (cairo:rectangle 1 1 (- (x ext) 2) (- (y ext) 2))
       (cairo:stroke))))
-
 
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)

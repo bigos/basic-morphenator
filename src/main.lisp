@@ -18,14 +18,26 @@
               (when model
                 (setf (greeted model) ""))
               (if text-morph
-                  (setf (widget-text text-morph) "")
+                  (setf (widget-text text-morph) ""
+                        (cursor-pos text-morph) 0
+                        (scroll-x text-morph) 0)
                   (when model
                     (setf (entered model) ""))))
              (T (warn "unknown ALT shortcut"))))
+      ((and text-morph (string-equal key-name "Left"))
+       (clamp-cursor text-morph)
+       (setf (cursor-pos text-morph) (max 0 (1- (cursor-pos text-morph)))))
+      ((and text-morph (string-equal key-name "Right"))
+       (clamp-cursor text-morph)
+       (setf (cursor-pos text-morph)
+             (min (length (widget-text text-morph)) (1+ (cursor-pos text-morph)))))
+      ((and text-morph (string-equal key-name "Home"))
+       (setf (cursor-pos text-morph) 0))
+      ((and text-morph (string-equal key-name "End"))
+       (setf (cursor-pos text-morph) (length (widget-text text-morph))))
       ((backspace-key-p key-name)
        (if text-morph
-           (setf (widget-text text-morph)
-                 (delete-last-char (widget-text text-morph)))
+           (delete-before-cursor text-morph)
            (when model
              (setf (entered model)
                    (delete-last-char (entered model))))))
@@ -41,11 +53,11 @@
                   (not (char= (char entered 0) #\Newline))
                   (not (char= (char entered 0) #\Rubout)))
          (if text-morph
-             (setf (widget-text text-morph)
-                   (format nil "~A~A" (widget-text text-morph) entered))
+             (insert-at-cursor text-morph entered)
              (when model
                (setf (entered model)
                      (format nil "~A~A" (entered model) entered)))))))))
+
 
 (defun find-the-morph (x y)
   (car (last (morphs-at (world (the-model)) x y))))
