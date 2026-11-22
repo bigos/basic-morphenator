@@ -215,6 +215,8 @@
    (text-getter :type (or null function))
    (text-setter :type (or null function))
    (cursor-pos :std 0 :type integer)
+   (selection-start :std nil :type (or null integer))
+   (is-selecting :std nil :type boolean)
    (scroll-x :std 0 :type number)))
 
 ;;; morphic - composite widgets ------------------------------------------------

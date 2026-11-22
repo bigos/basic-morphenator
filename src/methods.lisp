@@ -133,20 +133,58 @@
               (refresh-location sub)
               (layout-submorphs sub))))))))
 
-(defun text-advance-width (str)
-  "Return the horizontal pixel advance of STR under the current Cairo font."
-  (multiple-value-bind (a b c d x-adv)
-      (cairo:text-extents str)
-    (if (numberp x-adv)
-        x-adv
-        ;; Fallback if binding returns a text-extents struct/object in A
-        (cairo:text-extents-x-advance a))))
+(defun safe-text-advance-width (morph str)
+  "Measure STR width via Cairo when a context is active, otherwise use 15px Ubuntu Mono advance (9.0px/char)."
+  (if (and (boundp 'cairo:*context*) cairo:*context*)
+      (progn
+        (render-prepare-to-show-text morph)
+        (multiple-value-bind (a b c d x-adv)
+            (cairo:text-extents str)
+          (declare (ignore b c d))
+          (if (numberp x-adv)
+              x-adv
+              (cairo:text-extents-x-advance a))))
+      (* (length str) 9.0)))
 
 (defun clamp-cursor (morph)
   (let ((len (length (widget-text morph))))
     (setf (cursor-pos morph) (max 0 (min (cursor-pos morph) len)))))
 
+(defun selection-bounds (morph)
+  "Return (VALUES start end) of the active selection, or (VALUES nil nil)."
+  (clamp-cursor morph)
+  (let ((anchor (selection-start morph))
+        (cur (cursor-pos morph)))
+    (if (and anchor (/= anchor cur))
+        (values (min anchor cur) (max anchor cur))
+        (values nil nil))))
+
+(defun clear-selection (morph)
+  (setf (selection-start morph) nil
+        (is-selecting morph) nil))
+
+(defun delete-selection (morph)
+  "Delete selected text if any and move cursor to start of deleted range. Returns T if deleted."
+  (multiple-value-bind (s e) (selection-bounds morph)
+    (when s
+      (let ((txt (widget-text morph)))
+        (setf (widget-text morph)
+              (concatenate 'string (subseq txt 0 s) (subseq txt e)))
+        (setf (cursor-pos morph) s)
+        (clear-selection morph)
+        t))))
+
+(defun move-text-cursor (morph new-pos shift-p)
+  (clamp-cursor morph)
+  (if shift-p
+      (unless (selection-start morph)
+        (setf (selection-start morph) (cursor-pos morph)))
+      (clear-selection morph))
+  (setf (cursor-pos morph)
+        (max 0 (min (length (widget-text morph)) new-pos))))
+
 (defun insert-at-cursor (morph str)
+  (delete-selection morph)
   (clamp-cursor morph)
   (let* ((txt (widget-text morph))
          (pos (cursor-pos morph)))
@@ -155,13 +193,14 @@
     (incf (cursor-pos morph) (length str))))
 
 (defun delete-before-cursor (morph)
-  (clamp-cursor morph)
-  (let* ((txt (widget-text morph))
-         (pos (cursor-pos morph)))
-    (when (> pos 0)
-      (setf (widget-text morph)
-            (concatenate 'string (subseq txt 0 (1- pos)) (subseq txt pos)))
-      (decf (cursor-pos morph)))))
+  (unless (delete-selection morph)
+    (clamp-cursor morph)
+    (let* ((txt (widget-text morph))
+           (pos (cursor-pos morph)))
+      (when (> pos 0)
+        (setf (widget-text morph)
+              (concatenate 'string (subseq txt 0 (1- pos)) (subseq txt pos)))
+        (decf (cursor-pos morph))))))
 
 (defun cursor-index-at-local-x (morph local-x)
   "Find the closest character index in MORPH for a click at LOCAL-X."
@@ -173,7 +212,7 @@
         0
         (loop with prev-w = 0
               for i from 1 to len
-              for w = (text-advance-width (subseq txt 0 i))
+              for w = (safe-text-advance-width morph (subseq txt 0 i))
               when (< target-x (/ (+ prev-w w) 2.0))
                 return (1- i)
               do (setf prev-w w)
@@ -385,13 +424,26 @@
        (funcall (secondary-action-selector morph))))))
 (defmethod handle-event-mouse-button ((morph text-model-morph) (event symbol) button x y)
   (declare (ignore button y))
-  (when (eq event :pressed)
-    (setf (focused-morph morph) morph)
-    (multiple-value-bind (dx dy) (morph-global-offset morph)
-      (declare (ignore dy))
-      (render-prepare-to-show-text morph)
-      (setf (cursor-pos morph)
-            (cursor-index-at-local-x morph (- x dx))))))
+  (case event
+    (:pressed
+     (setf (focused-morph morph) morph)
+     (multiple-value-bind (dx dy) (morph-global-offset morph)
+       (declare (ignore dy))
+       (let ((idx (cursor-index-at-local-x morph (- x dx))))
+         (setf (cursor-pos morph) idx
+               (selection-start morph) idx
+               (is-selecting morph) t))))
+    (:released
+     (setf (is-selecting morph) nil)
+     (when (eql (selection-start morph) (cursor-pos morph))
+       (setf (selection-start morph) nil)))))
+
+(defun update-text-drag-selection (x)
+  (let ((fm (let ((w (world (the-model)))) (and w (focused-morph w)))))
+    (when (and (typep fm 'text-model-morph) (is-selecting fm))
+      (multiple-value-bind (dx dy) (morph-global-offset fm)
+        (declare (ignore dy))
+        (setf (cursor-pos fm) (cursor-index-at-local-x fm (- x dx)))))))
 
 (defgeneric handles-mouse-over-p (morph)
   (:method ((morph morph)) nil))
