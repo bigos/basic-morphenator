@@ -13,7 +13,8 @@
                  #:cl-gtk4 #:cl-gdk4 #:cl-glib #:cl-cairo2
                  #:defclass-std
                  )
-    :pathname "src/"
+  :pathname "src/"
+  :serial T
   :components ((:file "packages")
                (:file "basic-morphenator")
                (:file "classes")
