@@ -67,6 +67,8 @@
 
 (defclass/std world-morph (paste-up-morph)
   ((active-hand)
+   (focused-morph)
+   (pressed-morph)
    (canvas)
    (damage-recorder)
    (step-list)
