@@ -133,12 +133,19 @@
   (warn "adding layout element ~s" direction))
 
 ;;; ================== location ================================================
+;;; Ensure every placed-morph starts with a valid (0, 0) location
+(defmethod initialize-instance :after ((morph placed-morph) &key)
+  (unless (location morph)
+    (setf (location morph) (build-location 0 0))))
+
 (defun morph-location-axis (morph axis-fn)
   (if (location morph)
-      (funcall axis-fn (location morph))
+      (or (funcall axis-fn (location morph)) 0)
       0))
+
 (defmethod morph-location-x ((morph morph))
   (morph-location-axis morph #'x))
+
 (defmethod morph-location-y ((morph morph))
   (morph-location-axis morph #'y))
 
@@ -150,6 +157,7 @@
 
 (defmethod prev-sibling-widths-sum ((morph morph))
   (prev-sibling-axis-sum morph #'x))
+
 (defmethod prev-sibling-heights-sum ((morph morph))
   (prev-sibling-axis-sum morph #'y))
 
@@ -159,35 +167,29 @@
     (refresh-location-with-owner morph (owner morph))))
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
-  (refresh-location-with-owner-direction-aux morph owner-morph (direction owner-morph)))
-
-(defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
   (ecase (direction owner-morph)
     (:vertical
      (setf (location morph)
-           (make-instance 'location
-                          :x (local-x morph)                  ; keep as padding offset
-                          :y (prev-sibling-heights-sum morph))))
+           (build-location (morph-location-x morph)
+                           (prev-sibling-heights-sum morph))))
     (:horizontal
      (setf (location morph)
-           (make-instance 'location
-                          :x (prev-sibling-widths-sum morph)
-                          :y (local-y morph))))))
+           (build-location (prev-sibling-widths-sum morph)
+                           (morph-location-y morph))))))
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
   ;; plain (non-layout) owner: child keeps its own local offset;
   ;; nesting is handled by the cairo translate, nothing to recompute
   (unless (location morph)
-    (setf (location morph) (make-instance 'location :x 0 :y 0))))
+    (setf (location morph) (build-location 0 0))))
 
-(defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
-  (let ((owner-morph-location (~> owner-morph location)))
-    (setf (location morph)
-          (make-instance 'location
-                         :absolute-x (+ (~> owner-morph-location absolute-x) (~> morph morph-location-x))
-                         :absolute-y (+ (~> owner-morph-location absolute-y) (~> morph morph-location-y))
-                         :x (~> morph morph-location-x)
-                         :y (~> morph morph-location-y)))))
+(defmethod refresh-location-with-owner :after ((morph morph) (owner-morph layout-morph))
+  (let ((oe (extent owner-morph)) (loc (location morph)) (ext (extent morph)))
+    (when (and oe loc ext
+               (or (< (x loc) 0) (< (y loc) 0)
+                   (> (+ (x loc) (x ext)) (x oe))
+                   (> (+ (y loc) (y ext)) (y oe))))
+      (warn "morph ~s has elements outside its owner" morph))))
 
 (defmethod refresh-location-with-owner :after ((morph morph) (owner-morph layout-morph))
   (let ((oe (extent owner-morph)) (loc (location morph)) (ext (extent morph)))
@@ -369,10 +371,10 @@
         (id morph) 1)
   (setf (owner morph) nil
         (pressed-morph morph) nil
-        (location morph) (make-instance 'location
-                                        :x 0
-                                        :y 0)
-        (extent morph) (make-instance 'extent :x (car *window-size*) :y (cdr *window-size*))))
+        (location morph) (build-location 0 0)
+        (extent morph) (make-instance 'extent
+                                      :x (or (car *window-size*) 600)
+                                      :y (or (cdr *window-size*) 400))))
 
 (defmethod render-world ((morph world-morph))
   (let ((ext (extent morph)))
