@@ -2,6 +2,52 @@
 
 (in-package #:basic-morphenator)
 
+
+(defun printable-input-p (entered ctrl-p)
+  (and (not ctrl-p)
+       entered
+       (stringp entered)
+       (> (length entered) 0)
+       (not (member (char entered 0)
+                    '(#\Escape #\Return #\Newline #\Rubout)
+                    :test #'char=))))
+
+(defun handle-text-morph-key (text-morph entered key-name shift-p ctrl-p)
+  "Handle keys specific to an active text-morph. Returns T if handled, NIL otherwise."
+  (cond
+    ((and ctrl-p (string-equal entered "a"))
+     (setf (selection-start text-morph) 0
+           (cursor-pos text-morph) (length (widget-text text-morph)))
+     t)
+    ((string-equal key-name "Left")
+     (move-text-cursor text-morph (1- (cursor-pos text-morph)) shift-p)
+     t)
+    ((string-equal key-name "Right")
+     (move-text-cursor text-morph (1+ (cursor-pos text-morph)) shift-p)
+     t)
+    ((string-equal key-name "Home")
+     (move-text-cursor text-morph 0 shift-p)
+     t)
+    ((string-equal key-name "End")
+     (move-text-cursor text-morph (length (widget-text text-morph)) shift-p)
+     t)
+    ((string-equal key-name "Delete")
+     (unless (delete-selection text-morph)
+       (clamp-cursor text-morph)
+       (let* ((txt (widget-text text-morph))
+              (pos (cursor-pos text-morph)))
+         (when (< pos (length txt))
+           (setf (widget-text text-morph)
+                 (concatenate 'string (subseq txt 0 pos) (subseq txt (1+ pos)))))))
+     t)
+    ((backspace-key-p key-name)
+     (delete-before-cursor text-morph)
+     t)
+    ((printable-input-p entered ctrl-p)
+     (insert-at-cursor text-morph entered)
+     t)
+    (t nil)))
+
 (defmethod handle-key-pressed (entered key-name key-code mods lisp-window)
   (declare (ignore key-code lisp-window))
   (let ((model (the-model))
@@ -29,47 +75,19 @@
                   (when model
                     (setf (entered model) ""))))
              (t (warn "unknown ALT shortcut"))))
-      ((and text-morph ctrl-p (string-equal entered "a"))
-       (setf (selection-start text-morph) 0
-             (cursor-pos text-morph) (length (widget-text text-morph))))
-      ((and text-morph (string-equal key-name "Left"))
-       (move-text-cursor text-morph (1- (cursor-pos text-morph)) shift-p))
-      ((and text-morph (string-equal key-name "Right"))
-       (move-text-cursor text-morph (1+ (cursor-pos text-morph)) shift-p))
-      ((and text-morph (string-equal key-name "Home"))
-       (move-text-cursor text-morph 0 shift-p))
-      ((and text-morph (string-equal key-name "End"))
-       (move-text-cursor text-morph (length (widget-text text-morph)) shift-p))
-      ((and text-morph (string-equal key-name "Delete"))
-       (unless (delete-selection text-morph)
-         (clamp-cursor text-morph)
-         (let* ((txt (widget-text text-morph))
-                (pos (cursor-pos text-morph)))
-           (when (< pos (length txt))
-             (setf (widget-text text-morph)
-                   (concatenate 'string (subseq txt 0 pos) (subseq txt (1+ pos))))))))
+      ((and text-morph
+            (handle-text-morph-key text-morph entered key-name shift-p ctrl-p)))
       ((backspace-key-p key-name)
-       (if text-morph
-           (delete-before-cursor text-morph)
-           (when model
-             (setf (entered model)
-                   (delete-last-char (entered model))))))
+       (when model
+         (setf (entered model)
+               (delete-last-char (entered model)))))
       ((return-key-p key-name entered)
        (when model
          (greet-me model)))
-      ((not ctrl-p)
-       (when (and entered
-                  (stringp entered)
-                  (> (length entered) 0)
-                  (not (char= (char entered 0) #\Escape))
-                  (not (char= (char entered 0) #\Return))
-                  (not (char= (char entered 0) #\Newline))
-                  (not (char= (char entered 0) #\Rubout)))
-         (if text-morph
-             (insert-at-cursor text-morph entered)
-             (when model
-               (setf (entered model)
-                     (format nil "~A~A" (entered model) entered)))))))))
+      ((printable-input-p entered ctrl-p)
+       (when model
+         (setf (entered model)
+               (format nil "~A~A" (entered model) entered)))))))
 
 (defun find-the-morph (x y)
   (car (last (morphs-at (current-world) x y))))
