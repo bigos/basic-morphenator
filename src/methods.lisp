@@ -198,11 +198,6 @@
 (defgeneric layout-submorphs (morph)
   (:method ((morph morph)) nil))
 
-(defmethod layout-submorphs ((morph layout-morph))
-  (dolist (sub (submorphs morph))
-    (refresh-location sub)
-    (layout-submorphs sub)))
-
 (defmethod add-morph ((morph morph) (submorph morph))
   (setf (owner submorph) morph)
   (setf (submorphs morph) (append (submorphs morph) (list submorph)))
