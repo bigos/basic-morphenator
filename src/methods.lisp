@@ -73,6 +73,7 @@
   (unless (typep morph 'world-morph)
     (setf (id morph) (1+ (last-morph-id morph)))
     (setf (last-morph-id morph) (id morph))))
+
 ;;; =============== add morph ==================================================
 (defgeneric layout-submorphs (morph)
   (:method ((morph morph)) nil))
@@ -238,20 +239,36 @@
     (setf (mouse-over-morphs handler) new-chain)))
 
 ;;; ================= events ===================================================
+(defun morph-target-world (morph)
+  (or (morph-world morph)
+      (current-world)))
+
+(defun release-world-pressed-morph (world)
+  (when (and world (pressed-morph world))
+    (setf (is-pressed (pressed-morph world)) nil
+          (pressed-morph world) nil)))
+
+(defun morph-has-focus-p (morph)
+  (let ((w (morph-target-world morph)))
+    (and w (eq (focused-morph w) morph))))
 
 (defmethod handle-event-mouse-button ((morph null) (event symbol) button x y)
   (declare (ignore button))
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
   (let ((w (current-world)))
-    (when (eq event :released)
-      (release-world-pressed-morph w))))
+    (when (and w (eq event :released))
+      (warn "pressed is ~S" (pressed-morph w))
+      (release-world-pressed-morph w)
+      (warn "after releasing ~s" (pressed-morph w)))))
 
 (defmethod handle-event-mouse-button ((morph morph) (event symbol) button x y)
   (declare (ignore button))
   (warn "UNHANDLED mouse button event ~s at ~a for ~s" event (format nil "~,2f x ~,2f" x y) morph)
   (let ((w (morph-target-world morph)))
-    (when (eq event :released)
-      (release-world-pressed-morph w))))
+    (when (and w (eq event :released))
+      (warn "pressed is ~S" (pressed-morph w))
+      (release-world-pressed-morph w)
+      (warn "after releasing ~s" (pressed-morph w)))))
 
 (defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) button x y)
   (declare (ignore button))
@@ -289,7 +306,7 @@
          (setf (selection-start morph) nil))))))
 
 (defun update-text-drag-selection (x)
-  (let ((fm (let ((w (world (the-model)))) (and w (focused-morph w)))))
+  (let ((fm (let ((w (current-world))) (and w (focused-morph w)))))
     (when (and (typep fm 'text-model-morph) (is-selecting fm))
       (multiple-value-bind (dx dy) (morph-global-offset fm)
         (declare (ignore dy))
@@ -402,7 +419,7 @@
         (gui-color:set-rgba "red")
         (cairo:move-to draw-x 15)
         (cairo:show-text txt)
-        (when (eq (focused-morph morph) morph)
+        (when (morph-has-focus-p morph)
           (let ((caret-x (+ draw-x cursor-x)))
             (gui-color:set-rgba "black")
             (cairo:set-line-width 1.5)
@@ -410,7 +427,7 @@
             (cairo:line-to caret-x (- h 3))
             (cairo:stroke)))))
     (cairo:restore))
-  (when (eq (focused-morph morph) morph)
+  (when (morph-has-focus-p morph)
     (let ((ext (extent morph)))
       (gui-color:set-rgba "blue")
       (cairo:set-line-width 2.0)
