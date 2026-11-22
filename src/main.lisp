@@ -2,21 +2,52 @@
 
 (in-package #:basic-morphenator)
 
+;; (defmethod handle-key-pressed (entered key-name key-code mods lisp-window)
+;;   (cond ((equal mods '(:ALT))
+;;          (cond ((equal entered "r")
+;;                 (warn "refresh the init-ui")
+;;                 (init-gui (the-model)))
+;;                ((equal entered "g")
+;;                 (greet-me (the-model)))
+;;                ((equal entered "c")
+;;                 (warn "clear by shortcut")
+;;                 (setf (greeted (the-model)) ""
+;;                       ;; i do not understand the following line that you want to replace
+;;                       ;; (entered (the-model)) ""
+;;                       (setf zzz)
+;;                       ))
+;;                (T (warn "unknown ALT shortcut"))))
+;;         (T
+;;          (setf (entered (the-model))
+;;                (format nil "~A~A" (entered (the-model)) entered)))))
+
 (defmethod handle-key-pressed (entered key-name key-code mods lisp-window)
-  (cond ((equal mods '(:ALT))
-         (cond ((equal entered "r")
-                (warn "refresh the init-ui")
-                (init-gui (the-model)))
-               ((equal entered "g")
-                (greet-me (the-model)))
-               ((equal entered "c")
-                (warn "clear by shortcut")
-                (setf (greeted (the-model)) ""
-                      (entered (the-model)) ""))
-               (T (warn "unknown ALT shortcut"))))
-        (T
-         (setf (entered (the-model))
-               (format nil "~A~A" (entered (the-model)) entered)))))
+  (declare (ignore key-name key-code lisp-window))
+  (let ((model (the-model))
+        (text-morph (active-text-morph)))
+    (cond ((equal mods '(:ALT))
+           (cond ((equal entered "r")
+                  (warn "refresh the init-ui")
+                  (init-gui model))
+                 ((equal entered "g")
+                  (greet-me model))
+                 ((equal entered "c")
+                  (warn "clear by shortcut")
+                  (when model
+                    (setf (greeted model) ""))
+                  (if text-morph
+                      (setf (widget-text text-morph) "")
+                      (when model
+                        (setf (entered model) ""))))
+                 (T (warn "unknown ALT shortcut"))))
+          (T
+           (when (and entered (not (string= entered "")))
+             (if text-morph
+                 (setf (widget-text text-morph)
+                       (format nil "~A~A" (widget-text text-morph) entered))
+                 (when model
+                   (setf (entered model)
+                         (format nil "~A~A" (entered model) entered)))))))))
 
 (defun find-the-morph (x y)
   (car (last (morphs-at (world (the-model)) x y))))

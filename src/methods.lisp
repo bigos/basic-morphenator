@@ -36,6 +36,23 @@
   (gui-color:set-rgba color)
   (cairo:show-text (or text "")))
 
+(defun find-text-morph (root)
+  (when root
+    (if (typep root 'text-model-morph)
+        root
+        (loop for child in (submorphs root)
+              for found = (find-text-morph child)
+              when found return found))))
+
+(defun active-text-morph ()
+  (let* ((model (the-model))
+         (world (and model (world model))))
+    (or (and world
+             (focused-morph world)
+             (typep (focused-morph world) 'text-model-morph)
+             (focused-morph world))
+        (find-text-morph world))))
+
 ;;; ================= init gui =================================================
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defmethod init-gui ((model basic-morphenator-model))
