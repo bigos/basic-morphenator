@@ -3,34 +3,6 @@
 (in-package #:basic-morphenator)
 
 (defmethod handle-key-pressed (entered key-name key-code mods lisp-window)
-  (declare (ignore key-name key-code lisp-window))
-  (let ((model (the-model))
-        (text-morph (active-text-morph)))
-    (cond ((equal mods '(:ALT))
-           (cond ((equal entered "r")
-                  (warn "refresh the init-ui")
-                  (init-gui model))
-                 ((equal entered "g")
-                  (greet-me model))
-                 ((equal entered "c")
-                  (warn "clear by shortcut")
-                  (when model
-                    (setf (greeted model) ""))
-                  (if text-morph
-                      (setf (widget-text text-morph) "")
-                      (when model
-                        (setf (entered model) ""))))
-                 (T (warn "unknown ALT shortcut"))))
-          (T
-           (when (and entered (not (string= entered "")))
-             (if text-morph
-                 (setf (widget-text text-morph)
-                       (format nil "~A~A" (widget-text text-morph) entered))
-                 (when model
-                   (setf (entered model)
-                         (format nil "~A~A" (entered model) entered)))))))))
-
-(defmethod handle-key-pressed (entered key-name key-code mods lisp-window)
   (declare (ignore key-code lisp-window))
   (let ((model (the-model))
         (text-morph (active-text-morph)))
@@ -57,12 +29,16 @@
            (when model
              (setf (entered model)
                    (delete-last-char (entered model))))))
+      ((return-key-p key-name entered)
+       (when model
+         (greet-me model)))
       (T
        (when (and entered
                   (stringp entered)
                   (> (length entered) 0)
                   (not (char= (char entered 0) #\Escape))
                   (not (char= (char entered 0) #\Return))
+                  (not (char= (char entered 0) #\Newline))
                   (not (char= (char entered 0) #\Rubout)))
          (if text-morph
              (setf (widget-text text-morph)

@@ -13,6 +13,15 @@
                          :color
                          (color obj)))))
 
+(defun return-key-p (key-name entered)
+  (or (and (stringp key-name)
+           (or (string-equal key-name "Return")
+               (string-equal key-name "KP_Enter")))
+      (and (stringp entered)
+           (= (length entered) 1)
+           (member (char entered 0) '(#\Return #\Newline #\Linefeed)
+                   :test #'char=))))
+
 ;;; ================= helpers ==================================================
 (defmethod greet-me ((model basic-morphenator-model))
   (setf (greeted model) (entered model)))
