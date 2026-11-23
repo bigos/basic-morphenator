@@ -325,3 +325,22 @@
         (b (make-instance 'bm:boxed-morph)))
     (bm:add-morph a b)
     (signals error (bm:add-morph a b))))
+
+(test next-morph-id-invariant
+  "Pin: worlds get id 1, morph ids increase, and a new world resets the counter."
+  (let* ((w1 (make-instance 'bm:world-morph))
+         (a  (make-instance 'bm:boxed-morph))
+         (w2 (make-instance 'bm:world-morph))
+         (b  (make-instance 'bm:boxed-morph)))
+    (is (= 1 (bm::id w1)))
+    (is (= 1 (bm::id w2)))
+    (is (< (bm::id w1) (bm::id a)))
+    (is (< (bm::id b) (bm::id a)))))   ; w2 reset the counter below a's id
+
+(test next-morph-id-increases-within-world
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (a (make-instance 'bm:boxed-morph))
+           (b (make-instance 'bm:boxed-morph)))
+      (is (= 1 (bm::id world)))
+      (is (< (bm::id a) (bm::id b))))))

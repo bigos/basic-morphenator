@@ -91,7 +91,7 @@
   (when (fboundp '(setf width))
     (ignore-errors (setf (width lisp-window) w)))
   (when (fboundp '(setf height))
-    (ignore-errors (setf (height lisp-window) w)))
+    (ignore-errors (setf (height lisp-window) h)))
 
   (setf *window-size* (cons w h))
   (when (current-world)
