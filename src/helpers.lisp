@@ -140,6 +140,15 @@
     (when world
       (car (last (morphs-at world x y))))))
 
+(defun find-text-morph (morph)
+  "Return the first text-model-morph in MORPH's submorph hierarchy, or NIL."
+  (when morph
+    (if (typep morph 'text-model-morph)
+        morph
+        (loop for sub in (submorphs morph)
+              for found = (find-text-morph sub)
+              when found return found))))
+
 (defun clear-text-morph (text-morph)
   (setf (widget-text text-morph) ""
         (cursor-pos text-morph) 0
