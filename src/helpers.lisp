@@ -152,7 +152,10 @@
       (setf (selection-start morph) nil))))
 
 (defun find-the-morph (x y)
-  (car (last (morphs-at (current-world) x y))))
+  "Return the innermost morph at global coordinates (X, Y), or NIL."
+  (let ((world (current-world)))
+    (when world
+      (car (last (morphs-at world x y))))))
 
 (defun clear-text-morph (text-morph)
   (setf (widget-text text-morph) ""

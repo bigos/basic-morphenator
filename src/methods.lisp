@@ -234,14 +234,17 @@
                (<= 0 ly) (< ly (y ext))))))))
 
 (defgeneric morphs-at (morph x y)
-  (:documentation "Morphs containing the point, outermost first.")
-  (:method ((morph morph) x y) nil)
-  (:method ((morph boxed-morph) x y)
+  (:documentation "Morphs containing the point (X, Y), ordered outermost to innermost.")
+  (:method ((morph morph) x y)
+    (declare (ignore x y))
+    nil)
+  (:method ((morph placed-morph) x y)
     (when (contains-point-p morph x y)
       (cons morph
             (loop for sub in (reverse (submorphs morph))
-                  for chain = (morphs-at sub x y)
-                  when chain return chain)))))
+                  for sub-chain = (morphs-at sub x y)
+                  when sub-chain append sub-chain
+                    when sub-chain return sub-chain)))))
 
 (defun process-mouse-over (handler new-chain)
   (let* ((old (mouse-over-morphs handler))

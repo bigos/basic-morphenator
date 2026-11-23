@@ -108,8 +108,10 @@
 
 (defun dispatch-mouse-button (event args)
   (destructuring-bind ((button x y)) args
-    (handle-event-mouse-button (find-the-morph x y)
-                               event button x y)))
+    (let ((target (or (find-the-morph x y)
+                      (current-world))))
+      (when target
+        (handle-event-mouse-button target event button x y)))))
 
 (defmethod process-event ((lisp-window basic-morphenator-window) event &rest args)
   (unless (or (member event '(:timeout :motion))
