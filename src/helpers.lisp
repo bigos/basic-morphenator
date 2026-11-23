@@ -28,13 +28,6 @@
   (gui-color:set-rgba color)
   (cairo:show-text (or text "")))
 
-(defun active-text-morph ()
-  (let* ((model (the-model))
-         (world (and model (world model)))
-         (fm (and world (focused-morph world))))
-    (when (and fm (typep fm 'text-model-morph))
-      fm)))
-
 (defun delete-last-char (str)
   (let ((s (or str "")))
     (if (> (length s) 0)

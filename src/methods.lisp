@@ -274,6 +274,10 @@
 
 (defmethod handle-event-mouse-button ((morph morph) (event symbol) button x y)
   (declare (ignore button))
+  (when (eq event :pressed)
+    (let ((w (morph-target-world morph)))
+      (when w
+        (setf (world-keyboard-focus w) nil))))
   (handle-unhandled-mouse-button morph event x y (morph-target-world morph)))
 
 (defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) button x y)
@@ -286,7 +290,9 @@
          (setf (pressed-morph w) morph))
        (when (and (contains-point-p morph x y)
                   (action-selector morph))
-         (funcall (action-selector morph))))
+         (funcall (action-selector morph)))
+       (when w
+         (setf (world-keyboard-focus w) nil)))
       (:released
        (release-world-pressed-morph w)
        (when (and (contains-point-p morph x y)
@@ -299,7 +305,7 @@
     (case event
       (:pressed
        (when w
-         (setf (focused-morph w) morph))
+         (setf (world-keyboard-focus w) morph))
        (multiple-value-bind (dx dy) (morph-global-offset morph)
          (declare (ignore dy))
          (let ((idx (cursor-index-at-local-x morph (- x dx))))
