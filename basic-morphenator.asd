@@ -1,8 +1,3 @@
-(defpackage basic-morphenator-system
-  (:use :common-lisp :asdf))
-;;; some say it is a good practice to use a separate package for system declaration
-(in-package :basic-morphenator-system)
-
 (defsystem "basic-morphenator"
     :version "0.0.1"
     :author "https://github.com/bigos"
