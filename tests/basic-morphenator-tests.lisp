@@ -1,4 +1,4 @@
-(declaim (optimize (speed 0) (safety 3) (debug 3)))
+(declaim (optimize (speed 1) (safety 3) (debug 3)))
 
 ;; (ql:quickload :basic-morphenator/tests)
 (in-package #:basic-morphenator-test)
