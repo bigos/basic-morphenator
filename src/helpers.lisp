@@ -178,3 +178,9 @@
        (not (member (char entered 0)
                     '(#\Escape #\Return #\Newline #\Rubout)
                     :test #'char=))))
+
+;;; TODO implement if needed later
+(defgeneric new-file (model)
+  (:method ((model t))
+    (declare (ignore model))
+    nil))

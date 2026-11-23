@@ -320,10 +320,19 @@
         c)))
 
 ;;; ============= render =======================================================
+(defgeneric render-prepare-to-show-text (morph)
+  (:method ((morph t))
+    (when (and (boundp 'cairo:*context*) cairo:*context*)
+      (cairo:select-font-face "Ubuntu Mono" :normal :normal)
+      (cairo:set-font-size 15)
+      (cairo:move-to 0 15))))
+
 (defmethod render-prepare-to-show-text ((morph placed-morph))
   (cairo:select-font-face "Ubuntu Mono" :normal :normal)
   (cairo:set-font-size 15)
   (cairo:move-to 0 15))   ; baseline 15px below local origin
+
+(defgeneric render (morph))
 
 (defmethod render :around ((morph placed-morph))
   (cairo:save)                                    ; match your binding's style
