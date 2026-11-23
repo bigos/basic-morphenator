@@ -478,3 +478,36 @@
         (when (proportional-height spec)
           (setf (y (extent sub)) (round (* h (proportional-height spec)))))))
     (layout-submorphs sub)))
+
+(defgeneric accepts-keyboard-focus-p (morph)
+  (:documentation "Return T if MORPH can hold keyboard focus.")
+  (:method ((morph morph)) nil)
+  (:method ((morph text-model-morph)) t))
+
+(defun world-keyboard-focus (world)
+  (when world
+    (let ((hand (active-hand world)))
+      (if hand
+          (keyboard-focus hand)
+          (focused-morph world)))))
+
+(defun (setf world-keyboard-focus) (morph world)
+  (when world
+    (let ((next-focus (if (and morph (accepts-keyboard-focus-p morph))
+                          morph
+                          nil))
+          (hand (active-hand world)))
+      (if hand
+          (setf (keyboard-focus hand) next-focus)
+          (setf (focused-morph world) next-focus)))))
+
+(defun morph-has-focus-p (morph)
+  (let ((w (morph-target-world morph)))
+    (and w (eq (world-keyboard-focus w) morph))))
+
+(defun active-text-morph ()
+  (let* ((model (the-model))
+         (world (and model (world model)))
+         (fm (world-keyboard-focus world)))
+    (when (and fm (typep fm 'text-model-morph))
+      fm)))
