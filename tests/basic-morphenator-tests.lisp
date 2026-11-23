@@ -5,7 +5,7 @@
 ;; (fiveam:run-all-tests)
 ;; (run! 'basic-equalities)
 
-(setf 5am:*on-error* :debug)
+;; (setf 5am:*on-error* :debug)
 
 ;;; =========================== fixtures =======================================
 (def-fixture prepare-variables (n)
