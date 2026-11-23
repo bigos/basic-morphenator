@@ -143,14 +143,6 @@
   (unless (location morph)
     (setf (location morph) (build-location 0 0))))
 
-(defmethod refresh-location-with-owner :after ((morph morph) (owner-morph layout-morph))
-  (let ((oe (extent owner-morph)) (loc (location morph)) (ext (extent morph)))
-    (when (and oe loc ext
-               (or (< (x loc) 0) (< (y loc) 0)
-                   (> (+ (x loc) (x ext)) (x oe))
-                   (> (+ (y loc) (y ext)) (y oe))))
-      (warn "morph ~s has elements outside its owner" morph))))
-
 (defmethod layout-submorphs ((morph layout-morph))
   (let* ((subs (submorphs morph))
          (n (length subs)))
@@ -264,9 +256,7 @@
 
 (defun handle-unhandled-mouse-button (morph event x y world)
   (when (and world (eq event :released))
-    (warn "pressed is ~S" (pressed-morph world))
-    (release-world-pressed-morph world)
-    (warn "after releasing ~s" (pressed-morph world))))
+    (release-world-pressed-morph world)))
 
 (defmethod handle-event-mouse-button ((morph morph) (event symbol) button x y)
   (declare (ignore button))
