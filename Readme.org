@@ -8,6 +8,11 @@ At the moment this project is at very early stages.
 We have a working text field with a caret, selection, drag-select, horizontal
 scrolling and clipping.
 
+** dependencies
+#+begin_example
+sudo apt install libgtk-4-dev libgirepository-2.0-dev libgtk-4-doc
+#+end_example
+
 ** running tests
 #+begin_src common-lisp
   (ql:quickload :basic-morphenator)
