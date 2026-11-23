@@ -13,7 +13,7 @@
 
 (defun print-object-inner (obj  stream)
   (print-unreadable-object (obj stream :type t :identity t)
-    (format stream "~a"
+    (format stream "~s"
             (loop for sl in (closer-mop:class-slots (class-of obj))
                   for slot-name = (closer-mop:slot-definition-name sl)
                   collect (cons slot-name
