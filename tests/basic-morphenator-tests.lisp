@@ -265,25 +265,29 @@
            (tm (bm:find-text-morph world)))
       (is-true tm)
       (setf (bm:widget-text tm) "abcdef"
-            (bm:x (bm:location tm)) 0
-            (bm:y (bm:location tm)) 0
+            (bm:scroll-x tm) 0
             (bm:x (bm:extent tm)) 300
             (bm:y (bm:extent tm)) 30)
-      ;; Local x = 4 + 9 = 13 -> index 1; local x = 4 + 36 = 40 -> index 4
-      (process-event win :pressed '(1 13 10))
-      (is (eq tm (bm::world-keyboard-focus world)))
-      (is (= 1 (bm:cursor-pos tm)))
-      (is (= 1 (bm:selection-start tm)))
-      (is-true (bm:is-selecting tm))
+      (multiple-value-bind (dx dy) (bm::morph-global-offset tm)
+        (let* ((mid-y (+ dy 10))
+               ;; local-x = 13 -> target-x = 9 (in [4.5, 13.5) -> index 1)
+               (press-x (+ dx 13))
+               ;; local-x = 40 -> target-x = 36 (in [31.5, 40.5) -> index 4)
+               (drag-x (+ dx 40)))
+          (process-event win :pressed (list 1 press-x mid-y))
+          (is (eq tm (bm:world-keyboard-focus world)))
+          (is (= 1 (bm:cursor-pos tm)))
+          (is (= 1 (bm:selection-start tm)))
+          (is-true (bm:is-selecting tm))
 
-      (process-event win :motion '(40 10))
-      (is (= 4 (bm:cursor-pos tm)))
-      (is (= 1 (bm:selection-start tm)))
+          (process-event win :motion (list drag-x mid-y))
+          (is (= 4 (bm:cursor-pos tm)))
+          (is (= 1 (bm:selection-start tm)))
 
-      (process-event win :released '(1 40 10))
-      (is-false (bm:is-selecting tm))
-      (is (= 1 (bm:selection-start tm)))
-      (is (= 4 (bm:cursor-pos tm))))))
+          (process-event win :released (list 1 drag-x mid-y))
+          (is-false (bm:is-selecting tm))
+          (is (= 1 (bm:selection-start tm)))
+          (is (= 4 (bm:cursor-pos tm))))))))
 
 (test text-cursor-selection-and-editing
   "Verify cursor movement, shift selection, insertion, and backspace deletion."

@@ -458,7 +458,11 @@
         (location morph) (build-location 0 0)
         (extent morph) (make-instance 'extent
                                       :x (or (car *window-size*) 600)
-                                      :y (or (cdr *window-size*) 400))))
+                                      :y (or (cdr *window-size*) 400)))
+  (unless (active-hand morph)
+    (setf (active-hand morph)
+          (make-instance 'hand-morph
+                         :mouse-over-handler (make-instance 'mouse-over-handler)))))
 
 (defmethod render-world ((morph world-morph))
   (let ((ext (extent morph)))
@@ -480,27 +484,22 @@
           (setf (y (extent sub)) (round (* h (proportional-height spec)))))))
     (layout-submorphs sub)))
 
+;;; ---------------focus -------------------------------------------------------
 (defgeneric accepts-keyboard-focus-p (morph)
   (:documentation "Return T if MORPH can hold keyboard focus.")
   (:method ((morph morph)) nil)
   (:method ((morph text-model-morph)) t))
 
 (defun world-keyboard-focus (world)
-  (when world
-    (let ((hand (active-hand world)))
-      (if hand
-          (keyboard-focus hand)
-          (focused-morph world)))))
+  (when (and world (active-hand world))
+    (keyboard-focus (active-hand world))))
 
 (defun (setf world-keyboard-focus) (morph world)
-  (when world
+  (when (and world (active-hand world))
     (let ((next-focus (if (and morph (accepts-keyboard-focus-p morph))
                           morph
-                          nil))
-          (hand (active-hand world)))
-      (if hand
-          (setf (keyboard-focus hand) next-focus)
-          (setf (focused-morph world) next-focus)))))
+                          nil)))
+      (setf (keyboard-focus (active-hand world)) next-focus))))
 
 (defun morph-has-focus-p (morph)
   (let ((w (morph-target-world morph)))
