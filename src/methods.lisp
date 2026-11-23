@@ -262,10 +262,6 @@
     (setf (is-pressed (pressed-morph world)) nil
           (pressed-morph world) nil)))
 
-(defun morph-has-focus-p (morph)
-  (let ((w (morph-target-world morph)))
-    (and w (eq (focused-morph w) morph))))
-
 (defun handle-unhandled-mouse-button (morph event x y world)
   (when (and world (eq event :released))
     (warn "pressed is ~S" (pressed-morph world))
@@ -458,7 +454,6 @@
   (setf (last-morph-id morph) 1
         (id morph) 1)
   (setf (owner morph) nil
-        (focused-morph morph) nil
         (pressed-morph morph) nil
         (location morph) (build-location 0 0)
         (extent morph) (make-instance 'extent

@@ -123,6 +123,29 @@
       (process-event win :key-pressed '("Z" "Z" 0 nil))
       (is (string= "" (bm:widget-text tm))))))
 
+(test clicking-empty-world-clears-text-focus
+  "Verify clicking empty world space clears keyboard focus from an active text-model-morph."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (tm (bm:find-text-morph world))
+           (empty-patch (make-instance 'bm:boxed-morph
+                                       :color "gray"
+                                       :location (make-instance 'bm:location :x 10 :y 250)
+                                       :extent (make-instance 'bm:extent :x 100 :y 40))))
+      (is-true tm)
+      (bm:add-morph world empty-patch)
+      (setf (bm::world-keyboard-focus world) tm)
+      (is (eq tm (bm:active-text-morph)))
+
+      ;; Clicking a non-focusable morph in world space clears keyboard focus
+      (process-event win :pressed '(1 30 260))
+      (is (null (bm::world-keyboard-focus world)))
+      (is (null (bm:active-text-morph)))
+
+      ;; Subsequent typing leaves text morph untouched
+      (process-event win :key-pressed '("Q" "Q" 0 nil))
+      (is (string= "" (bm:widget-text tm))))))
+
 (test process-event-resize
   "Verify :resize updates window dimensions and *window-size*."
   (with-fixture with-test-window ()
@@ -234,6 +257,33 @@
       (process-event win :released '(1 350 350))
       (is-false (bm::is-pressed btn))
       (is (null (bm::pressed-morph world))))))
+
+(test text-drag-selection-updates-cursor-and-selection
+  "Verify dragging across a focused text-model-morph selects text and clears on release."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (tm (bm:find-text-morph world)))
+      (is-true tm)
+      (setf (bm:widget-text tm) "abcdef"
+            (bm:x (bm:location tm)) 0
+            (bm:y (bm:location tm)) 0
+            (bm:x (bm:extent tm)) 300
+            (bm:y (bm:extent tm)) 30)
+      ;; Local x = 4 + 9 = 13 -> index 1; local x = 4 + 36 = 40 -> index 4
+      (process-event win :pressed '(1 13 10))
+      (is (eq tm (bm::world-keyboard-focus world)))
+      (is (= 1 (bm:cursor-pos tm)))
+      (is (= 1 (bm:selection-start tm)))
+      (is-true (bm:is-selecting tm))
+
+      (process-event win :motion '(40 10))
+      (is (= 4 (bm:cursor-pos tm)))
+      (is (= 1 (bm:selection-start tm)))
+
+      (process-event win :released '(1 40 10))
+      (is-false (bm:is-selecting tm))
+      (is (= 1 (bm:selection-start tm)))
+      (is (= 4 (bm:cursor-pos tm))))))
 
 (test text-cursor-selection-and-editing
   "Verify cursor movement, shift selection, insertion, and backspace deletion."
