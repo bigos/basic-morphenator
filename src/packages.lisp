@@ -61,6 +61,9 @@
    #:render-world
    #:resize
    #:widget-text
+   #:x
+   #:y
+   #:move-text-cursor
 
    ;; Text & input helpers used in tests/code
    #:printable-input-p

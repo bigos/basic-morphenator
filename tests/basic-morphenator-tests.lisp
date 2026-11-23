@@ -96,3 +96,70 @@
   (with-fixture with-test-window ()
     (process-event win :resize '(800 600))
     (is (equal '(800 . 600) bm:*window-size*))))
+
+;;; ======================= layout & hit-testing tests =======================
+(test layout-submorphs-horizontal-and-vertical
+  "Verify horizontal and vertical layout sizing and gap placement without overflow."
+  (let* ((container (make-instance 'bm:layout-morph
+                                   :direction :horizontal
+                                   :separation 10
+                                   :extent (make-instance 'bm:extent :x 320 :y 40)))
+         (left (make-instance 'bm:boxed-morph
+                              :color "red"
+                              :extent (make-instance 'bm:extent :x 60 :y 40)
+                              :layout-spec (make-instance 'bm:layout-spec :fixed-width 60)))
+         (right (make-instance 'bm:boxed-morph
+                               :color "blue"
+                               :extent (make-instance 'bm:extent :x 50 :y 40)
+                               :layout-spec (make-instance 'bm:layout-spec :proportional-width 1.0))))
+    (bm:add-morph container left)
+    (bm:add-morph container right)
+    (is (= 0 (bm:x (bm:location left))))
+    (is (= 60 (bm:x (bm:extent left))))
+    (is (= 70 (bm:x (bm:location right))))
+    (is (= 250 (bm:x (bm:extent right))))
+    (is (<= (+ (bm:x (bm:location right)) (bm:x (bm:extent right)))
+            (bm:x (bm:extent container))))))
+
+(test morphs-at-hit-testing-chain
+  "Verify morphs-at returns outermost-to-innermost chain and respects bounds."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (chain-inside (bm:morphs-at world 15 15))
+           (chain-outside (bm:morphs-at world 9999 9999)))
+      (is-true chain-inside)
+      (is (eq world (first chain-inside)))
+      (is (null chain-outside)))))
+
+;;; ======================= widget & cursor/selection tests ==================
+(test button-press-triggers-greet-me
+  "Pressing a pluggable-button-morph invokes its action-selector and updates greeted."
+  (with-fixture with-test-window ()
+    (let* ((model (bm:the-model))
+           (clicked nil)
+           (btn (make-instance 'bm:pluggable-button-morph
+                               :color "green"
+                               :extent (make-instance 'bm:extent :x 100 :y 30)
+                               :label "Test"
+                               :action-selector (lambda ()
+                                                  (setf clicked t)
+                                                  (bm:greet-me model)))))
+      (setf (bm:entered model) "Ada")
+      (bm:handle-event-mouse-button btn :pressed 1 10 10)
+      (is-true clicked)
+      (is (string= "Ada" (bm:greeted model))))))
+
+(test text-cursor-selection-and-editing
+  "Verify cursor movement, shift selection, insertion, and backspace deletion."
+  (let ((tm (make-instance 'bm:text-model-morph :text "hello")))
+    (setf (bm:cursor-pos tm) 5)
+    (bm:move-text-cursor tm 2 t)
+    (is (= 2 (bm:cursor-pos tm)))
+    (is (= 5 (bm:selection-start tm)))
+    (bm:insert-at-cursor tm "XY")
+    (is (string= "heXY" (bm:widget-text tm)))
+    (is (= 4 (bm:cursor-pos tm)))
+    (is (null (bm:selection-start tm)))
+    (bm:delete-before-cursor tm)
+    (is (string= "heX" (bm:widget-text tm)))
+    (is (= 3 (bm:cursor-pos tm)))))
