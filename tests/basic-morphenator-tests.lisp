@@ -2,7 +2,6 @@
 
 ;; (ql:quickload :basic-morphenator/tests)
 (in-package #:basic-morphenator-test)
-;; (fiveam:run-all-tests)
 ;; (run! 'basic-equalities)
 
 ;; (setf 5am:*on-error* :debug)
@@ -19,14 +18,6 @@
       (setf a nil
             b nil
             c nil)))
-
-(def-fixture with-test-window ()
-  (let ((win (bm:main :testing t)))
-    (unwind-protect
-         (&body)
-      (setf bm::*basic-morphenator-model* nil
-            bm::*environment* nil
-            bm::*window-size* nil))))
 
 ;;; ======================= tests ==============================================
 (fiveam:test basic-equalities
