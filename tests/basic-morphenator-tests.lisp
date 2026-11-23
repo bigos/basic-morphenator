@@ -307,3 +307,21 @@
     (bm:delete-before-cursor tm)
     (is (string= "heX" (bm:widget-text tm)))
     (is (= 3 (bm:cursor-pos tm)))))
+;;; ================================== adding duplicate morphs =================
+(test add-morph-rejects-self
+  (let ((m (make-instance 'bm:boxed-morph)))
+    (signals error (bm:add-morph m m))))
+
+(test add-morph-rejects-cycle
+  (let ((a (make-instance 'bm:boxed-morph))
+        (b (make-instance 'bm:boxed-morph))
+        (c (make-instance 'bm:boxed-morph)))
+    (bm:add-morph a b)
+    (bm:add-morph b c)
+    (signals error (bm:add-morph c a))))
+
+(test add-morph-rejects-duplicate-child
+  (let ((a (make-instance 'bm:boxed-morph))
+        (b (make-instance 'bm:boxed-morph)))
+    (bm:add-morph a b)
+    (signals error (bm:add-morph a b))))

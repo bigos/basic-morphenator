@@ -68,9 +68,7 @@
 
 (defmethod initialize-instance :after ((morph morph) &key)
   (unless (typep morph 'world-morph)
-    (setf (id morph) (1+ (last-morph-id morph)))
-    (setf (last-morph-id morph) (id morph))))
-
+    (setf (id morph) (next-morph-id))))
 ;;; =============== add morph ==================================================
 (defgeneric layout-submorphs (morph)
   (:method ((morph morph)) nil))
@@ -81,6 +79,28 @@
   (setf (submorphs morph) (append (submorphs morph) (list submorph)))
   (refresh-location submorph)
   (layout-submorphs morph))
+
+(defmethod add-morph ((morph morph) (submorph morph))
+  ;; 1. Cycle: submorph is morph, or an ancestor of morph.
+  (when (morph-ancestor-p morph submorph)
+    (error "Cannot add ~S to ~S: would create a cycle." submorph morph))
+
+  ;; 2. Duplicate: already a direct child of morph.
+  (when (member submorph (submorphs morph) :test #'eq)
+    (error "~S is already a submorph of ~S." submorph morph))
+
+  ;; 3. Detach for reparenting
+  (when (owner submorph)
+    (setf (submorphs (owner submorph))
+          (remove submorph (submorphs (owner submorph)) :test #'eq))
+    (setf (owner submorph) nil))
+
+  ;; All checks passed — mutate.
+  (setf (owner submorph) morph)
+  (setf (submorphs morph) (append (submorphs morph) (list submorph)))
+  (refresh-location submorph)
+  (layout-submorphs morph)
+  submorph)
 
 ;;; ================== location ================================================
 ;;; Ensure every placed-morph starts with a valid (0, 0) location
@@ -439,9 +459,9 @@
 
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)
-  (setf (last-morph-id morph) 1
-        (id morph) 1)
-  (setf (owner morph) nil
+  (reset-morph-id-counter 1)             ; next non-world morph will be id 2
+  (setf (id morph) 1
+        (owner morph) nil
         (pressed-morph morph) nil
         (location morph) (build-location 0 0)
         (extent morph) (make-instance 'extent

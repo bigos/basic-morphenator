@@ -8,6 +8,7 @@
 (defvar *basic-morphenator-model* nil)
 (defvar *environment* nil)
 (defvar *window-size* nil)
+(defvar *morph-id-counter* 0)
 
 ;;; ============================================================================
 
@@ -44,3 +45,9 @@
 (defun morph-target-world (morph)
   (or (morph-world morph)
       (current-world)))
+
+(defun next-morph-id ()
+  (incf *morph-id-counter*))
+
+(defun reset-morph-id-counter (value)
+  (setf *morph-id-counter* value))

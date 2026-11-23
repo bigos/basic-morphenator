@@ -79,8 +79,7 @@
    (pause)
    (last-cycle-had-any-event)
    (taskbar)
-   (scale-factor :allocation :class :std 1.0)
-   (last-morph-id :allocation :class :documentation "last-id for new morph creation" )))
+   (scale-factor :allocation :class :std 1.0)))
 
 ;;; morphic - layouts ----------------------------------------------------------
 (defclass/std layout-adjusting-morph (boxed-morph)

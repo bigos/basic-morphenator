@@ -179,3 +179,9 @@
   (:method ((model t))
     (declare (ignore model))
     nil))
+
+(defun morph-ancestor-p (morph ancestor)
+  "Return T if ANCESTOR is MORPH itself or appears in MORPH's owner chain."
+  (loop for m = morph then (owner m)
+        while m
+          thereis (eq m ancestor)))
