@@ -108,7 +108,7 @@
                   10)))
     (loop for m in (submorphs own)
           until (eq m morph)
-          sum (+ (~> m extent (funcall axis-fn _)) gap))))
+          sum (+ (funcall axis-fn (extent m)) gap))))
 
 (defmethod prev-sibling-widths-sum ((morph morph))
   (prev-sibling-axis-sum morph #'x))
