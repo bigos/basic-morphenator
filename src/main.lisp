@@ -88,12 +88,19 @@
 
 (defun handle-window-resize (lisp-window w h)
   (gui-window:window-resize w h lisp-window)
-  (when (and (fboundp '(setf width))
-             (compute-applicable-methods #'(setf width) (list w lisp-window)))
-    (setf (width lisp-window) w))
-  (when (and (fboundp '(setf height))
-             (compute-applicable-methods #'(setf height) (list h lisp-window)))
-    (setf (height lisp-window) h))
+
+  ;; (when (and (fboundp '(setf width))
+  ;;            (compute-applicable-methods #'(setf width) (list w lisp-window)))
+  ;;   (setf (width lisp-window) w))
+  (when (fboundp '(setf width))
+    (ignore-errors (setf (width lisp-window) w)))
+
+  ;; (when (and (fboundp '(setf height))
+  ;;            (compute-applicable-methods #'(setf height) (list h lisp-window)))
+  ;;   (setf (height lisp-window) h))
+  (when (fboundp '(setf height))
+    (ignore-errors (setf (width lisp-window) w)))
+
   (setf *window-size* (cons w h))
   (when (current-world)
     (resize (current-world) w h)))

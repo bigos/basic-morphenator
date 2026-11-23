@@ -16,9 +16,8 @@
     ;; body
     (&body)
     ;; teardown code
-    (setf a nil
-          b nil
-          c nil)))
+    ;; not applicable for let
+   ))
 
 ;;; ======================= tests ==============================================
 (fiveam:test basic-equalities
@@ -38,10 +37,10 @@
 ;;; =========================== fixtures =======================================
 (def-fixture with-test-window ()
   (let ((win (bm:main :testing t)))
-    (unwind-protect
-         (&body)
+    (unwind-protect (&body)
       (setf bm:*basic-morphenator-model* nil
-            bm:*environment* nil))))
+            bm:*environment* nil
+            bm:*window-size* nil))))
 
 ;;; ======================= unit tests =========================================
 (test printable-input-validation
@@ -277,11 +276,8 @@
                (w5 (bm::safe-text-advance-width tm (subseq (bm:widget-text tm) 0 5)))
                (press-target (- (/ (+ w1 w2) 2.0) 0.5))
                (drag-target  (- (/ (+ w4 w5) 2.0) 0.5))
-               ;; (press-x (+ dx pad (- press-target (bm:scroll-x tm))))
-               ;; (drag-x  (+ dx pad (- drag-target (bm:scroll-x tm))))
                (press-x (+ dx pad press-target (- (bm:scroll-x tm))))
-               (drag-x  (+ dx pad drag-target  (- (bm:scroll-x tm))))
-               )
+               (drag-x  (+ dx pad drag-target  (- (bm:scroll-x tm)))))
           (process-event win :pressed (list 1 press-x mid-y))
           (is (eq tm (bm:world-keyboard-focus world)))
           (is (= 1 (bm:cursor-pos tm)))

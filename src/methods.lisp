@@ -76,6 +76,7 @@
   (:method ((morph morph)) nil))
 
 (defmethod add-morph ((morph morph) (submorph morph))
+  (assert (not (loop for m = morph then (owner m) while m thereis (eq m submorph))))
   (setf (owner submorph) morph)
   (setf (submorphs morph) (append (submorphs morph) (list submorph)))
   (refresh-location submorph)
