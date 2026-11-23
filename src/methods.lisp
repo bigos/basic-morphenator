@@ -316,7 +316,7 @@
        (finish-text-selection morph)))))
 
 (defun update-text-drag-selection (x)
-  (let ((fm (let ((w (current-world))) (and w (focused-morph w)))))
+  (let ((fm (let ((w (current-world))) (and w (world-keyboard-focus w)))))
     (when (and (typep fm 'text-model-morph) (is-selecting fm))
       (multiple-value-bind (dx dy) (morph-global-offset fm)
         (declare (ignore dy))

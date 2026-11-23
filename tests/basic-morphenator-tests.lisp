@@ -84,7 +84,7 @@
       (is (string= "" (bm:entered model)))
 
       ;; Focus the text-model-morph and type
-      (setf (bm::focused-morph world) tm)
+      (setf (bm::world-keyboard-focus world) tm)
       (is (eq tm (bm:active-text-morph)))
       (process-event win :key-pressed '("H" "H" 0 nil))
       (process-event win :key-pressed '("i" "i" 0 nil))
@@ -97,6 +97,30 @@
       ;; Clear via Alt+c
       (process-event win :key-pressed '("c" "c" 0 (:ALT)))
       (is (string= "" (bm:greeted model)))
+      (is (string= "" (bm:widget-text tm))))))
+
+(test clicking-non-focusable-clears-text-focus
+  "Verify clicking a button clears keyboard focus from an active text-model-morph."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (tm (bm:find-text-morph world))
+           (btn (make-instance 'bm:pluggable-button-morph
+                               :color "green"
+                               :label "Blur"
+                               :location (make-instance 'bm:location :x 10 :y 10)
+                               :extent (make-instance 'bm:extent :x 80 :y 30))))
+      (is-true tm)
+      (bm:add-morph world btn)
+      (setf (bm::world-keyboard-focus world) tm)
+      (is (eq tm (bm:active-text-morph)))
+
+      ;; Clicking the button clears keyboard focus
+      (process-event win :pressed '(1 20 20))
+      (is (null (bm::world-keyboard-focus world)))
+      (is (null (bm:active-text-morph)))
+
+      ;; Typing after losing focus does not edit the text morph
+      (process-event win :key-pressed '("Z" "Z" 0 nil))
       (is (string= "" (bm:widget-text tm))))))
 
 (test process-event-resize
@@ -158,7 +182,7 @@
       (let* ((px 45)
              (py 50)
              (chain (bm:morphs-at world px py))
-             (hit (bm::find-the-morph px py)))
+             (hit (bm:find-the-morph px py)))
         (is (equal chain (list world container button)))
         (is (eq button hit))
         (is (not (eq container hit)))

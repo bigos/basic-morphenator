@@ -67,7 +67,6 @@
 
 (defclass/std world-morph (paste-up-morph)
   ((active-hand)
-   (focused-morph :std nil)
    (pressed-morph :std nil)
    (canvas)
    (damage-recorder)

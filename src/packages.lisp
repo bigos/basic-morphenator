@@ -66,6 +66,8 @@
    #:move-text-cursor
    #:find-the-morph
    #:find-text-morph
+   #:accepts-keyboard-focus-p
+   #:world-keyboard-focus
 
    ;; Text & input helpers used in tests/code
    #:printable-input-p

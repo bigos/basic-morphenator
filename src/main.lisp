@@ -124,7 +124,7 @@
      (dispatch-mouse-button event args))
     (:released
      (let* ((w (current-world))
-            (fm (and w (focused-morph w))))
+            (fm (and w (world-keyboard-focus w))))
        (finish-text-selection fm))
      (dispatch-mouse-button event args))
     (:resize
