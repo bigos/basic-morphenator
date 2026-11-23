@@ -59,10 +59,7 @@
       (add-morph row label)
       (add-morph row input)
       (add-morph row button)
-      (add-morph view greeting-label))
-    (setf (active-hand world)
-          (make-instance 'hand-morph
-                         :mouse-over-handler (make-instance 'mouse-over-handler)))))
+      (add-morph view greeting-label))))
 
 (defun build-location (x y)
   (make-instance 'location
