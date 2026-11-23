@@ -15,7 +15,7 @@ sudo apt install libgtk-4-dev libgirepository-2.0-dev libgtk-4-doc
 
 ** running tests
 #+begin_src common-lisp
-  (ql:quickload :basic-morphenator)
+  (asdf:load-system "basic-morphenator" :force t)
 
   ;; example program
   (basic-morphenator:main)
