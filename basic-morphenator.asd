@@ -1,13 +1,13 @@
 (defsystem "basic-morphenator"
-    :version "0.0.1"
-    :author "https://github.com/bigos"
-    :license "PUBLIC DOMAIN"
-    :depends-on (#:clops-gui
-                 #:sycamore
-                 #:serapeum
-                 #:cl-gtk4 #:cl-gdk4 #:cl-glib #:cl-cairo2
-                 #:defclass-std
-                 )
+  :version "0.0.1"
+  :author "https://github.com/bigos"
+  :license "PUBLIC DOMAIN"
+  :depends-on (#:clops-gui
+               #:sycamore
+               #:serapeum
+               #:cl-gtk4 #:cl-gdk4 #:cl-glib #:cl-cairo2
+               #:defclass-std
+               )
   :pathname "src/"
   :serial T
   :components ((:file "packages")
@@ -18,7 +18,8 @@
                (:file "helpers")
                (:file "main")
                )
-    :description "basic morphenator for GUI for clops in separate system")
+  :in-order-to ((test-op (test-op "basic-morphenator/tests")))
+  :description "basic morphenator for GUI for clops in separate system")
 
 (defsystem "basic-morphenator/tests"
     :depends-on ("basic-morphenator" "fiveam")
@@ -27,4 +28,8 @@
     :components ((:file "packages")
                  (:file "basic-morphenator-tests"))
     :perform (test-op (op c)
-                      (uiop:symbol-call :fiveam :run-all-tests)))
+                      (uiop:symbol-call :fiveam
+                                        :run!
+                                        (uiop:find-symbol*
+                                         :basic-morphenator-suite
+                                         :basic-morphenator-test))))
