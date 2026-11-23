@@ -7,3 +7,14 @@ At the moment this project is at very early stages.
 
 We have a working text field with a caret, selection, drag-select, horizontal
 scrolling and clipping.
+
+** running tests
+#+begin_src common-lisp
+  (ql:quickload :basic-morphenator)
+
+  ;; example program
+  (basic-morphenator:main)
+
+  ;; tests
+  (asdf:test-system "basic-morphenator")
+#+end_src

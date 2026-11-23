@@ -21,6 +21,8 @@
   :in-order-to ((test-op (test-op "basic-morphenator/tests")))
   :description "basic morphenator for GUI for clops in separate system")
 
+;; (ql:quickload :basic-morphenator)
+;; (asdf:test-system "basic-morphenator")
 (defsystem "basic-morphenator/tests"
     :depends-on ("basic-morphenator" "fiveam")
     :pathname "tests/"
