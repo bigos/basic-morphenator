@@ -228,6 +228,7 @@
         (setf *environment* :development)
         (gui-window-gtk:window-main (make-instance 'basic-morphenator-window)))))
 
+(-> experiment () null)
 (defun experiment ()
   (let ((ew (main :testing t)))
     (process-event ew :resize '(400 500))

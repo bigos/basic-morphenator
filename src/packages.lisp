@@ -1,5 +1,8 @@
 (defpackage #:basic-morphenator
   (:use #:cl)
+  (:import-from :serapeum
+                ~>
+                ->)
   (:import-from :defclass-std
                 defclass/std)
   (:import-from :boxes
