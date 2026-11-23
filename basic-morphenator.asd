@@ -4,6 +4,7 @@
   :license "PUBLIC DOMAIN"
   :depends-on (#:clops-gui
                #:sycamore
+               #:closer-mop
                #:cl-gtk4 #:cl-gdk4 #:cl-glib #:cl-cairo2
                #:defclass-std
                )

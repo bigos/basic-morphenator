@@ -33,8 +33,7 @@
    (submorphs)
    (properties)
    (id)
-   (private-display-bounds)
-   (last-morph-id :allocation :class :documentation "last-id for new morph creation" )))
+   (private-display-bounds)))
 
 (defclass/std placed-morph (morph)
   ((location)
@@ -80,7 +79,8 @@
    (pause)
    (last-cycle-had-any-event)
    (taskbar)
-   (scale-factor :allocation :class :std 1.0)))
+   (scale-factor :allocation :class :std 1.0)
+   (last-morph-id :allocation :class :documentation "last-id for new morph creation" )))
 
 ;;; morphic - layouts ----------------------------------------------------------
 (defclass/std layout-adjusting-morph (boxed-morph)
