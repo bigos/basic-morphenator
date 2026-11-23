@@ -60,17 +60,9 @@
        (handle-alt-shortcut entered model text-morph))
       ((and text-morph
             (handle-text-morph-key text-morph entered key-name shift-p ctrl-p)))
-      ((backspace-key-p key-name)
-       (when model
-         (setf (entered model)
-               (delete-last-char (entered model)))))
       ((return-key-p key-name entered)
        (when model
-         (greet-me model)))
-      ((printable-input-p entered ctrl-p)
-       (when model
-         (setf (entered model)
-               (format nil "~A~A" (entered model) entered)))))))
+         (greet-me model))))))
 
 (defun handle-menu-action (action)
   (cond

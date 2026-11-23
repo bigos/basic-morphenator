@@ -57,39 +57,47 @@
 (test text-morph-editing-helpers
   "Verify delete-char-at-cursor and clear-text-morph."
   (with-fixture with-test-window ()
-    (let ((tm (bm:active-text-morph)))
-      (when tm
-        (setf (bm:widget-text tm) "abcd"
-              (bm:cursor-pos tm) 1)
-        (bm:delete-char-at-cursor tm)
-        (is (string= "acd" (bm:widget-text tm)))
-        (bm:clear-text-morph tm)
-        (is (string= "" (bm:widget-text tm)))
-        (is (= 0 (bm:cursor-pos tm)))))))
+    (let* ((world (bm:current-world))
+           (tm (bm:find-text-morph world)))
+      (is-true tm)
+      (setf (bm:widget-text tm) "abcd"
+            (bm:cursor-pos tm) 1)
+      (bm:delete-char-at-cursor tm)
+      (is (string= "acd" (bm:widget-text tm)))
+      (bm:clear-text-morph tm)
+      (is (string= "" (bm:widget-text tm)))
+      (is (= 0 (bm:cursor-pos tm))))))
 
 ;;; ==================== integration / event tests =============================
 (test process-event-key-and-shortcuts
-  "Verify typing, Return greeting, and Alt+c clearing through process-event."
+  "Verify typing requires focused text-model-morph, Return greets, and Alt+c clears."
   (with-fixture with-test-window ()
-    (let ((model (bm:the-model))
-          (tm (bm:active-text-morph)))
+    (let* ((model (bm:the-model))
+           (world (bm:current-world))
+           (tm (bm:find-text-morph world)))
+      (is-true tm)
+      (is (null (bm:active-text-morph)))
+
+      ;; Unfocused typing should not mutate the text morph or model
+      (process-event win :key-pressed '("X" "X" 0 nil))
+      (is (string= "" (bm:widget-text tm)))
+      (is (string= "" (bm:entered model)))
+
+      ;; Focus the text-model-morph and type
+      (setf (bm::focused-morph world) tm)
+      (is (eq tm (bm:active-text-morph)))
       (process-event win :key-pressed '("H" "H" 0 nil))
       (process-event win :key-pressed '("i" "i" 0 nil))
-      (if tm
-          (is (string= "Hi" (bm:widget-text tm)))
-          (is (string= "Hi" (bm:entered model))))
+      (is (string= "Hi" (bm:widget-text tm)))
 
       ;; Trigger greeting via Return
       (process-event win :key-pressed '("" "Return" 0 nil))
-      (is (string= (if tm (bm:widget-text tm) (bm:entered model))
-                   (bm:greeted model)))
+      (is (string= "Hi" (bm:greeted model)))
 
       ;; Clear via Alt+c
       (process-event win :key-pressed '("c" "c" 0 (:ALT)))
       (is (string= "" (bm:greeted model)))
-      (if tm
-          (is (string= "" (bm:widget-text tm)))
-          (is (string= "" (bm:entered model)))))))
+      (is (string= "" (bm:widget-text tm))))))
 
 (test process-event-resize
   "Verify :resize updates window dimensions and *window-size*."
@@ -131,6 +139,31 @@
       (is (eq world (first chain-inside)))
       (is (null chain-outside)))))
 
+(test nested-morph-hit-testing-returns-innermost-child
+  "Verify morphs-at chain order and find-the-morph selecting nested child over containers."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (container (make-instance 'bm:layout-morph
+                                     :direction :horizontal
+                                     :location (make-instance 'bm:location :x 20 :y 30)
+                                     :extent (make-instance 'bm:extent :x 200 :y 60)))
+           (button (make-instance 'bm:pluggable-button-morph
+                                  :color "green"
+                                  :label "Nested"
+                                  :location (make-instance 'bm:location :x 10 :y 10)
+                                  :extent (make-instance 'bm:extent :x 80 :y 30))))
+      (bm:add-morph world container)
+      (bm:add-morph container button)
+      ;; Global coordinates of button: x in [30, 110), y in [40, 70)
+      (let* ((px 45)
+             (py 50)
+             (chain (bm:morphs-at world px py))
+             (hit (bm::find-the-morph px py)))
+        (is (equal chain (list world container button)))
+        (is (eq button hit))
+        (is (not (eq container hit)))
+        (is (not (eq world hit)))))))
+
 ;;; ======================= widget & cursor/selection tests ==================
 (test button-press-triggers-greet-me
   "Pressing a pluggable-button-morph invokes its action-selector and updates greeted."
@@ -148,6 +181,35 @@
       (bm:handle-event-mouse-button btn :pressed 1 10 10)
       (is-true clicked)
       (is (string= "Ada" (bm:greeted model))))))
+
+(test button-press-and-release-outside-clears-pressed-state
+  "Verify pressing a button sets is-pressed and releasing outside clears pressed state."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (model (bm:the-model))
+           (press-count 0)
+           (btn (make-instance 'bm:pluggable-button-morph
+                               :color "green"
+                               :label "Click"
+                               :location (make-instance 'bm:location :x 10 :y 10)
+                               :extent (make-instance 'bm:extent :x 80 :y 30)
+                               :action-selector (lambda ()
+                                                  (incf press-count)
+                                                  (bm:greet-me model)))))
+      (bm:add-morph world btn)
+      (setf (bm:entered model) "Grace")
+
+      ;; Press inside the button
+      (process-event win :pressed '(1 20 20))
+      (is-true (bm::is-pressed btn))
+      (is (eq btn (bm::pressed-morph world)))
+      (is (= 1 press-count))
+      (is (string= "Grace" (bm:greeted model)))
+
+      ;; Release outside the button (e.g., on world background)
+      (process-event win :released '(1 350 350))
+      (is-false (bm::is-pressed btn))
+      (is (null (bm::pressed-morph world))))))
 
 (test text-cursor-selection-and-editing
   "Verify cursor movement, shift selection, insertion, and backspace deletion."

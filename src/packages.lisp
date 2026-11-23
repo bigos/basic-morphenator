@@ -64,11 +64,12 @@
    #:x
    #:y
    #:move-text-cursor
+   #:find-the-morph
+   #:find-text-morph
 
    ;; Text & input helpers used in tests/code
    #:printable-input-p
    #:active-text-morph
-   #:find-text-morph
    #:delete-char-at-cursor
    #:delete-before-cursor
    #:clear-text-morph
