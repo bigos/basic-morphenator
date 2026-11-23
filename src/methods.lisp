@@ -101,14 +101,19 @@
 (defmethod morph-location-y ((morph morph))
   (morph-location-axis morph #'y))
 
+(defun layout-gap (morph)
+  (if (and morph (typep morph 'layout-morph))
+      (or (separation morph) 10)
+      10))
+
 (defmethod prev-sibling-axis-sum ((morph morph) axis-fn)
   (let* ((own (owner morph))
-         (gap (if (and own (typep own 'layout-morph))
-                  (or (separation own) 10)
-                  10)))
+         (gap (layout-gap own)))
     (loop for m in (submorphs own)
+          for idx from 0
           until (eq m morph)
-          sum (+ (funcall axis-fn (extent m)) gap))))
+          sum (+ (funcall axis-fn (extent m))
+                 (if (> idx 0) gap 0)))))
 
 (defmethod prev-sibling-widths-sum ((morph morph))
   (prev-sibling-axis-sum morph #'x))
@@ -150,13 +155,13 @@
   (let* ((subs (submorphs morph))
          (n (length subs)))
     (when (> n 0)
-      (let* ((gap (or (separation morph) 10))
+      (let* ((gap (layout-gap morph))
              (total-gap (* gap (max 0 (1- n))))
              (dir (direction morph))
-             (avail-w (max 0 (- (x (extent morph))
-                                (if (eq dir :horizontal) total-gap 0))))
-             (avail-h (max 0 (- (y (extent morph))
-                                (if (eq dir :vertical) total-gap 0))))
+             (owner-w (x (extent morph)))
+             (owner-h (y (extent morph)))
+             (avail-w (max 0 (- owner-w (if (eq dir :horizontal) total-gap 0))))
+             (avail-h (max 0 (- owner-h (if (eq dir :vertical) total-gap 0))))
              (fixed-sum 0)
              (prop-sum 0.0))
         ;; 1. Tally fixed sizes and proportional weights along the main axis
@@ -177,8 +182,9 @@
                    (incf fixed-sum (fixed-height spec)))
                   (t
                    (incf fixed-sum (y (extent sub))))))))
-        ;; 2. Resize each child along main and cross axes, then position it
-        (let ((rem (max 0 (- (if (eq dir :horizontal) avail-w avail-h) fixed-sum))))
+        ;; 2. Compute sizes and place children cleanly with cursor tracking
+        (let ((rem (max 0 (- (if (eq dir :horizontal) avail-w avail-h) fixed-sum)))
+              (cursor 0))
           (dolist (sub subs)
             (let* ((spec (layout-spec sub))
                    (new-w (cond
@@ -199,7 +205,13 @@
                             (t (y (extent sub))))))
               (setf (x (extent sub)) new-w
                     (y (extent sub)) new-h)
-              (refresh-location sub)
+              (ecase dir
+                (:horizontal
+                 (setf (location sub) (build-location cursor (morph-location-y sub)))
+                 (incf cursor (+ new-w gap)))
+                (:vertical
+                 (setf (location sub) (build-location (morph-location-x sub) cursor))
+                 (incf cursor (+ new-h gap))))
               (layout-submorphs sub))))))))
 
 ;;; ---------------- mouse location --------------------------------------------
