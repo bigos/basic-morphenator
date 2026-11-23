@@ -27,7 +27,7 @@
     :depends-on ("basic-morphenator" "fiveam")
     :pathname "tests/"
     :serial T
-    :components ((:file "packages")
+    :components ((:file "test-packages")
                  (:file "basic-morphenator-tests"))
     :perform (test-op (op c)
                       (uiop:symbol-call :fiveam
