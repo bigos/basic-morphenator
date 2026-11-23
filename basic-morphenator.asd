@@ -27,7 +27,6 @@
   :serial T
   :components ((:file "packages")
                (:file "basic-morphenator-tests"))
-
   :perform (test-op (op c)
                     (uiop:symbol-call :fiveam :run!
                                       (uiop:find-symbol* :basic-morphenator-suite
