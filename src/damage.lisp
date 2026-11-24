@@ -4,12 +4,13 @@
 
 ;;; ============================================================================
 ;;; Low-level damage tracking: dirty-rectangle bookkeeping, viewport clamping,
-;;; and redraw flag helpers.
+;;; redraw-flag helpers, and per-morph damage recording.
 ;;;
-;;; Loaded after classes.lisp (needs world-morph, extent, damage-recorder,
-;;; needs-redraw-p) and before both methods.lisp and helpers.lisp so that
-;;; record-damage-rect / mark-needs-redraw / viewport-bounds are visible
-;;; without forward references.
+;;; Loaded after geometry.lisp (record-morph-damage needs morph-global-offset)
+;;; and after classes.lisp (needs world-morph, extent, damage-recorder,
+;;; needs-redraw-p). Before both methods.lisp and helpers.lisp so that
+;;; record-damage-rect / record-morph-damage / mark-needs-redraw / viewport-bounds
+;;; are visible without forward references.
 ;;; ============================================================================
 
 ;;; ---------------- redraw flags ----------------------------------------------
@@ -111,14 +112,13 @@ Returns (VALUES cx cy cw ch) or NIL if empty/outside viewport."
                   (coalesce-damage-rects (nconc existing (list rect))))))))
     (mark-needs-redraw world)))
 
-;;; ---------------- record-morph-damage (moved from methods.lisp) -----------
 (defun record-morph-damage (morph)
   "Record MORPH's global bounding rectangle on its target world, if any."
   (when morph
     (let ((world (morph-target-world morph)))
       (when (and world (typep world 'world-morph))
-        (if (and (typep morph 'boxed-morph) (extent morph)
-                 (x (extent morph)) (y (extent morph)))
+        (if (and (typep morph 'boxed-morph)
+                 (extent morph) (x (extent morph)) (y (extent morph)))
             (multiple-value-bind (dx dy) (morph-global-offset morph)
               (record-damage-rect world dx dy (x (extent morph)) (y (extent morph))))
             (mark-needs-redraw world))))))
