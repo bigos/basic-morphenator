@@ -2,6 +2,10 @@
 
 (in-package #:basic-morphenator)
 
+(defvar *deferred-layout-morphs* nil
+  "When non-NIL (a hash-table of morph -> t), defer immediate layout-submorphs calls
+during add-morph and flush them at the end of with-deferred-layout.")
+
 (defmethod print-object ((obj location) stream)
   (print-object-inner obj stream))
 
@@ -89,20 +93,37 @@
             (remove submorph (submorphs old-owner) :test #'eq))
       (setf (owner submorph) nil))
 
-    ;; 4. Attach to new parent.
+    ;; 4. Attach to new parent without O(n^2) append copies.
     (setf (owner submorph) morph)
     (setf (submorphs morph)
           (if (submorphs morph)
               (nconc (submorphs morph) (list submorph))
               (list submorph)))
     (refresh-location submorph)
-    (layout-submorphs morph)
 
-    ;; 5. Re-layout the old owner so its remaining siblings fill the gap.
-    (when old-owner
-      (layout-submorphs old-owner)))
+    ;; 5. Layout immediately unless inside with-deferred-layout.
+    (if *deferred-layout-morphs*
+        (progn
+          (note-deferred-layout morph)
+          (when old-owner
+            (note-deferred-layout old-owner)))
+        (progn
+          (layout-submorphs morph)
+          (when old-owner
+            (layout-submorphs old-owner)))))
 
   submorph)
+
+(defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
+  (ecase (direction owner-morph)
+    (:vertical
+     (set-location-xy morph
+                      (morph-location-x morph)
+                      (prev-sibling-heights-sum morph)))
+    (:horizontal
+     (set-location-xy morph
+                      (prev-sibling-widths-sum morph)
+                      (morph-location-y morph)))))
 
 ;;; ================== location ================================================
 ;;; Ensure every placed-morph starts with a valid (0, 0) location
@@ -525,9 +546,31 @@
       fm)))
 
 (defun set-location-xy (morph x y)
+  "Update MORPH's location coordinates to (X, Y) in place when possible."
   (let ((loc (location morph)))
     (if loc
         (setf (x loc) x
               (y loc) y)
         (setf (location morph) (build-location x y)))
     loc))
+
+(defun note-deferred-layout (morph)
+  (when (and *deferred-layout-morphs* (typep morph 'layout-morph))
+    (setf (gethash morph *deferred-layout-morphs*) t)))
+
+(defun flush-deferred-layouts (table)
+  (when table
+    (maphash (lambda (morph presentp)
+               (declare (ignore presentp))
+               (when (typep morph 'layout-morph)
+                 (layout-submorphs morph)))
+             table)))
+
+(defmacro with-deferred-layout ((&key) &body body)
+  "Batch add-morph operations, running layout-submorphs once per touched layout-morph
+after BODY completes."
+  `(let ((*deferred-layout-morphs* (or *deferred-layout-morphs*
+                                       (make-hash-table :test #'eq))))
+     (unwind-protect
+          (progn ,@body)
+       (flush-deferred-layouts *deferred-layout-morphs*))))

@@ -68,6 +68,8 @@
    #:find-text-morph
    #:accepts-keyboard-focus-p
    #:world-keyboard-focus
+   #:set-location-xy
+   #:with-deferred-layout
 
    ;; Text & input helpers used in tests/code
    #:printable-input-p
