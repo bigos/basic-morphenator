@@ -52,17 +52,6 @@ Returns (VALUES cx cy cw ch) or NIL if empty/outside viewport."
         (when (and (> cw 0) (> ch 0))
           (values x1 y1 cw ch))))))
 
-(defun record-damage-rect (world x y w h)
-  "Record a dirty rectangle (X, Y, W, H) on WORLD and mark WORLD needing redraw."
-  (when (and world (typep world 'world-morph))
-    (multiple-value-bind (cx cy cw ch) (clamp-rect-to-viewport x y w h world)
-      (when cx
-        (let ((rect (list :x cx :y cy :w cw :h ch))
-              (existing (damage-recorder world)))
-          (unless (member rect existing :test #'equal)
-            (setf (damage-recorder world) (nconc existing (list rect))))))
-    (mark-needs-redraw world))))
-
 (defun record-morph-damage (morph)
   "Record MORPH's global bounding rectangle on its target world, if any."
   (when morph

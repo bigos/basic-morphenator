@@ -551,3 +551,22 @@
       (bm:clear-needs-redraw world)
       (is (null (bm::damage-recorder world)))
       (is-false (bm:world-needs-redraw-p world)))))
+
+(test coalesce-damage-rects-merges-overlapping-and-adjacent
+  "Verify overlapping and edge-touching dirty rects merge while disjoint rects stay separate."
+  (with-fixture with-test-window ()
+    (let ((world (bm:current-world)))
+      (bm:clear-needs-redraw world)
+
+      ;; Overlapping and edge-touching rectangles along x:
+      ;; [10, 50) x [10, 40) + [40, 80) x [10, 40) + [30, 60) x [35, 60)
+      (bm:record-damage-rect world 10 10 40 30)
+      (bm:record-damage-rect world 40 10 40 30)
+      (bm:record-damage-rect world 30 35 30 25)
+
+      ;; Disjoint rectangle elsewhere in the viewport
+      (bm:record-damage-rect world 300 200 50 40)
+
+      (is (equal (bm::damage-recorder world)
+                 '((:x 10 :y 10 :w 70 :h 50)
+                   (:x 300 :y 200 :w 50 :h 40)))))))
