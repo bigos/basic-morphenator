@@ -522,3 +522,32 @@
 
       ;; Visible morph is still hit normally
       (is-true (member visible-btn (bm:morphs-at world 30 30))))))
+
+;;; ========== damage-recorder tests ==========================================
+(test damage-recorder-tracks-and-clears-dirty-rects
+  "Verify damage-recorder clamps/records morph damage and clears on clear-needs-redraw."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (btn (make-instance 'bm:pluggable-button-morph
+                               :color "green"
+                               :label "Damage"
+                               :location (make-instance 'bm:location :x 10 :y 20)
+                               :extent (make-instance 'bm:extent :x 80 :y 30))))
+      (bm:add-morph world btn)
+      (bm:clear-needs-redraw world)
+      (is (null (bm::damage-recorder world)))
+      (is-false (bm:world-needs-redraw-p world))
+
+      (bm:record-morph-damage btn)
+      (is-true (bm:world-needs-redraw-p world))
+      (is (equal (bm::damage-recorder world)
+                 '((:x 10 :y 20 :w 80 :h 30))))
+
+      ;; Clamping out-of-bounds rectangle to 600x400 viewport
+      (bm:record-damage-rect world 580 390 50 40)
+      (is (equal (second (bm::damage-recorder world))
+                 '(:x 580 :y 390 :w 20 :h 10)))
+
+      (bm:clear-needs-redraw world)
+      (is (null (bm::damage-recorder world)))
+      (is-false (bm:world-needs-redraw-p world)))))
