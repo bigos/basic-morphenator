@@ -6,16 +6,72 @@
   "When non-NIL (a hash-table of morph -> t), defer immediate layout-submorphs calls
 during add-morph and flush them at the end of with-deferred-layout.")
 
+(defun reset-damage-recorder (&optional (world (current-world)))
+  (when (and world (typep world 'world-morph))
+    (setf (damage-recorder world) nil)))
+
 (defun mark-needs-redraw (&optional (world (current-world)))
   (when (and world (typep world 'world-morph))
     (setf (needs-redraw-p world) t)))
 
 (defun clear-needs-redraw (&optional (world (current-world)))
   (when (and world (typep world 'world-morph))
-    (setf (needs-redraw-p world) nil)))
+    (setf (needs-redraw-p world) nil)
+    (reset-damage-recorder world)))
 
 (defun world-needs-redraw-p (&optional (world (current-world)))
   (and world (typep world 'world-morph) (needs-redraw-p world)))
+
+(defun viewport-bounds (&optional (world (current-world)))
+  "Return (VALUES width height) for the visible viewport, or (VALUES nil nil) if unknown."
+  (let ((ext (and world (typep world 'world-morph) (extent world))))
+    (cond
+      ((and ext (x ext) (y ext))
+       (values (x ext) (y ext)))
+      ((and (consp *window-size*) (car *window-size*) (cdr *window-size*))
+       (values (car *window-size*) (cdr *window-size*)))
+      (t
+       (values nil nil)))))
+
+(defun clamp-rect-to-viewport (x y w h world)
+  "Normalize and clamp rectangle [X, X+W) x [Y, Y+H) to WORLD's viewport when known.
+Returns (VALUES cx cy cw ch) or NIL if empty/outside viewport."
+  (let* ((x1 (min x (+ x w)))
+         (y1 (min y (+ y h)))
+         (x2 (max x (+ x w)))
+         (y2 (max y (+ y h))))
+    (multiple-value-bind (vw vh) (viewport-bounds world)
+      (when vw
+        (setf x1 (max 0 x1)
+              x2 (min vw x2)))
+      (when vh
+        (setf y1 (max 0 y1)
+              y2 (min vh y2)))
+      (let ((cw (- x2 x1))
+            (ch (- y2 y1)))
+        (when (and (> cw 0) (> ch 0))
+          (values x1 y1 cw ch))))))
+
+(defun record-damage-rect (world x y w h)
+  "Record a dirty rectangle (X, Y, W, H) on WORLD and mark WORLD needing redraw."
+  (when (and world (typep world 'world-morph))
+    (multiple-value-bind (cx cy cw ch) (clamp-rect-to-viewport x y w h world)
+      (when cx
+        (let ((rect (list :x cx :y cy :w cw :h ch))
+              (existing (damage-recorder world)))
+          (unless (member rect existing :test #'equal)
+            (setf (damage-recorder world) (nconc existing (list rect))))))
+    (mark-needs-redraw world))))
+
+(defun record-morph-damage (morph)
+  "Record MORPH's global bounding rectangle on its target world, if any."
+  (when morph
+    (let ((world (morph-target-world morph)))
+      (when (and world (typep world 'world-morph))
+        (if (and (typep morph 'boxed-morph) (extent morph) (x (extent morph)) (y (extent morph)))
+            (multiple-value-bind (dx dy) (morph-global-offset morph)
+              (record-damage-rect world dx dy (x (extent morph)) (y (extent morph))))
+            (mark-needs-redraw world))))))
 
 (defun set-location-xy (morph x y)
   "Update MORPH's location coordinates to (X, Y) in place when possible."
@@ -36,7 +92,7 @@ during add-morph and flush them at the end of with-deferred-layout.")
                (declare (ignore presentp))
                (when (typep morph 'layout-morph)
                  (layout-submorphs morph)
-                 (mark-needs-redraw (morph-target-world morph))))
+                 (record-morph-damage morph)))
              table)))
 
 (defmacro with-deferred-layout ((&key) &body body)
@@ -152,10 +208,10 @@ after BODY completes."
             (note-deferred-layout old-owner)))
         (progn
           (layout-submorphs morph)
-          (mark-needs-redraw (morph-target-world morph))
+          (record-morph-damage morph)
           (when old-owner
             (layout-submorphs old-owner)
-            (mark-needs-redraw (morph-target-world old-owner))))))
+            (record-morph-damage old-owner)))))
 
   submorph)
 
@@ -290,17 +346,6 @@ after BODY completes."
   (values (morph-global-offset-axis morph #'x)
           (morph-global-offset-axis morph #'y)))
 
-(defun viewport-bounds (&optional (world (current-world)))
-  "Return (VALUES width height) for the visible viewport, or (VALUES nil nil) if unknown."
-  (let ((ext (and world (typep world 'world-morph) (extent world))))
-    (cond
-      ((and ext (x ext) (y ext))
-       (values (x ext) (y ext)))
-      ((and (consp *window-size*) (car *window-size*) (cdr *window-size*))
-       (values (car *window-size*) (cdr *window-size*)))
-      (t
-       (values nil nil)))))
-
 (defun morph-rect-in-viewport-p (dx dy w h vw vh)
   "Return T if rectangle [DX, DX+W) x [DY, DY+H) overlaps viewport [0, VW) x [0, VH)."
   (and (> w 0) (> h 0)
@@ -348,17 +393,23 @@ after BODY completes."
          (entered (remove-if (lambda (m) (member m old)) new-chain))
          (changed-p (or left entered (not (equal old new-chain)))))
     (dolist (m (reverse left))
-      (when (handles-mouse-over-p m) (mouse-leave m)))
+      (when (handles-mouse-over-p m)
+        (mouse-leave m)
+        (record-morph-damage m)))
     (dolist (m entered)
-      (when (handles-mouse-over-p m) (mouse-enter m)))
+      (when (handles-mouse-over-p m)
+        (mouse-enter m)
+        (record-morph-damage m)))
     (setf (mouse-over-morphs handler) new-chain)
     changed-p))
 
 ;;; ================= events ===================================================
 (defun release-world-pressed-morph (world)
   (when (and world (pressed-morph world))
-    (setf (is-pressed (pressed-morph world)) nil
-          (pressed-morph world) nil)))
+    (let ((prev (pressed-morph world)))
+      (setf (is-pressed prev) nil
+            (pressed-morph world) nil)
+      (record-morph-damage prev))))
 
 (defun handle-unhandled-mouse-button (morph event x y world)
   (declare (ignore morph x y))
@@ -384,18 +435,17 @@ after BODY completes."
        (setf (is-pressed morph) t)
        (when w
          (setf (pressed-morph w) morph
-               (world-keyboard-focus w) nil)
-         (mark-needs-redraw w))
+               (world-keyboard-focus w) nil))
+       (record-morph-damage morph)
        (when (and (contains-point-p morph x y)
                   (action-selector morph))
          (funcall (action-selector morph))))
       (:released
        (release-world-pressed-morph w)
+       (record-morph-damage morph)
        (when (and (contains-point-p morph x y)
                   (secondary-action-selector morph))
-         (funcall (secondary-action-selector morph)))
-       (when w
-         (mark-needs-redraw w))))))
+         (funcall (secondary-action-selector morph)))))))
 
 (defmethod handle-event-mouse-button ((morph text-model-morph) (event symbol) button x y)
   (declare (ignore button y))
@@ -403,18 +453,17 @@ after BODY completes."
     (case event
       (:pressed
        (when w
-         (setf (world-keyboard-focus w) morph)
-         (mark-needs-redraw w))
+         (setf (world-keyboard-focus w) morph))
        (multiple-value-bind (dx dy) (morph-global-offset morph)
          (declare (ignore dy))
          (let ((idx (cursor-index-at-local-x morph (- x dx))))
            (setf (cursor-pos morph) idx
                  (selection-start morph) idx
-                 (is-selecting morph) t))))
+                 (is-selecting morph) t)))
+       (record-morph-damage morph))
       (:released
        (finish-text-selection morph)
-       (when w
-         (mark-needs-redraw w))))))
+       (record-morph-damage morph)))))
 
 (defun update-text-drag-selection (x)
   (let ((fm (let ((w (current-world))) (and w (world-keyboard-focus w)))))
@@ -425,6 +474,7 @@ after BODY completes."
                (new-pos (cursor-index-at-local-x fm (- x dx))))
           (unless (eql old-pos new-pos)
             (setf (cursor-pos fm) new-pos)
+            (record-morph-damage fm)
             t))))))
 
 (defgeneric handles-mouse-over-p (morph)
@@ -574,6 +624,7 @@ after BODY completes."
   (setf (id morph) 1
         (owner morph) nil
         (pressed-morph morph) nil
+        (damage-recorder morph) nil
         (location morph) (build-location 0 0)
         (extent morph) (make-instance 'extent
                                       :x (or (car *window-size*) 600)
@@ -584,11 +635,21 @@ after BODY completes."
                          :mouse-over-handler (make-instance 'mouse-over-handler)))))
 
 (defmethod render-world ((morph world-morph))
-  (let ((ext (extent morph)))
+  (let ((ext (extent morph))
+        (rects (damage-recorder morph)))
     (when ext
-      (draw-box-rect 0 0 (x ext) (y ext) "red")))
-  (dolist (m (submorphs morph))
-    (render-morph m 0 0))
+      (draw-box-rect 0 0 (x ext) (y ext) "red"))
+    (if (and rects (boundp 'cairo:*context*) cairo:*context*)
+        (dolist (r rects)
+          (cairo:save)
+          (cairo:rectangle (getf r :x) (getf r :y) (getf r :w) (getf r :h))
+          (cairo:clip)
+          (unwind-protect
+               (dolist (m (submorphs morph))
+                 (render-morph m 0 0))
+            (cairo:restore)))
+        (dolist (m (submorphs morph))
+          (render-morph m 0 0))))
   (clear-needs-redraw morph))
 
 (defmethod resize ((morph world-morph) w h)
@@ -605,7 +666,7 @@ after BODY completes."
         (when (proportional-height spec)
           (setf (y (extent sub)) (round (* h (proportional-height spec)))))))
     (layout-submorphs sub))
-  (mark-needs-redraw morph))
+  (record-damage-rect morph 0 0 w h))
 
 ;;; ---------------focus -------------------------------------------------------
 (defgeneric accepts-keyboard-focus-p (morph)
