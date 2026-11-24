@@ -201,30 +201,6 @@ after BODY completes."
               (layout-submorphs sub))))))))
 
 ;;; ---------------- mouse location & visibility culling ------------------------
-(defun morph-rect-in-viewport-p (dx dy w h vw vh)
-  "Return T if rectangle [DX, DX+W) x [DY, DY+H) overlaps viewport [0, VW) x [0, VH)."
-  (and (> w 0) (> h 0)
-       (or (null vw) (< dx vw))
-       (or (null vh) (< dy vh))
-       (or (null vw) (> (+ dx w) 0))
-       (or (null vh) (> (+ dy h) 0))))
-
-(defun morph-visible-p (morph &optional ox oy)
-  "Return T if MORPH should be rendered given accumulated parent offset (OX, OY)."
-  (if (typep morph 'boxed-morph)
-      (let ((ext (extent morph)))
-        (if (and ext (x ext) (y ext))
-            (multiple-value-bind (vw vh) (viewport-bounds (morph-target-world morph))
-              (let ((lx (morph-loc-coord morph #'x))
-                    (ly (morph-loc-coord morph #'y)))
-                (multiple-value-bind (dx dy)
-                    (if (and ox oy)
-                        (values (+ ox lx) (+ oy ly))
-                        (morph-global-offset morph))
-                  (morph-rect-in-viewport-p dx dy (x ext) (y ext) vw vh))))
-            t))
-      t))
-
 (defmethod contains-point-p ((morph morph) x y &optional (ox 0) (oy 0))
   (declare (ignore x y ox oy))
   nil)
@@ -353,6 +329,21 @@ after BODY completes."
 ;;; ============= render =======================================================
 (defmethod render ((morph placed-morph))
   (draw-morph-box morph))
+
+(defmethod render-morph ((morph placed-morph) &optional (ox 0) (oy 0))
+  (let* ((lx (morph-loc-coord morph #'x))
+         (ly (morph-loc-coord morph #'y))
+         (nx (+ ox lx))
+         (ny (+ oy ly)))
+    (when (morph-visible-p morph ox oy)
+      (cairo:save)
+      (cairo:translate lx ly)
+      (unwind-protect
+           (progn
+             (render morph)
+             (dolist (sub (submorphs morph))
+               (render-morph sub nx ny)))
+        (cairo:restore)))))
 
 (defmethod render ((morph label-morph))
   (call-next-method)
@@ -518,12 +509,6 @@ after BODY completes."
          (fm (world-keyboard-focus world)))
     (when (and fm (typep fm 'text-model-morph))
       fm)))
-
-(defun point-in-viewport-p (x y morph)
-  "Return T if (X, Y) is inside MORPH's viewport, or if viewport bounds are unknown."
-  (multiple-value-bind (vw vh) (viewport-bounds (morph-target-world morph))
-    (and (or (null vw) (and (<= 0 x) (< x vw)))
-         (or (null vh) (and (<= 0 y) (< y vh))))))
 
 (defgeneric morphs-at (morph x y &optional offset-x offset-y)
   (:documentation "Morphs containing the point (X, Y), ordered outermost to innermost.")
