@@ -3,11 +3,14 @@
 (in-package #:basic-morphenator)
 
 (defun handle-alt-shortcut (entered model text-morph)
+  "Run a registered ALT shortcut for ENTERED. Return T if handled, NIL otherwise."
   (cond ((equal entered "r")
          (warn "refresh the init-ui")
-         (init-gui model))
+         (init-gui model)
+         t)
         ((equal entered "g")
-         (greet-me model))
+         (greet-me model)
+         t)
         ((equal entered "c")
          (warn "clear by shortcut")
          (when model
@@ -15,8 +18,9 @@
          (if text-morph
              (clear-text-morph text-morph)
              (when model
-               (setf (entered model) ""))))
-        (t (warn "unknown ALT shortcut"))))
+               (setf (entered model) "")))
+         t)
+        (t nil)))
 
 (defun handle-text-morph-key (text-morph entered key-name shift-p ctrl-p)
   "Handle keys specific to an active text-morph. Returns T if handled, NIL otherwise."
