@@ -92,9 +92,6 @@ after BODY completes."
     (setf (id morph) (next-morph-id))))
 
 ;;; =============== add morph ==================================================
-(defgeneric layout-submorphs (morph)
-  (:method ((morph morph)) nil))
-
 (defmethod add-morph ((morph morph) (submorph morph))
   ;; 1. Cycle: submorph is morph, or an ancestor of morph.
   (when (morph-ancestor-p morph submorph)
@@ -354,44 +351,12 @@ after BODY completes."
         c)))
 
 ;;; ============= render =======================================================
-(defgeneric render-prepare-to-show-text (morph)
-  (:method ((morph t))
-    (declare (ignore morph))
-    (when (and (boundp 'cairo:*context*) cairo:*context*)
-      (cairo:select-font-face "Ubuntu Mono" :normal :normal)
-      (cairo:set-font-size 15)
-      (cairo:move-to 0 15))))
-
-(defgeneric render (morph))
-
-(defgeneric render-morph (morph &optional ox oy)
-  (:method ((morph morph) &optional (ox 0) (oy 0))
-    (declare (ignore ox oy))
-    nil)
-  (:method ((morph placed-morph) &optional (ox 0) (oy 0))
-    (let* ((lx (morph-loc-coord morph #'x))
-           (ly (morph-loc-coord morph #'y))
-           (nx (+ ox lx))
-           (ny (+ oy ly)))
-      (when (morph-visible-p morph ox oy)
-        (cairo:save)
-        (cairo:translate lx ly)
-        (unwind-protect
-             (progn
-               (render morph)
-               (dolist (sub (submorphs morph))
-                 (render-morph sub nx ny)))
-          (cairo:restore))))))
-
 (defmethod render ((morph placed-morph))
   (draw-morph-box morph))
 
 (defmethod render ((morph label-morph))
   (call-next-method)
   (draw-morph-label morph (render-text-for-color morph)))
-
-(defmethod render-text-for-color ((morph label-morph))
-  (or (label-text morph) ""))
 
 (defmethod render ((morph pluggable-button-morph))
   (let ((fill (cond
