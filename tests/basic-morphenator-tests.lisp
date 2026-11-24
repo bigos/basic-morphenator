@@ -368,3 +368,25 @@
     (bm:add-morph (make-instance 'bm:world-morph) a)
     (is (= 0   (bm:x (bm:location b))))
     (is (= 100 (bm:x (bm:location c))))))
+
+(test alt-backspace-and-left-reach-text-morph
+  "Alt+Backspace deletes; Alt+Left moves cursor; Alt+x is a no-op."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (tm    (bm:find-text-morph world)))
+      (setf (bm::world-keyboard-focus world) tm)
+      (setf (bm:widget-text tm) "abc"
+            (bm:cursor-pos tm) 3)
+
+      ;; Alt+Backspace → delete before cursor
+      (process-event win :key-pressed '("" "BackSpace" 0 (:ALT)))
+      (is (string= "ab" (bm:widget-text tm)))
+      (is (= 2 (bm:cursor-pos tm)))
+
+      ;; Alt+Left → move cursor
+      (process-event win :key-pressed '("" "Left" 0 (:ALT)))
+      (is (= 1 (bm:cursor-pos tm)))
+
+      ;; Alt+x → no-op, text unchanged
+      (process-event win :key-pressed '("x" "x" 0 (:ALT)))
+      (is (string= "ab" (bm:widget-text tm))))))
