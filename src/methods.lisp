@@ -6,6 +6,17 @@
   "When non-NIL (a hash-table of morph -> t), defer immediate layout-submorphs calls
 during add-morph and flush them at the end of with-deferred-layout.")
 
+(defun mark-needs-redraw (&optional (world (current-world)))
+  (when (and world (typep world 'world-morph))
+    (setf (needs-redraw-p world) t)))
+
+(defun clear-needs-redraw (&optional (world (current-world)))
+  (when (and world (typep world 'world-morph))
+    (setf (needs-redraw-p world) nil)))
+
+(defun world-needs-redraw-p (&optional (world (current-world)))
+  (and world (typep world 'world-morph) (needs-redraw-p world)))
+
 (defun set-location-xy (morph x y)
   "Update MORPH's location coordinates to (X, Y) in place when possible."
   (let ((loc (location morph)))
@@ -18,6 +29,15 @@ during add-morph and flush them at the end of with-deferred-layout.")
 (defun note-deferred-layout (morph)
   (when (and *deferred-layout-morphs* (typep morph 'layout-morph))
     (setf (gethash morph *deferred-layout-morphs*) t)))
+
+(defun flush-deferred-layouts (table)
+  (when table
+    (maphash (lambda (morph presentp)
+               (declare (ignore presentp))
+               (when (typep morph 'layout-morph)
+                 (layout-submorphs morph)
+                 (mark-needs-redraw (morph-target-world morph))))
+             table)))
 
 (defmacro with-deferred-layout ((&key) &body body)
   "Batch add-morph operations, running layout-submorphs once per touched layout-morph
@@ -95,6 +115,7 @@ after BODY completes."
 (defmethod initialize-instance :after ((morph morph) &key)
   (unless (typep morph 'world-morph)
     (setf (id morph) (next-morph-id))))
+
 ;;; =============== add morph ==================================================
 (defgeneric layout-submorphs (morph)
   (:method ((morph morph)) nil))
@@ -131,8 +152,10 @@ after BODY completes."
             (note-deferred-layout old-owner)))
         (progn
           (layout-submorphs morph)
+          (mark-needs-redraw (morph-target-world morph))
           (when old-owner
-            (layout-submorphs old-owner)))))
+            (layout-submorphs old-owner)
+            (mark-needs-redraw (morph-target-world old-owner))))))
 
   submorph)
 
@@ -142,16 +165,15 @@ after BODY completes."
   (unless (location morph)
     (setf (location morph) (build-location 0 0))))
 
-(defun morph-location-axis (morph axis-fn)
-  (if (location morph)
-      (or (funcall axis-fn (location morph)) 0)
-      0))
+(defun morph-loc-coord (morph axis-fn)
+  (let ((loc (and (typep morph 'placed-morph) (location morph))))
+    (or (and loc (funcall axis-fn loc)) 0)))
 
-(defmethod morph-location-x ((morph morph))
-  (morph-location-axis morph #'x))
+(defun morph-location-x ((morph morph))
+  (morph-loc-coord morph #'x))
 
-(defmethod morph-location-y ((morph morph))
-  (morph-location-axis morph #'y))
+(defun morph-location-y ((morph morph))
+  (morph-loc-coord morph #'y))
 
 (defun layout-gap (morph)
   (if (and morph (typep morph 'layout-morph))
@@ -259,12 +281,14 @@ after BODY completes."
               (layout-submorphs sub))))))))
 
 ;;; ---------------- mouse location --------------------------------------------
+(defun morph-global-offset-axis (morph axis-fn)
+  (loop for m = morph then (owner m)
+        while m
+        sum (morph-loc-coord m axis-fn)))
+
 (defun morph-global-offset (morph)
-  (values
-   (loop for m = morph then (owner m) while m
-         sum (if (and (location m) (x (location m))) (x (location m)) 0))
-   (loop for m = morph then (owner m) while m
-         sum (if (and (location m) (y (location m))) (y (location m)) 0))))
+  (values (morph-global-offset-axis morph #'x)
+          (morph-global-offset-axis morph #'y)))
 
 (defmethod contains-point-p ((morph morph) x y &optional (ox 0) (oy 0))
   (declare (ignore x y ox oy))
@@ -273,18 +297,15 @@ after BODY completes."
 (defmethod contains-point-p ((morph boxed-morph) x y &optional ox oy)
   (let ((ext (extent morph)))
     (when ext
-      (multiple-value-bind (dx dy)
-          (if (and ox oy)
-              (values (+ ox (if (and (location morph) (x (location morph)))
-                               (x (location morph))
-                               0))
-                      (+ oy (if (and (location morph) (y (location morph)))
-                               (y (location morph))
-                               0)))
-              (morph-global-offset morph))
-        (let ((lx (- x dx)) (ly (- y dy)))
-          (and (<= 0 lx) (< lx (x ext))
-               (<= 0 ly) (< ly (y ext))))))))
+      (let ((lx-coord (morph-loc-coord morph #'x))
+            (ly-coord (morph-loc-coord morph #'y)))
+        (multiple-value-bind (dx dy)
+            (if (and ox oy)
+                (values (+ ox lx-coord) (+ oy ly-coord))
+                (morph-global-offset morph))
+          (let ((lx (- x dx)) (ly (- y dy)))
+            (and (<= 0 lx) (< lx (x ext))
+                 (<= 0 ly) (< ly (y ext)))))))))
 
 (defgeneric morphs-at (morph x y &optional offset-x offset-y)
   (:documentation "Morphs containing the point (X, Y), ordered outermost to innermost.")
@@ -292,9 +313,8 @@ after BODY completes."
     (declare (ignore x y offset-x offset-y))
     nil)
   (:method ((morph placed-morph) x y &optional (offset-x 0) (offset-y 0))
-    (let* ((loc (location morph))
-           (nx (+ offset-x (if (and loc (x loc)) (x loc) 0)))
-           (ny (+ offset-y (if (and loc (y loc)) (y loc) 0))))
+    (let ((nx (+ offset-x (morph-loc-coord morph #'x)))
+          (ny (+ offset-y (morph-loc-coord morph #'y))))
       (when (contains-point-p morph x y offset-x offset-y)
         (cons morph
               (loop for sub in (reverse (submorphs morph))
@@ -313,6 +333,7 @@ after BODY completes."
       (when (handles-mouse-over-p m) (mouse-enter m)))
     (setf (mouse-over-morphs handler) new-chain)
     changed-p))
+
 ;;; ================= events ===================================================
 (defun release-world-pressed-morph (world)
   (when (and world (pressed-morph world))
@@ -326,11 +347,14 @@ after BODY completes."
 
 (defmethod handle-event-mouse-button ((morph morph) (event symbol) button x y)
   (declare (ignore button))
-  (when (eq event :pressed)
-    (let ((w (morph-target-world morph)))
+  (let ((w (morph-target-world morph)))
+    (when (eq event :pressed)
       (when w
-        (setf (world-keyboard-focus w) nil))))
-  (handle-unhandled-mouse-button morph event x y (morph-target-world morph)))
+        (setf (world-keyboard-focus w) nil)
+        (mark-needs-redraw w)))
+    (when (and w (eq event :released) (pressed-morph w))
+      (mark-needs-redraw w))
+    (handle-unhandled-mouse-button morph event x y w)))
 
 (defmethod handle-event-mouse-button ((morph pluggable-button-morph) (event symbol) button x y)
   (declare (ignore button))
@@ -339,17 +363,19 @@ after BODY completes."
       (:pressed
        (setf (is-pressed morph) t)
        (when w
-         (setf (pressed-morph w) morph))
+         (setf (pressed-morph w) morph
+               (world-keyboard-focus w) nil)
+         (mark-needs-redraw w))
        (when (and (contains-point-p morph x y)
                   (action-selector morph))
-         (funcall (action-selector morph)))
-       (when w
-         (setf (world-keyboard-focus w) nil)))
+         (funcall (action-selector morph))))
       (:released
        (release-world-pressed-morph w)
        (when (and (contains-point-p morph x y)
                   (secondary-action-selector morph))
-         (funcall (secondary-action-selector morph)))))))
+         (funcall (secondary-action-selector morph)))
+       (when w
+         (mark-needs-redraw w))))))
 
 (defmethod handle-event-mouse-button ((morph text-model-morph) (event symbol) button x y)
   (declare (ignore button y))
@@ -357,7 +383,8 @@ after BODY completes."
     (case event
       (:pressed
        (when w
-         (setf (world-keyboard-focus w) morph))
+         (setf (world-keyboard-focus w) morph)
+         (mark-needs-redraw w))
        (multiple-value-bind (dx dy) (morph-global-offset morph)
          (declare (ignore dy))
          (let ((idx (cursor-index-at-local-x morph (- x dx))))
@@ -365,7 +392,9 @@ after BODY completes."
                  (selection-start morph) idx
                  (is-selecting morph) t))))
       (:released
-       (finish-text-selection morph)))))
+       (finish-text-selection morph)
+       (when w
+         (mark-needs-redraw w))))))
 
 (defun update-text-drag-selection (x)
   (let ((fm (let ((w (current-world))) (and w (world-keyboard-focus w)))))
@@ -405,21 +434,17 @@ after BODY completes."
       (cairo:set-font-size 15)
       (cairo:move-to 0 15))))
 
-(defmethod render-prepare-to-show-text ((morph placed-morph))
-  (cairo:select-font-face "Ubuntu Mono" :normal :normal)
-  (cairo:set-font-size 15)
-  (cairo:move-to 0 15))   ; baseline 15px below local origin
-
 (defgeneric render (morph))
 
 (defmethod render :around ((morph placed-morph))
-  (cairo:save)                                    ; match your binding's style
+  (cairo:save)
   (cairo:translate (x (location morph)) (y (location morph)))
   (unwind-protect (call-next-method)
     (cairo:restore)))
 
 (defmethod render ((morph placed-morph))
   (draw-morph-box morph))
+
 (defmethod render :after ((morph morph))
   (loop for m in (submorphs morph)
         do (render m)))
@@ -470,7 +495,7 @@ after BODY completes."
   (invalidate-text-metrics morph))
 
 (defmethod render ((morph text-model-morph))
-  (call-next-method)                     ; ← was (draw-morph-box morph)
+  (call-next-method)
   (let* ((ext (extent morph))
          (w (x ext))
          (h (y ext))
@@ -532,7 +557,8 @@ after BODY completes."
 (defmethod render-world ((morph world-morph))
   (let ((ext (extent morph)))
     (draw-box-rect 0 0 (x ext) (y ext) "red"))
-  (loop for m in (submorphs morph) do (render m)))
+  (loop for m in (submorphs morph) do (render m))
+  (clear-needs-redraw morph))
 
 (defmethod resize ((morph world-morph) w h)
   "Resize the world on window resize"
@@ -547,7 +573,8 @@ after BODY completes."
           (setf (x (extent sub)) (round (* w (proportional-width spec)))))
         (when (proportional-height spec)
           (setf (y (extent sub)) (round (* h (proportional-height spec)))))))
-    (layout-submorphs sub)))
+    (layout-submorphs sub))
+  (mark-needs-redraw morph))
 
 ;;; ---------------focus -------------------------------------------------------
 (defgeneric accepts-keyboard-focus-p (morph)
@@ -576,23 +603,3 @@ after BODY completes."
          (fm (world-keyboard-focus world)))
     (when (and fm (typep fm 'text-model-morph))
       fm)))
-
-(defun mark-needs-redraw (&optional (world (current-world)))
-  (when (and world (typep world 'world-morph))
-    (setf (needs-redraw-p world) t)))
-
-(defun clear-needs-redraw (&optional (world (current-world)))
-  (when (and world (typep world 'world-morph))
-    (setf (needs-redraw-p world) nil)))
-
-(defun world-needs-redraw-p (&optional (world (current-world)))
-  (and world (typep world 'world-morph) (needs-redraw-p world)))
-
-(defun flush-deferred-layouts (table)
-  (when table
-    (maphash (lambda (morph presentp)
-               (declare (ignore presentp))
-               (when (typep morph 'layout-morph)
-                 (layout-submorphs morph)
-                 (mark-needs-redraw (morph-target-world morph))))
-             table)))
