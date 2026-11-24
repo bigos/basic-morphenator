@@ -2,6 +2,39 @@
 
 (in-package #:basic-morphenator)
 
+(defvar *text-width-caches* (make-hash-table :test #'eq)
+  "Maps a text-model-morph to a cache entry (:key KEY :widths VECTOR).")
+
+(defun text-metrics-cache-key (morph str)
+  (declare (ignore morph))
+  (let ((cairo-active-p (and (boundp 'cairo:*context*)
+                             cairo:*context*
+                             t)))
+    (cons str cairo-active-p)))
+
+(defun invalidate-text-metrics (morph)
+  "Clear cached prefix advance widths for MORPH."
+  (when (typep morph 'text-model-morph)
+    (remhash morph *text-width-caches*))
+  morph)
+
+(defun ensure-prefix-widths (morph str)
+  "Return a vector of length (1+ (length STR)) where element I is the advance
+width of (subseq STR 0 I), caching results per morph and text state."
+  (let* ((key (text-metrics-cache-key morph str))
+         (entry (gethash morph *text-width-caches*)))
+    (if (and entry (equal (getf entry :key) key))
+        (getf entry :widths)
+        (let* ((len (length str))
+               (widths (make-array (1+ len) :initial-element 0.0d0)))
+          (loop for i from 1 to len
+                do (setf (aref widths i)
+                         (float (safe-text-advance-width morph (subseq str 0 i))
+                                0.0d0)))
+          (setf (gethash morph *text-width-caches*)
+                (list :key key :widths widths))
+          widths))))
+
 (defun return-key-p (key-name entered)
   (or (and (stringp key-name)
            (or (string-equal key-name "Return")
@@ -82,6 +115,7 @@
               (concatenate 'string (subseq txt 0 s) (subseq txt e)))
         (setf (cursor-pos morph) s)
         (clear-selection morph)
+        (invalidate-text-metrics morph)
         t))))
 
 (defun move-text-cursor (morph new-pos shift-p)
@@ -100,7 +134,8 @@
          (pos (cursor-pos morph)))
     (setf (widget-text morph)
           (concatenate 'string (subseq txt 0 pos) str (subseq txt pos)))
-    (incf (cursor-pos morph) (length str))))
+    (incf (cursor-pos morph) (length str))
+    (invalidate-text-metrics morph)))
 
 (defun delete-before-cursor (morph)
   (unless (delete-selection morph)
@@ -110,7 +145,8 @@
       (when (> pos 0)
         (setf (widget-text morph)
               (concatenate 'string (subseq txt 0 (1- pos)) (subseq txt pos)))
-        (decf (cursor-pos morph))))))
+        (decf (cursor-pos morph))
+        (invalidate-text-metrics morph)))))
 
 (defun cursor-index-at-local-x (morph local-x)
   "Find the closest character index in MORPH for a click at LOCAL-X."
@@ -118,15 +154,15 @@
          (len (length txt))
          (pad 4)
          (target-x (+ (- local-x pad) (scroll-x morph))))
-    (if (<= target-x 0)
+    (if (or (<= target-x 0) (zerop len))
         0
-        (loop with prev-w = 0
-              for i from 1 to len
-              for w = (safe-text-advance-width morph (subseq txt 0 i))
-              when (< target-x (/ (+ prev-w w) 2.0))
-                return (1- i)
-              do (setf prev-w w)
-              finally (return len)))))
+        (let ((widths (ensure-prefix-widths morph txt)))
+          (loop for i from 1 to len
+                for prev-w = (aref widths (1- i))
+                for w = (aref widths i)
+                when (< target-x (/ (+ prev-w w) 2.0))
+                  return (1- i)
+                finally (return len))))))
 
 (defun finish-text-selection (morph)
   (when (typep morph 'text-model-morph)
@@ -153,8 +189,8 @@
   (setf (widget-text text-morph) ""
         (cursor-pos text-morph) 0
         (scroll-x text-morph) 0)
-  (clear-selection text-morph))
-
+  (clear-selection text-morph)
+  (invalidate-text-metrics text-morph))
 
 (defun delete-char-at-cursor (text-morph)
   (unless (delete-selection text-morph)
@@ -163,7 +199,8 @@
            (pos (cursor-pos text-morph)))
       (when (< pos (length txt))
         (setf (widget-text text-morph)
-              (concatenate 'string (subseq txt 0 pos) (subseq txt (1+ pos))))))))
+              (concatenate 'string (subseq txt 0 pos) (subseq txt (1+ pos))))
+        (invalidate-text-metrics text-morph)))))
 
 (defun printable-input-p (entered ctrl-p)
   (and (not ctrl-p)
@@ -185,51 +222,6 @@
   (loop for m = morph then (owner m)
         while m
           thereis (eq m ancestor)))
+```[cite: 7]
 
-(defvar *text-width-caches* (make-hash-table :test #'eq)
-  "Maps a text-model-morph to a cache entry (:key KEY :widths VECTOR).")
-
-(defun text-metrics-cache-key (morph str)
-  (let ((cairo-active-p (and (boundp 'cairo:*context*)
-                             cairo:*context*
-                             t)))
-    (cons str cairo-active-p)))
-
-(defun invalidate-text-metrics (morph)
-  "Clear cached prefix advance widths for MORPH."
-  (when (typep morph 'text-model-morph)
-    (remhash morph *text-width-caches*))
-  morph)
-
-(defun ensure-prefix-widths (morph str)
-  "Return a vector of length (1+ (length STR)) where element I is the advance
-width of (subseq STR 0 I), caching results per morph and text state."
-  (let* ((key (text-metrics-cache-key morph str))
-         (entry (gethash morph *text-width-caches*)))
-    (if (and entry (equal (getf entry :key) key))
-        (getf entry :widths)
-        (let* ((len (length str))
-               (widths (make-array (1+ len) :initial-element 0.0d0)))
-          (loop for i from 1 to len
-                do (setf (aref widths i)
-                         (float (safe-text-advance-width morph (subseq str 0 i))
-                                0.0d0)))
-          (setf (gethash morph *text-width-caches*)
-                (list :key key :widths widths))
-          widths))))
-
-(defun cursor-index-at-local-x (morph local-x)
-  "Find the closest character index in MORPH for a click at LOCAL-X."
-  (let* ((txt (widget-text morph))
-         (len (length txt))
-         (pad 4)
-         (target-x (+ (- local-x pad) (scroll-x morph))))
-    (if (or (<= target-x 0) (zerop len))
-        0
-        (let ((widths (ensure-prefix-widths morph txt)))
-          (loop for i from 1 to len
-                for prev-w = (aref widths (1- i))
-                for w = (aref widths i)
-                when (< target-x (/ (+ prev-w w) 2.0))
-                  return (1- i)
-                finally (return len))))))
+Would you like to see `methods.lisp` or `packages.lisp` in full next, or add tests for these changes?
