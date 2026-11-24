@@ -280,7 +280,7 @@ after BODY completes."
                  (incf cursor (+ new-h gap))))
               (layout-submorphs sub))))))))
 
-;;; ---------------- mouse location --------------------------------------------
+;;; ---------------- mouse location & visibility culling ------------------------
 (defun morph-global-offset-axis (morph axis-fn)
   (loop for m = morph then (owner m)
         while m
@@ -289,6 +289,41 @@ after BODY completes."
 (defun morph-global-offset (morph)
   (values (morph-global-offset-axis morph #'x)
           (morph-global-offset-axis morph #'y)))
+
+(defun viewport-bounds (&optional (world (current-world)))
+  "Return (VALUES width height) for the visible viewport, or (VALUES nil nil) if unknown."
+  (let ((ext (and world (typep world 'world-morph) (extent world))))
+    (cond
+      ((and ext (x ext) (y ext))
+       (values (x ext) (y ext)))
+      ((and (consp *window-size*) (car *window-size*) (cdr *window-size*))
+       (values (car *window-size*) (cdr *window-size*)))
+      (t
+       (values nil nil)))))
+
+(defun morph-rect-in-viewport-p (dx dy w h vw vh)
+  "Return T if rectangle [DX, DX+W) x [DY, DY+H) overlaps viewport [0, VW) x [0, VH)."
+  (and (> w 0) (> h 0)
+       (or (null vw) (< dx vw))
+       (or (null vh) (< dy vh))
+       (or (null vw) (> (+ dx w) 0))
+       (or (null vh) (> (+ dy h) 0))))
+
+(defun morph-visible-p (morph &optional ox oy)
+  "Return T if MORPH should be rendered given accumulated parent offset (OX, OY)."
+  (if (typep morph 'boxed-morph)
+      (let ((ext (extent morph)))
+        (if (and ext (x ext) (y ext))
+            (multiple-value-bind (vw vh) (viewport-bounds (morph-target-world morph))
+              (let ((lx (morph-loc-coord morph #'x))
+                    (ly (morph-loc-coord morph #'y)))
+                (multiple-value-bind (dx dy)
+                    (if (and ox oy)
+                        (values (+ ox lx) (+ oy ly))
+                        (morph-global-offset morph))
+                  (morph-rect-in-viewport-p dx dy (x ext) (y ext) vw vh))))
+            t))
+      t))
 
 (defmethod contains-point-p ((morph morph) x y &optional (ox 0) (oy 0))
   (declare (ignore x y ox oy))
@@ -436,18 +471,27 @@ after BODY completes."
 
 (defgeneric render (morph))
 
-(defmethod render :around ((morph placed-morph))
-  (cairo:save)
-  (cairo:translate (x (location morph)) (y (location morph)))
-  (unwind-protect (call-next-method)
-    (cairo:restore)))
+(defgeneric render-morph (morph &optional ox oy)
+  (:method ((morph morph) &optional (ox 0) (oy 0))
+    (declare (ignore ox oy))
+    nil)
+  (:method ((morph placed-morph) &optional (ox 0) (oy 0))
+    (let* ((lx (morph-loc-coord morph #'x))
+           (ly (morph-loc-coord morph #'y))
+           (nx (+ ox lx))
+           (ny (+ oy ly)))
+      (when (morph-visible-p morph ox oy)
+        (cairo:save)
+        (cairo:translate lx ly)
+        (unwind-protect
+             (progn
+               (render morph)
+               (dolist (sub (submorphs morph))
+                 (render-morph sub nx ny)))
+          (cairo:restore))))))
 
 (defmethod render ((morph placed-morph))
   (draw-morph-box morph))
-
-(defmethod render :after ((morph morph))
-  (loop for m in (submorphs morph)
-        do (render m)))
 
 (defmethod render ((morph label-morph))
   (call-next-method)
@@ -556,8 +600,10 @@ after BODY completes."
 
 (defmethod render-world ((morph world-morph))
   (let ((ext (extent morph)))
-    (draw-box-rect 0 0 (x ext) (y ext) "red"))
-  (loop for m in (submorphs morph) do (render m))
+    (when ext
+      (draw-box-rect 0 0 (x ext) (y ext) "red")))
+  (dolist (m (submorphs morph))
+    (render-morph m 0 0))
   (clear-needs-redraw morph))
 
 (defmethod resize ((morph world-morph) w h)
