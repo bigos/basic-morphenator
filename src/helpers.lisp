@@ -222,6 +222,3 @@ width of (subseq STR 0 I), caching results per morph and text state."
   (loop for m = morph then (owner m)
         while m
           thereis (eq m ancestor)))
-```[cite: 7]
-
-Would you like to see `methods.lisp` or `packages.lisp` in full next, or add tests for these changes?

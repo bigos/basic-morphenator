@@ -6,6 +6,36 @@
   "When non-NIL (a hash-table of morph -> t), defer immediate layout-submorphs calls
 during add-morph and flush them at the end of with-deferred-layout.")
 
+(defun set-location-xy (morph x y)
+  "Update MORPH's location coordinates to (X, Y) in place when possible."
+  (let ((loc (location morph)))
+    (if loc
+        (setf (x loc) x
+              (y loc) y)
+        (setf (location morph) (build-location x y)))
+    loc))
+
+(defun note-deferred-layout (morph)
+  (when (and *deferred-layout-morphs* (typep morph 'layout-morph))
+    (setf (gethash morph *deferred-layout-morphs*) t)))
+
+(defun flush-deferred-layouts (table)
+  (when table
+    (maphash (lambda (morph presentp)
+               (declare (ignore presentp))
+               (when (typep morph 'layout-morph)
+                 (layout-submorphs morph)))
+             table)))
+
+(defmacro with-deferred-layout ((&key) &body body)
+  "Batch add-morph operations, running layout-submorphs once per touched layout-morph
+after BODY completes."
+  `(let ((*deferred-layout-morphs* (or *deferred-layout-morphs*
+                                       (make-hash-table :test #'eq))))
+     (unwind-protect
+          (progn ,@body)
+       (flush-deferred-layouts *deferred-layout-morphs*))))
+
 (defmethod print-object ((obj location) stream)
   (print-object-inner obj stream))
 
@@ -114,17 +144,6 @@ during add-morph and flush them at the end of with-deferred-layout.")
 
   submorph)
 
-(defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
-  (ecase (direction owner-morph)
-    (:vertical
-     (set-location-xy morph
-                      (morph-location-x morph)
-                      (prev-sibling-heights-sum morph)))
-    (:horizontal
-     (set-location-xy morph
-                      (prev-sibling-widths-sum morph)
-                      (morph-location-y morph)))))
-
 ;;; ================== location ================================================
 ;;; Ensure every placed-morph starts with a valid (0, 0) location
 (defmethod initialize-instance :after ((morph placed-morph) &key)
@@ -170,13 +189,13 @@ during add-morph and flush them at the end of with-deferred-layout.")
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph layout-morph))
   (ecase (direction owner-morph)
     (:vertical
-     (setf (location morph)
-           (build-location (morph-location-x morph)
-                           (prev-sibling-heights-sum morph))))
+     (set-location-xy morph
+                      (morph-location-x morph)
+                      (prev-sibling-heights-sum morph)))
     (:horizontal
-     (setf (location morph)
-           (build-location (prev-sibling-widths-sum morph)
-                           (morph-location-y morph))))))
+     (set-location-xy morph
+                      (prev-sibling-widths-sum morph)
+                      (morph-location-y morph)))))
 
 (defmethod refresh-location-with-owner ((morph morph) (owner-morph morph))
   ;; plain (non-layout) owner: child keeps its own local offset;
@@ -255,29 +274,41 @@ during add-morph and flush them at the end of with-deferred-layout.")
    (loop for m = morph then (owner m) while m
          sum (if (and (location m) (y (location m))) (y (location m)) 0))))
 
-(defmethod contains-point-p ((morph morph) x y)
-  (declare (ignore x y))
+(defmethod contains-point-p ((morph morph) x y &optional (ox 0) (oy 0))
+  (declare (ignore x y ox oy))
   nil)
-(defmethod contains-point-p ((morph boxed-morph) x y)
+
+(defmethod contains-point-p ((morph boxed-morph) x y &optional ox oy)
   (let ((ext (extent morph)))
     (when ext
-      (multiple-value-bind (dx dy) (morph-global-offset morph)
+      (multiple-value-bind (dx dy)
+          (if (and ox oy)
+              (values (+ ox (if (and (location morph) (x (location morph)))
+                               (x (location morph))
+                               0))
+                      (+ oy (if (and (location morph) (y (location morph)))
+                               (y (location morph))
+                               0)))
+              (morph-global-offset morph))
         (let ((lx (- x dx)) (ly (- y dy)))
           (and (<= 0 lx) (< lx (x ext))
                (<= 0 ly) (< ly (y ext))))))))
 
-(defgeneric morphs-at (morph x y)
+(defgeneric morphs-at (morph x y &optional offset-x offset-y)
   (:documentation "Morphs containing the point (X, Y), ordered outermost to innermost.")
-  (:method ((morph morph) x y)
-    (declare (ignore x y))
+  (:method ((morph morph) x y &optional (offset-x 0) (offset-y 0))
+    (declare (ignore x y offset-x offset-y))
     nil)
-  (:method ((morph placed-morph) x y)
-    (when (contains-point-p morph x y)
-      (cons morph
-            (loop for sub in (reverse (submorphs morph))
-                  for sub-chain = (morphs-at sub x y)
-                  when sub-chain append sub-chain
-                    when sub-chain return sub-chain)))))
+  (:method ((morph placed-morph) x y &optional (offset-x 0) (offset-y 0))
+    (let* ((loc (location morph))
+           (nx (+ offset-x (if (and loc (x loc)) (x loc) 0)))
+           (ny (+ offset-y (if (and loc (y loc)) (y loc) 0))))
+      (when (contains-point-p morph x y offset-x offset-y)
+        (cons morph
+              (loop for sub in (reverse (submorphs morph))
+                    for sub-chain = (morphs-at sub x y nx ny)
+                    when sub-chain append sub-chain
+                      when sub-chain return sub-chain))))))
 
 (defun process-mouse-over (handler new-chain)
   (let* ((old (mouse-over-morphs handler))
@@ -437,6 +468,10 @@ during add-morph and flush them at the end of with-deferred-layout.")
        (setf (text morph) str)))
     str))
 
+(defmethod (setf widget-text) :after (value (morph text-model-morph))
+  (declare (ignore value))
+  (invalidate-text-metrics morph))
+
 (defmethod render ((morph text-model-morph))
   (call-next-method)                     ; ← was (draw-morph-box morph)
   (let* ((ext (extent morph))
@@ -544,33 +579,3 @@ during add-morph and flush them at the end of with-deferred-layout.")
          (fm (world-keyboard-focus world)))
     (when (and fm (typep fm 'text-model-morph))
       fm)))
-
-(defun set-location-xy (morph x y)
-  "Update MORPH's location coordinates to (X, Y) in place when possible."
-  (let ((loc (location morph)))
-    (if loc
-        (setf (x loc) x
-              (y loc) y)
-        (setf (location morph) (build-location x y)))
-    loc))
-
-(defun note-deferred-layout (morph)
-  (when (and *deferred-layout-morphs* (typep morph 'layout-morph))
-    (setf (gethash morph *deferred-layout-morphs*) t)))
-
-(defun flush-deferred-layouts (table)
-  (when table
-    (maphash (lambda (morph presentp)
-               (declare (ignore presentp))
-               (when (typep morph 'layout-morph)
-                 (layout-submorphs morph)))
-             table)))
-
-(defmacro with-deferred-layout ((&key) &body body)
-  "Batch add-morph operations, running layout-submorphs once per touched layout-morph
-after BODY completes."
-  `(let ((*deferred-layout-morphs* (or *deferred-layout-morphs*
-                                       (make-hash-table :test #'eq))))
-     (unwind-protect
-          (progn ,@body)
-       (flush-deferred-layouts *deferred-layout-morphs*))))
