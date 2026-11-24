@@ -200,24 +200,7 @@ after BODY completes."
                  (incf cursor (+ new-h gap))))
               (layout-submorphs sub))))))))
 
-;;; ---------------- mouse location & visibility culling ------------------------
-(defmethod contains-point-p ((morph morph) x y &optional (ox 0) (oy 0))
-  (declare (ignore x y ox oy))
-  nil)
-
-(defmethod contains-point-p ((morph boxed-morph) x y &optional ox oy)
-  (let ((ext (extent morph)))
-    (when ext
-      (let ((lx-coord (morph-loc-coord morph #'x))
-            (ly-coord (morph-loc-coord morph #'y)))
-        (multiple-value-bind (dx dy)
-            (if (and ox oy)
-                (values (+ ox lx-coord) (+ oy ly-coord))
-                (morph-global-offset morph))
-          (let ((lx (- x dx)) (ly (- y dy)))
-            (and (<= 0 lx) (< lx (x ext))
-                 (<= 0 ly) (< ly (y ext)))))))))
-
+;;; ---------------- mouse-over tracking ---------------------------------------
 (defun process-mouse-over (handler new-chain)
   (let* ((old (mouse-over-morphs handler))
          (left    (remove-if (lambda (m) (member m new-chain)) old))
@@ -308,24 +291,6 @@ after BODY completes."
             (record-morph-damage fm)
             t))))))
 
-(defgeneric handles-mouse-over-p (morph)
-  (:method ((morph morph)) nil))
-(defmethod handles-mouse-over-p ((morph pluggable-button-morph)) t)
-
-(defgeneric mouse-enter (morph))
-(defgeneric mouse-leave (morph))
-(defmethod mouse-enter ((morph pluggable-button-morph))
-  (setf (mouse-is-over morph) t))
-(defmethod mouse-leave ((morph pluggable-button-morph))
-  (setf (mouse-is-over morph) nil))
-
-;;; =============== content ====================================================
-(defmethod label-text ((morph label-morph))
-  (let ((c (contents morph)))
-    (if (functionp c)
-        (funcall c)
-        c)))
-
 ;;; ============= render =======================================================
 (defmethod render ((morph placed-morph))
   (draw-morph-box morph))
@@ -356,12 +321,6 @@ after BODY completes."
                 (t (color morph)))))
     (draw-morph-box morph fill))
   (draw-morph-label morph (label morph)))
-
-(defgeneric widget-text (morph)
-  (:documentation "Return the current text displayed by MORPH."))
-
-(defgeneric (setf widget-text) (value morph)
-  (:documentation "Update the text stored or bound by MORPH."))
 
 (defmethod widget-text ((morph text-model-morph))
   (cond
@@ -483,11 +442,6 @@ after BODY completes."
   (record-damage-rect morph 0 0 w h))
 
 ;;; ---------------focus -------------------------------------------------------
-(defgeneric accepts-keyboard-focus-p (morph)
-  (:documentation "Return T if MORPH can hold keyboard focus.")
-  (:method ((morph morph)) nil)
-  (:method ((morph text-model-morph)) t))
-
 (defun world-keyboard-focus (world)
   (when (and world (active-hand world))
     (keyboard-focus (active-hand world))))
@@ -509,21 +463,3 @@ after BODY completes."
          (fm (world-keyboard-focus world)))
     (when (and fm (typep fm 'text-model-morph))
       fm)))
-
-(defgeneric morphs-at (morph x y &optional offset-x offset-y)
-  (:documentation "Morphs containing the point (X, Y), ordered outermost to innermost.")
-  (:method ((morph morph) x y &optional (offset-x 0) (offset-y 0))
-    (declare (ignore x y offset-x offset-y))
-    nil)
-  (:method ((morph placed-morph) x y &optional (offset-x 0) (offset-y 0))
-    (when (or (not (and (zerop offset-x) (zerop offset-y)))
-              (point-in-viewport-p x y morph))
-      (let ((nx (+ offset-x (morph-loc-coord morph #'x)))
-            (ny (+ offset-y (morph-loc-coord morph #'y))))
-        (when (and (morph-visible-p morph offset-x offset-y)
-                   (contains-point-p morph x y offset-x offset-y))
-          (cons morph
-                (loop for sub in (reverse (submorphs morph))
-                      for sub-chain = (morphs-at sub x y nx ny)
-                      when sub-chain append sub-chain
-                        when sub-chain return sub-chain)))))))

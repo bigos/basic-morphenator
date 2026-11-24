@@ -118,6 +118,3 @@
                       for sub-chain = (morphs-at sub x y nx ny)
                       when sub-chain append sub-chain
                         when sub-chain return sub-chain)))))))
-
-(defmethod greet-me ((model basic-morphenator-model))
-  (setf (greeted model) (entered model)))
