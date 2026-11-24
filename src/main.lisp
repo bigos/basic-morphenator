@@ -22,7 +22,7 @@
          t)
         (t nil)))
 
-(defun handle-text-morph-key (text-morph entered key-name shift-p ctrl-p)
+(defun handle-text-morph-key (text-morph entered key-name shift-p ctrl-p alt-p)
   "Handle keys specific to an active text-morph. Returns T if handled, NIL otherwise."
   (cond
     ((and ctrl-p (string-equal entered "a"))
@@ -47,7 +47,9 @@
     ((backspace-key-p key-name)
      (delete-before-cursor text-morph)
      t)
-    ((printable-input-p entered ctrl-p)
+    ;; Don't insert printable characters while ALT is held — they're app shortcuts.
+    ((and (not alt-p)
+          (printable-input-p entered ctrl-p))
      (insert-at-cursor text-morph entered)
      t)
     (t nil)))
@@ -60,10 +62,14 @@
         (ctrl-p  (and (listp mods) (member :CONTROL mods)))
         (alt-p   (and (listp mods) (member :ALT mods))))
     (cond
-      (alt-p
-       (handle-alt-shortcut entered model text-morph))
+      ;; ALT shortcuts win over the text morph (so Alt+c ≠ inserting "c").
+      ((and alt-p (handle-alt-shortcut entered model text-morph))
+       t)
+      ;; Text morph: handles Alt+Backspace/Left/Right/Delete/Home/End too,
+      ;; but not printable insert while Alt is held.
       ((and text-morph
-            (handle-text-morph-key text-morph entered key-name shift-p ctrl-p)))
+            (handle-text-morph-key text-morph entered key-name shift-p ctrl-p alt-p))
+       t)
       ((return-key-p key-name entered)
        (when model
          (greet-me model))))))
