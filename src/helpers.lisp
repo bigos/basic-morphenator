@@ -222,3 +222,52 @@ width of (subseq STR 0 I), caching results per morph and text state."
   (loop for m = morph then (owner m)
         while m
           thereis (eq m ancestor)))
+
+(defun rect-bounds (r)
+  "Return (VALUES x1 y1 x2 y2) for plist rect R."
+  (let ((x (getf r :x))
+        (y (getf r :y))
+        (w (getf r :w))
+        (h (getf r :h)))
+    (values x y (+ x w) (+ y h))))
+
+(defun rects-overlap-or-touch-p (r1 r2)
+  "Return T if R1 and R2 overlap or share/touch an edge."
+  (multiple-value-bind (ax1 ay1 ax2 ay2) (rect-bounds r1)
+    (multiple-value-bind (bx1 by1 bx2 by2) (rect-bounds r2)
+      (and (<= (max ax1 bx1) (min ax2 bx2))
+           (<= (max ay1 by1) (min ay2 by2))))))
+
+(defun merge-rects (r1 r2)
+  "Return the minimal bounding plist rectangle containing both R1 and R2."
+  (multiple-value-bind (ax1 ay1 ax2 ay2) (rect-bounds r1)
+    (multiple-value-bind (bx1 by1 bx2 by2) (rect-bounds r2)
+      (let* ((x (min ax1 bx1))
+             (y (min ay1 by1))
+             (w (- (max ax2 bx2) x))
+             (h (- (max ay2 by2) y)))
+        (list :x x :y y :w w :h h)))))
+
+(defun coalesce-damage-rects (rects)
+  "Merge all overlapping or touching rectangles in RECTS."
+  (let ((acc '()))
+    (dolist (r rects (nreverse acc))
+      (let ((current r)
+            (remaining '()))
+        (dolist (existing acc)
+          (if (rects-overlap-or-touch-p current existing)
+              (setf current (merge-rects current existing))
+              (push existing remaining)))
+        (setf acc (cons current (nreverse remaining)))))))
+
+(defun record-damage-rect (world x y w h)
+  "Record a dirty rectangle (X, Y, W, H) on WORLD and mark WORLD needing redraw."
+  (when (and world (typep world 'world-morph))
+    (multiple-value-bind (cx cy cw ch) (clamp-rect-to-viewport x y w h world)
+      (when cx
+        (let ((rect (list :x cx :y cy :w cw :h ch))
+              (existing (damage-recorder world)))
+          (unless (member rect existing :test #'equal)
+            (setf (damage-recorder world)
+                  (coalesce-damage-rects (nconc existing (list rect))))))))
+    (mark-needs-redraw world)))
