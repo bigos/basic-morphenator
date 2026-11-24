@@ -2,55 +2,12 @@
 
 (in-package #:basic-morphenator)
 
+;;; helpers are not loaded yet
+(declaim (ftype (function (t t t t t) t) record-damage-rect))
+
 (defvar *deferred-layout-morphs* nil
   "When non-NIL (a hash-table of morph -> t), defer immediate layout-submorphs calls
 during add-morph and flush them at the end of with-deferred-layout.")
-
-(defun reset-damage-recorder (&optional (world (current-world)))
-  (when (and world (typep world 'world-morph))
-    (setf (damage-recorder world) nil)))
-
-(defun mark-needs-redraw (&optional (world (current-world)))
-  (when (and world (typep world 'world-morph))
-    (setf (needs-redraw-p world) t)))
-
-(defun clear-needs-redraw (&optional (world (current-world)))
-  (when (and world (typep world 'world-morph))
-    (setf (needs-redraw-p world) nil)
-    (reset-damage-recorder world)))
-
-(defun world-needs-redraw-p (&optional (world (current-world)))
-  (and world (typep world 'world-morph) (needs-redraw-p world)))
-
-(defun viewport-bounds (&optional (world (current-world)))
-  "Return (VALUES width height) for the visible viewport, or (VALUES nil nil) if unknown."
-  (let ((ext (and world (typep world 'world-morph) (extent world))))
-    (cond
-      ((and ext (x ext) (y ext))
-       (values (x ext) (y ext)))
-      ((and (consp *window-size*) (car *window-size*) (cdr *window-size*))
-       (values (car *window-size*) (cdr *window-size*)))
-      (t
-       (values nil nil)))))
-
-(defun clamp-rect-to-viewport (x y w h world)
-  "Normalize and clamp rectangle [X, X+W) x [Y, Y+H) to WORLD's viewport when known.
-Returns (VALUES cx cy cw ch) or NIL if empty/outside viewport."
-  (let* ((x1 (min x (+ x w)))
-         (y1 (min y (+ y h)))
-         (x2 (max x (+ x w)))
-         (y2 (max y (+ y h))))
-    (multiple-value-bind (vw vh) (viewport-bounds world)
-      (when vw
-        (setf x1 (max 0 x1)
-              x2 (min vw x2)))
-      (when vh
-        (setf y1 (max 0 y1)
-              y2 (min vh y2)))
-      (let ((cw (- x2 x1))
-            (ch (- y2 y1)))
-        (when (and (> cw 0) (> ch 0))
-          (values x1 y1 cw ch))))))
 
 (defun record-morph-damage (morph)
   "Record MORPH's global bounding rectangle on its target world, if any."

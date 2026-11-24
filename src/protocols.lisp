@@ -1,0 +1,120 @@
+(declaim (optimize (speed 2) (safety 3) (debug 3)))
+(in-package #:basic-morphenator)
+
+;;; ---------------- generics whose methods are spread across files -----------
+(defgeneric greet-me (model))
+(defmethod greet-me ((model basic-morphenator-model))
+  (setf (greeted model) (entered model)))
+
+(defgeneric widget-text (morph)
+  (:documentation "Return the current text displayed by MORPH."))
+(defgeneric (setf widget-text) (value morph)
+  (:documentation "Update the text stored or bound by MORPH."))
+
+(defgeneric render (morph))
+(defgeneric render-morph (morph &optional ox oy)
+  (:method ((morph morph) &optional (ox 0) (oy 0))
+    (declare (ignore ox oy))
+    nil))
+
+(defgeneric render-prepare-to-show-text (morph)
+  (:method ((morph t))
+    (declare (ignore morph))
+    (when (and (boundp 'cairo:*context*) cairo:*context*)
+      (cairo:select-font-face "Ubuntu Mono" :normal :normal)
+      (cairo:set-font-size 15)
+      (cairo:move-to 0 15))))
+
+(defgeneric layout-submorphs (morph)
+  (:method ((morph morph)) nil))
+
+(defgeneric accepts-keyboard-focus-p (morph)
+  (:documentation "Return T if MORPH can hold keyboard focus.")
+  (:method ((morph morph)) nil)
+  (:method ((morph text-model-morph)) t))
+
+(defgeneric handles-mouse-over-p (morph)
+  (:method ((morph morph)) nil)
+  (:method ((morph pluggable-button-morph)) t))
+
+(defgeneric mouse-enter (morph))
+(defgeneric mouse-leave (morph))
+(defmethod mouse-enter ((morph pluggable-button-morph))
+  (setf (mouse-is-over morph) t))
+(defmethod mouse-leave ((morph pluggable-button-morph))
+  (setf (mouse-is-over morph) nil))
+
+(defgeneric label-text (morph))
+(defmethod label-text ((morph label-morph))
+  (let ((c (contents morph)))
+    (if (functionp c) (funcall c) c)))
+
+(defgeneric render-text-for-color (morph))
+(defmethod render-text-for-color ((morph label-morph))
+  (or (label-text morph) ""))
+
+;;; ---------------- hit-testing primitives -----------------------------------
+(defun morph-rect-in-viewport-p (dx dy w h vw vh)
+  "Return T if rectangle [DX, DX+W) x [DY, DY+H) overlaps viewport [0, VW) x [0, VH)."
+  (and (> w 0) (> h 0)
+       (or (null vw) (< dx vw))
+       (or (null vh) (< dy vh))
+       (or (null vw) (> (+ dx w) 0))
+       (or (null vh) (> (+ dy h) 0))))
+
+(defun morph-visible-p (morph &optional ox oy)
+  "Return T if MORPH should be rendered given accumulated parent offset (OX, OY)."
+  (if (typep morph 'boxed-morph)
+      (let ((ext (extent morph)))
+        (if (and ext (x ext) (y ext))
+            (multiple-value-bind (vw vh) (viewport-bounds (morph-target-world morph))
+              (let ((lx (morph-loc-coord morph #'x))
+                    (ly (morph-loc-coord morph #'y)))
+                (multiple-value-bind (dx dy)
+                    (if (and ox oy)
+                        (values (+ ox lx) (+ oy ly))
+                        (morph-global-offset morph))
+                  (morph-rect-in-viewport-p dx dy (x ext) (y ext) vw vh))))
+            t))
+      t))
+
+(defun point-in-viewport-p (x y morph)
+  "Return T if (X, Y) is inside MORPH's viewport, or if viewport bounds are unknown."
+  (multiple-value-bind (vw vh) (viewport-bounds (morph-target-world morph))
+    (and (or (null vw) (and (<= 0 x) (< x vw)))
+         (or (null vh) (and (<= 0 y) (< y vh))))))
+
+(defgeneric contains-point-p (morph x y &optional ox oy)
+  (:method ((morph morph) x y &optional (ox 0) (oy 0))
+    (declare (ignore x y ox oy))
+    nil)
+  (:method ((morph boxed-morph) x y &optional ox oy)
+    (let ((ext (extent morph)))
+      (when ext
+        (let ((lx-coord (morph-loc-coord morph #'x))
+              (ly-coord (morph-loc-coord morph #'y)))
+          (multiple-value-bind (dx dy)
+              (if (and ox oy)
+                  (values (+ ox lx-coord) (+ oy ly-coord))
+                  (morph-global-offset morph))
+            (let ((lx (- x dx)) (ly (- y dy)))
+              (and (<= 0 lx) (< lx (x ext))
+                   (<= 0 ly) (< ly (y ext))))))))))
+
+(defgeneric morphs-at (morph x y &optional offset-x offset-y)
+  (:documentation "Morphs containing the point (X, Y), ordered outermost to innermost.")
+  (:method ((morph morph) x y &optional (offset-x 0) (offset-y 0))
+    (declare (ignore x y offset-x offset-y))
+    nil)
+  (:method ((morph placed-morph) x y &optional (offset-x 0) (offset-y 0))
+    (when (or (not (and (zerop offset-x) (zerop offset-y)))
+              (point-in-viewport-p x y morph))
+      (let ((nx (+ offset-x (morph-loc-coord morph #'x)))
+            (ny (+ offset-y (morph-loc-coord morph #'y))))
+        (when (and (morph-visible-p morph offset-x offset-y)
+                   (contains-point-p morph x y offset-x offset-y))
+          (cons morph
+                (loop for sub in (reverse (submorphs morph))
+                      for sub-chain = (morphs-at sub x y nx ny)
+                      when sub-chain append sub-chain
+                        when sub-chain return sub-chain)))))))
