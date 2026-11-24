@@ -437,3 +437,61 @@
       (is-false (bm:world-needs-redraw-p world))
       (process-event win :key-pressed '("x" "x" 0 nil))
       (is-false (bm:world-needs-redraw-p world)))))
+
+;;; ========== off-screen / visibility culling tests =========================
+(test morph-visible-p-culls-offscreen-and-keeps-visible
+  "Verify morph-visible-p culls morphs outside the viewport and keeps overlapping ones."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (inside (make-instance 'bm:boxed-morph
+                                  :location (make-instance 'bm:location :x 20 :y 20)
+                                  :extent (make-instance 'bm:extent :x 80 :y 40)))
+           (partially-visible (make-instance 'bm:boxed-morph
+                                             :location (make-instance 'bm:location :x 580 :y 20)
+                                             :extent (make-instance 'bm:extent :x 50 :y 40)))
+           (off-right (make-instance 'bm:boxed-morph
+                                     :location (make-instance 'bm:location :x 700 :y 20)
+                                     :extent (make-instance 'bm:extent :x 50 :y 40)))
+           (off-top (make-instance 'bm:boxed-morph
+                                   :location (make-instance 'bm:location :x 20 :y -100)
+                                   :extent (make-instance 'bm:extent :x 50 :y 40))))
+      (bm:add-morph world inside)
+      (bm:add-morph world partially-visible)
+      (bm:add-morph world off-right)
+      (bm:add-morph world off-top)
+      (is-true  (bm::morph-visible-p inside 0 0))
+      (is-true  (bm::morph-visible-p partially-visible 0 0))
+      (is-false (bm::morph-visible-p off-right 0 0))
+      (is-false (bm::morph-visible-p off-top 0 0)))))
+
+(test morph-visible-p-respects-accumulated-parent-offsets
+  "Verify nested morphs use accumulated parent offsets when checking viewport bounds."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (container (make-instance 'bm:boxed-morph
+                                     :location (make-instance 'bm:location :x 500 :y 10)
+                                     :extent (make-instance 'bm:extent :x 200 :y 100)))
+           (child-in-view (make-instance 'bm:boxed-morph
+                                         :location (make-instance 'bm:location :x 10 :y 10)
+                                         :extent (make-instance 'bm:extent :x 40 :y 20)))
+           (child-offscreen (make-instance 'bm:boxed-morph
+                                           :location (make-instance 'bm:location :x 150 :y 10)
+                                           :extent (make-instance 'bm:extent :x 50 :y 20))))
+      (bm:add-morph world container)
+      (bm:add-morph container child-in-view)
+      (bm:add-morph container child-offscreen)
+      ;; container is at x=500; child-in-view global x is 510..550 (in 600px viewport)
+      (is-true  (bm::morph-visible-p child-in-view 500 10))
+      ;; child-offscreen global x is 650..700 (outside 600px viewport)
+      (is-false (bm::morph-visible-p child-offscreen 500 10)))))
+
+(test render-world-clears-needs-redraw-flag
+  "Verify render-world clears needs-redraw-p when no active cairo context is present."
+  (with-fixture with-test-window ()
+    (let ((world (bm:current-world)))
+      (bm:mark-needs-redraw world)
+      (is-true (bm:world-needs-redraw-p world))
+      ;; Guard against nil cairo:*context* if safe-text / cairo calls run in headless tests
+      (unless (and (boundp 'cairo:*context*) cairo:*context*)
+        (bm:render-world world)
+        (is-false (bm:world-needs-redraw-p world))))))

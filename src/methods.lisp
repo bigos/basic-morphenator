@@ -169,10 +169,10 @@ after BODY completes."
   (let ((loc (and (typep morph 'placed-morph) (location morph))))
     (or (and loc (funcall axis-fn loc)) 0)))
 
-(defun morph-location-x ((morph morph))
+(defmethod morph-location-x ((morph morph))
   (morph-loc-coord morph #'x))
 
-(defun morph-location-y ((morph morph))
+(defmethod morph-location-y ((morph morph))
   (morph-loc-coord morph #'y))
 
 (defun layout-gap (morph)
@@ -341,21 +341,6 @@ after BODY completes."
           (let ((lx (- x dx)) (ly (- y dy)))
             (and (<= 0 lx) (< lx (x ext))
                  (<= 0 ly) (< ly (y ext)))))))))
-
-(defgeneric morphs-at (morph x y &optional offset-x offset-y)
-  (:documentation "Morphs containing the point (X, Y), ordered outermost to innermost.")
-  (:method ((morph morph) x y &optional (offset-x 0) (offset-y 0))
-    (declare (ignore x y offset-x offset-y))
-    nil)
-  (:method ((morph placed-morph) x y &optional (offset-x 0) (offset-y 0))
-    (let ((nx (+ offset-x (morph-loc-coord morph #'x)))
-          (ny (+ offset-y (morph-loc-coord morph #'y))))
-      (when (contains-point-p morph x y offset-x offset-y)
-        (cons morph
-              (loop for sub in (reverse (submorphs morph))
-                    for sub-chain = (morphs-at sub x y nx ny)
-                    when sub-chain append sub-chain
-                      when sub-chain return sub-chain))))))
 
 (defun process-mouse-over (handler new-chain)
   (let* ((old (mouse-over-morphs handler))
@@ -649,3 +634,27 @@ after BODY completes."
          (fm (world-keyboard-focus world)))
     (when (and fm (typep fm 'text-model-morph))
       fm)))
+
+(defun point-in-viewport-p (x y morph)
+  "Return T if (X, Y) is inside MORPH's viewport, or if viewport bounds are unknown."
+  (multiple-value-bind (vw vh) (viewport-bounds (morph-target-world morph))
+    (and (or (null vw) (and (<= 0 x) (< x vw)))
+         (or (null vh) (and (<= 0 y) (< y vh))))))
+
+(defgeneric morphs-at (morph x y &optional offset-x offset-y)
+  (:documentation "Morphs containing the point (X, Y), ordered outermost to innermost.")
+  (:method ((morph morph) x y &optional (offset-x 0) (offset-y 0))
+    (declare (ignore x y offset-x offset-y))
+    nil)
+  (:method ((morph placed-morph) x y &optional (offset-x 0) (offset-y 0))
+    (when (or (not (and (zerop offset-x) (zerop offset-y)))
+              (point-in-viewport-p x y morph))
+      (let ((nx (+ offset-x (morph-loc-coord morph #'x)))
+            (ny (+ offset-y (morph-loc-coord morph #'y))))
+        (when (and (morph-visible-p morph offset-x offset-y)
+                   (contains-point-p morph x y offset-x offset-y))
+          (cons morph
+                (loop for sub in (reverse (submorphs morph))
+                      for sub-chain = (morphs-at sub x y nx ny)
+                      when sub-chain append sub-chain
+                        when sub-chain return sub-chain)))))))
