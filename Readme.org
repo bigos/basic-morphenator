@@ -5,8 +5,10 @@ https://github.com/Cuis-Smalltalk/Cuis-Smalltalk-UI
 
 At the moment this project is at very early stages.
 
-We have a working text field with a caret, selection, drag-select, horizontal
-scrolling and clipping.
+We have a substantial Cuis-style Morphic foundation in CLOS—complete with morph /
+placed-morph / boxed-morph / world-morph / hand-morph, proportional & fixed
+layout-spec handling, mouse-over enter/leave tracking, text selection/scrolling/
+editing, Alt shortcuts, GTK4/Cairo integration, and a FiveAM test suite.
 
 ** dependencies
 #+begin_example
