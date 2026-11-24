@@ -91,7 +91,10 @@
 
     ;; 4. Attach to new parent.
     (setf (owner submorph) morph)
-    (setf (submorphs morph) (append (submorphs morph) (list submorph)))
+    (setf (submorphs morph)
+          (if (submorphs morph)
+              (nconc (submorphs morph) (list submorph))
+              (list submorph)))
     (refresh-location submorph)
     (layout-submorphs morph)
 
@@ -520,3 +523,11 @@
          (fm (world-keyboard-focus world)))
     (when (and fm (typep fm 'text-model-morph))
       fm)))
+
+(defun set-location-xy (morph x y)
+  (let ((loc (location morph)))
+    (if loc
+        (setf (x loc) x
+              (y loc) y)
+        (setf (location morph) (build-location x y)))
+    loc))
