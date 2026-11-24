@@ -44,9 +44,6 @@ width of (subseq STR 0 I), caching results per morph and text state."
            (member (char entered 0) '(#\Return #\Newline #\Linefeed)
                    :test #'char=))))
 
-(defmethod greet-me ((model basic-morphenator-model))
-  (setf (greeted model) (entered model)))
-
 (defun draw-box-rect (x y w h color)
   (gui-color:set-rgba (or color "yellow"))
   (cairo:rectangle x y w h)
