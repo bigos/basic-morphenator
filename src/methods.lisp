@@ -347,6 +347,7 @@
 ;;; ============= render =======================================================
 (defgeneric render-prepare-to-show-text (morph)
   (:method ((morph t))
+    (declare (ignore morph))
     (when (and (boundp 'cairo:*context*) cairo:*context*)
       (cairo:select-font-face "Ubuntu Mono" :normal :normal)
       (cairo:set-font-size 15)
@@ -413,7 +414,7 @@
     str))
 
 (defmethod render ((morph text-model-morph))
-  (draw-morph-box morph)
+  (call-next-method)                     ; ← was (draw-morph-box morph)
   (let* ((ext (extent morph))
          (w (x ext))
          (h (y ext))
