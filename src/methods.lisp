@@ -74,13 +74,6 @@
   (:method ((morph morph)) nil))
 
 (defmethod add-morph ((morph morph) (submorph morph))
-  (assert (not (loop for m = morph then (owner m) while m thereis (eq m submorph))))
-  (setf (owner submorph) morph)
-  (setf (submorphs morph) (append (submorphs morph) (list submorph)))
-  (refresh-location submorph)
-  (layout-submorphs morph))
-
-(defmethod add-morph ((morph morph) (submorph morph))
   ;; 1. Cycle: submorph is morph, or an ancestor of morph.
   (when (morph-ancestor-p morph submorph)
     (error "Cannot add ~S to ~S: would create a cycle." submorph morph))
@@ -89,17 +82,23 @@
   (when (member submorph (submorphs morph) :test #'eq)
     (error "~S is already a submorph of ~S." submorph morph))
 
-  ;; 3. Detach for reparenting
-  (when (owner submorph)
-    (setf (submorphs (owner submorph))
-          (remove submorph (submorphs (owner submorph)) :test #'eq))
-    (setf (owner submorph) nil))
+  ;; 3. Detach from old owner (remember it for re-layout).
+  (let ((old-owner (owner submorph)))
+    (when old-owner
+      (setf (submorphs old-owner)
+            (remove submorph (submorphs old-owner) :test #'eq))
+      (setf (owner submorph) nil))
 
-  ;; All checks passed — mutate.
-  (setf (owner submorph) morph)
-  (setf (submorphs morph) (append (submorphs morph) (list submorph)))
-  (refresh-location submorph)
-  (layout-submorphs morph)
+    ;; 4. Attach to new parent.
+    (setf (owner submorph) morph)
+    (setf (submorphs morph) (append (submorphs morph) (list submorph)))
+    (refresh-location submorph)
+    (layout-submorphs morph)
+
+    ;; 5. Re-layout the old owner so its remaining siblings fill the gap.
+    (when old-owner
+      (layout-submorphs old-owner)))
+
   submorph)
 
 ;;; ================== location ================================================
@@ -273,6 +272,7 @@
           (pressed-morph world) nil)))
 
 (defun handle-unhandled-mouse-button (morph event x y world)
+  (declare (ignore morph x y))
   (when (and world (eq event :released))
     (release-world-pressed-morph world)))
 
