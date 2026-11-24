@@ -16,10 +16,12 @@
                (:file "gui-color")
                (:file "geometry")
                (:file "damage")
+               (:file "protocols")     ; NEW
+               (:file "text")          ; NEW
+               (:file "drawing")       ; NEW
                (:file "methods")
                (:file "helpers")
-               (:file "main")
-               )
+               (:file "main"))
   :in-order-to ((test-op (test-op "basic-morphenator/tests")))
   :description "basic morphenator for GUI for clops in separate system")
 
@@ -36,4 +38,4 @@
                                         :run!
                                         (uiop:find-symbol*
                                          :basic-morphenator-suite
-                                         :basic-morphenator-test))))
+                                         :basic-morphenator-test))))2
