@@ -240,10 +240,10 @@ during add-morph and flush them at the end of with-deferred-layout.")
                     (y (extent sub)) new-h)
               (ecase dir
                 (:horizontal
-                 (setf (location sub) (build-location cursor (morph-location-y sub)))
+                 (set-location-xy sub cursor (morph-location-y sub))
                  (incf cursor (+ new-w gap)))
                 (:vertical
-                 (setf (location sub) (build-location (morph-location-x sub) cursor))
+                 (set-location-xy sub (morph-location-x sub) cursor)
                  (incf cursor (+ new-h gap))))
               (layout-submorphs sub))))))))
 
