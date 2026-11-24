@@ -369,6 +369,7 @@
     (is (= 0   (bm:x (bm:location b))))
     (is (= 100 (bm:x (bm:location c))))))
 
+;;; this may be wrong, need double checking in case overzealous AI misunderstood my intentions
 (test alt-backspace-and-left-reach-text-morph
   "Alt+Backspace deletes; Alt+Left moves cursor; Alt+x is a no-op."
   (with-fixture with-test-window ()
