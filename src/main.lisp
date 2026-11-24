@@ -63,11 +63,12 @@
         (alt-p   (and (listp mods) (member :ALT mods))))
     (cond
       ((and alt-p (handle-alt-shortcut entered model text-morph))
+       (when text-morph (record-morph-damage text-morph))
        (mark-needs-redraw)
        t)
       ((and text-morph
             (handle-text-morph-key text-morph entered key-name shift-p ctrl-p alt-p))
-       (mark-needs-redraw)
+       (record-morph-damage text-morph)
        t)
       ((return-key-p key-name entered)
        (when model
@@ -108,7 +109,7 @@
   (setf *window-size* (cons w h))
   (when (current-world)
     (resize (current-world) w h)
-    (mark-needs-redraw (current-world))))
+    (record-damage-rect (current-world) 0 0 w h)))
 
 (defun dispatch-mouse-button (event args)
   (destructuring-bind ((button x y)) args
@@ -148,7 +149,7 @@
               (fm (and w (world-keyboard-focus w))))
          (when (and fm (typep fm 'text-model-morph) (is-selecting fm))
            (finish-text-selection fm)
-           (mark-needs-redraw w)))
+           (record-morph-damage fm)))
        (dispatch-mouse-button event args)
        (setf changed-p (world-needs-redraw-p)))
       (:resize

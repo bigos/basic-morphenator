@@ -495,3 +495,30 @@
       (unless (and (boundp 'cairo:*context*) cairo:*context*)
         (bm:render-world world)
         (is-false (bm:world-needs-redraw-p world))))))
+
+(test morphs-at-culls-out-of-viewport-and-offscreen-morphs
+  "Verify morphs-at skips points outside the viewport and off-screen morphs."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (offscreen-btn (make-instance 'bm:pluggable-button-morph
+                                         :color "green"
+                                         :label "Offscreen"
+                                         :location (make-instance 'bm:location :x 900 :y 50)
+                                         :extent (make-instance 'bm:extent :x 80 :y 30)))
+           (visible-btn (make-instance 'bm:pluggable-button-morph
+                                        :color "green"
+                                        :label "Visible"
+                                        :location (make-instance 'bm:location :x 20 :y 20)
+                                        :extent (make-instance 'bm:extent :x 80 :y 30))))
+      (bm:add-morph world offscreen-btn)
+      (bm:add-morph world visible-btn)
+
+      ;; Out-of-viewport point is culled immediately
+      (is (null (bm:morphs-at world -10 10)))
+      (is (null (bm:morphs-at world 5000 5000)))
+
+      ;; Off-screen morph is culled even if point is inside its raw coordinates
+      (is-false (member offscreen-btn (bm:morphs-at world 920 60)))
+
+      ;; Visible morph is still hit normally
+      (is-true (member visible-btn (bm:morphs-at world 30 30))))))

@@ -58,6 +58,7 @@
    #:update-text-drag-selection
    #:finish-text-selection
    #:render
+   #:render-morph
    #:render-world
    #:resize
    #:widget-text
@@ -75,6 +76,9 @@
    #:mark-needs-redraw
    #:clear-needs-redraw
    #:world-needs-redraw-p
+   #:record-damage-rect
+   #:record-morph-damage
+   #:reset-damage-recorder
 
    ;; Text & input helpers used in tests/code
    #:printable-input-p
