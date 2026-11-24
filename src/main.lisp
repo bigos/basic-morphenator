@@ -62,17 +62,19 @@
         (ctrl-p  (and (listp mods) (member :CONTROL mods)))
         (alt-p   (and (listp mods) (member :ALT mods))))
     (cond
-      ;; ALT shortcuts win over the text morph (so Alt+c ≠ inserting "c").
       ((and alt-p (handle-alt-shortcut entered model text-morph))
+       (mark-needs-redraw)
        t)
-      ;; Text morph: handles Alt+Backspace/Left/Right/Delete/Home/End too,
-      ;; but not printable insert while Alt is held.
       ((and text-morph
             (handle-text-morph-key text-morph entered key-name shift-p ctrl-p alt-p))
+       (mark-needs-redraw)
        t)
       ((return-key-p key-name entered)
        (when model
-         (greet-me model))))))
+         (greet-me model)
+         (mark-needs-redraw)
+         t))
+      (t nil))))
 
 (defun handle-menu-action (action)
   (cond
@@ -105,7 +107,8 @@
 
   (setf *window-size* (cons w h))
   (when (current-world)
-    (resize (current-world) w h)))
+    (resize (current-world) w h)
+    (mark-needs-redraw (current-world))))
 
 (defun dispatch-mouse-button (event args)
   (destructuring-bind ((button x y)) args
@@ -119,40 +122,56 @@
               (eq *environment* :testing))
     (warn "!!! event ~S ~S" event args))
 
-  (case event
-    ((:timeout :focus-enter :focus-leave :scroll)
-     nil)
-    ((:motion :motion-enter)
-     (destructuring-bind ((x y)) args
-       (update-text-drag-selection x)
-       (process-mouse-over (the-handler) (morphs-at (current-world) x y))))
-    (:motion-leave
-     (process-mouse-over (the-handler) nil)
-     (gui-app:mouse-motion-leave))
-    (:pressed
-     (dispatch-mouse-button event args))
-    (:released
-     (let* ((w (current-world))
-            (fm (and w (world-keyboard-focus w))))
-       (finish-text-selection fm))
-     (dispatch-mouse-button event args))
-    (:resize
-     (destructuring-bind ((w h)) args
-       (handle-window-resize lisp-window w h)))
-    (:key-pressed
-     (destructuring-bind ((entered key-name key-code mods)) args
-       (format t "~&>>> key pressed ~S~%" (list entered key-name key-code mods))
-       (handle-key-pressed entered key-name key-code mods lisp-window)))
-    (:menu-simple
-     (destructuring-bind ((action)) args
-       (handle-menu-action action)
-       (gui-window:steal-focus lisp-window)))
-    (otherwise
-     (unless (eq event :key-released)
-       (warn "not handled event ~S ~S" event args))))
+  (let ((changed-p nil))
+    (case event
+      ((:timeout :focus-enter :focus-leave :scroll)
+       nil)
+      ((:motion :motion-enter)
+       (destructuring-bind ((x y)) args
+         (let ((drag-changed (update-text-drag-selection x))
+               (hover-changed (and (current-world)
+                                   (process-mouse-over (the-handler)
+                                                       (morphs-at (current-world) x y)))))
+           (when (or drag-changed hover-changed)
+             (mark-needs-redraw)
+             (setf changed-p t)))))
+      (:motion-leave
+       (when (process-mouse-over (the-handler) nil)
+         (mark-needs-redraw)
+         (setf changed-p t))
+       (gui-app:mouse-motion-leave))
+      (:pressed
+       (dispatch-mouse-button event args)
+       (setf changed-p (world-needs-redraw-p)))
+      (:released
+       (let* ((w (current-world))
+              (fm (and w (world-keyboard-focus w))))
+         (when (and fm (typep fm 'text-model-morph) (is-selecting fm))
+           (finish-text-selection fm)
+           (mark-needs-redraw w)))
+       (dispatch-mouse-button event args)
+       (setf changed-p (world-needs-redraw-p)))
+      (:resize
+       (destructuring-bind ((w h)) args
+         (handle-window-resize lisp-window w h)
+         (setf changed-p t)))
+      (:key-pressed
+       (destructuring-bind ((entered key-name key-code mods)) args
+         (format t "~&>>> key pressed ~S~%" (list entered key-name key-code mods))
+         (when (handle-key-pressed entered key-name key-code mods lisp-window)
+           (setf changed-p t))))
+      (:menu-simple
+       (destructuring-bind ((action)) args
+         (handle-menu-action action)
+         (gui-window:steal-focus lisp-window)
+         (mark-needs-redraw)
+         (setf changed-p t)))
+      (otherwise
+       (unless (eq event :key-released)
+         (warn "not handled event ~S ~S" event args))))
 
-  (gui-window:redraw-canvas lisp-window (format nil "EVENT_~A" event)))
-
+    (when (or changed-p (world-needs-redraw-p))
+      (gui-window:redraw-canvas lisp-window (format nil "EVENT_~A" event)))))
 ;;; ========================
 (defmethod draw-window ((window basic-morphenator-window))
   ;; TODO review drawing window

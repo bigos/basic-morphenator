@@ -71,6 +71,10 @@
    #:set-location-xy
    #:with-deferred-layout
    #:invalidate-text-metrics
+   #:needs-redraw-p
+   #:mark-needs-redraw
+   #:clear-needs-redraw
+   #:world-needs-redraw-p
 
    ;; Text & input helpers used in tests/code
    #:printable-input-p

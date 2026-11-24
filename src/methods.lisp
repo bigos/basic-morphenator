@@ -313,13 +313,14 @@ after BODY completes."
 (defun process-mouse-over (handler new-chain)
   (let* ((old (mouse-over-morphs handler))
          (left    (remove-if (lambda (m) (member m new-chain)) old))
-         (entered (remove-if (lambda (m) (member m old)) new-chain)))
+         (entered (remove-if (lambda (m) (member m old)) new-chain))
+         (changed-p (or left entered (not (equal old new-chain)))))
     (dolist (m (reverse left))
       (when (handles-mouse-over-p m) (mouse-leave m)))
     (dolist (m entered)
       (when (handles-mouse-over-p m) (mouse-enter m)))
-    (setf (mouse-over-morphs handler) new-chain)))
-
+    (setf (mouse-over-morphs handler) new-chain)
+    changed-p))
 ;;; ================= events ===================================================
 (defun release-world-pressed-morph (world)
   (when (and world (pressed-morph world))
@@ -379,7 +380,11 @@ after BODY completes."
     (when (and (typep fm 'text-model-morph) (is-selecting fm))
       (multiple-value-bind (dx dy) (morph-global-offset fm)
         (declare (ignore dy))
-        (setf (cursor-pos fm) (cursor-index-at-local-x fm (- x dx)))))))
+        (let* ((old-pos (cursor-pos fm))
+               (new-pos (cursor-index-at-local-x fm (- x dx))))
+          (unless (eql old-pos new-pos)
+            (setf (cursor-pos fm) new-pos)
+            t))))))
 
 (defgeneric handles-mouse-over-p (morph)
   (:method ((morph morph)) nil))
@@ -579,3 +584,23 @@ after BODY completes."
          (fm (world-keyboard-focus world)))
     (when (and fm (typep fm 'text-model-morph))
       fm)))
+
+(defun mark-needs-redraw (&optional (world (current-world)))
+  (when (and world (typep world 'world-morph))
+    (setf (needs-redraw-p world) t)))
+
+(defun clear-needs-redraw (&optional (world (current-world)))
+  (when (and world (typep world 'world-morph))
+    (setf (needs-redraw-p world) nil)))
+
+(defun world-needs-redraw-p (&optional (world (current-world)))
+  (and world (typep world 'world-morph) (needs-redraw-p world)))
+
+(defun flush-deferred-layouts (table)
+  (when table
+    (maphash (lambda (morph presentp)
+               (declare (ignore presentp))
+               (when (typep morph 'layout-morph)
+                 (layout-submorphs morph)
+                 (mark-needs-redraw (morph-target-world morph))))
+             table)))

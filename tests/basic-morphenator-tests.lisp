@@ -421,3 +421,19 @@
     (is-true (gethash tm bm::*text-width-caches*))
     (bm:invalidate-text-metrics tm)
     (is (null (gethash tm bm::*text-width-caches*)))))
+
+;;; ========== redundant redraw ================================================
+(test noop-events-clear-and-skip-redundant-redraw
+  "Verify a handled event sets needs-redraw-p, render clears it, and no-op events leave it nil."
+  (with-fixture with-test-window ()
+    (let ((world (bm:current-world)))
+      (bm:mark-needs-redraw world)
+      (is-true (bm:world-needs-redraw-p world))
+      (bm:clear-needs-redraw world)
+      (is-false (bm:world-needs-redraw-p world))
+
+      ;; Unhandled/no-op events should not mark redraw needed
+      (process-event win :timeout '(0))
+      (is-false (bm:world-needs-redraw-p world))
+      (process-event win :key-pressed '("x" "x" 0 nil))
+      (is-false (bm:world-needs-redraw-p world)))))
