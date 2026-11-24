@@ -19,14 +19,6 @@ during add-morph and flush them at the end of with-deferred-layout.")
   (when (and *deferred-layout-morphs* (typep morph 'layout-morph))
     (setf (gethash morph *deferred-layout-morphs*) t)))
 
-(defun flush-deferred-layouts (table)
-  (when table
-    (maphash (lambda (morph presentp)
-               (declare (ignore presentp))
-               (when (typep morph 'layout-morph)
-                 (layout-submorphs morph)))
-             table)))
-
 (defmacro with-deferred-layout ((&key) &body body)
   "Batch add-morph operations, running layout-submorphs once per touched layout-morph
 after BODY completes."
