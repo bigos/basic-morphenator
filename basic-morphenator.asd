@@ -38,4 +38,4 @@
                                         :run!
                                         (uiop:find-symbol*
                                          :basic-morphenator-suite
-                                         :basic-morphenator-test))))2
+                                         :basic-morphenator-test))))
