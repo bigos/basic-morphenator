@@ -2,9 +2,6 @@
 
 (in-package #:basic-morphenator)
 
-;;; helpers are not loaded yet
-(declaim (ftype (function (t t t t t) t) record-damage-rect))
-
 (defvar *deferred-layout-morphs* nil
   "When non-NIL (a hash-table of morph -> t), defer immediate layout-submorphs calls
 during add-morph and flush them at the end of with-deferred-layout.")
