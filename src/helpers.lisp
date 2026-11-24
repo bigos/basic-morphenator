@@ -185,3 +185,51 @@
   (loop for m = morph then (owner m)
         while m
           thereis (eq m ancestor)))
+
+(defvar *text-width-caches* (make-hash-table :test #'eq)
+  "Maps a text-model-morph to a cache entry (:key KEY :widths VECTOR).")
+
+(defun text-metrics-cache-key (morph str)
+  (let ((cairo-active-p (and (boundp 'cairo:*context*)
+                             cairo:*context*
+                             t)))
+    (cons str cairo-active-p)))
+
+(defun invalidate-text-metrics (morph)
+  "Clear cached prefix advance widths for MORPH."
+  (when (typep morph 'text-model-morph)
+    (remhash morph *text-width-caches*))
+  morph)
+
+(defun ensure-prefix-widths (morph str)
+  "Return a vector of length (1+ (length STR)) where element I is the advance
+width of (subseq STR 0 I), caching results per morph and text state."
+  (let* ((key (text-metrics-cache-key morph str))
+         (entry (gethash morph *text-width-caches*)))
+    (if (and entry (equal (getf entry :key) key))
+        (getf entry :widths)
+        (let* ((len (length str))
+               (widths (make-array (1+ len) :initial-element 0.0d0)))
+          (loop for i from 1 to len
+                do (setf (aref widths i)
+                         (float (safe-text-advance-width morph (subseq str 0 i))
+                                0.0d0)))
+          (setf (gethash morph *text-width-caches*)
+                (list :key key :widths widths))
+          widths))))
+
+(defun cursor-index-at-local-x (morph local-x)
+  "Find the closest character index in MORPH for a click at LOCAL-X."
+  (let* ((txt (widget-text morph))
+         (len (length txt))
+         (pad 4)
+         (target-x (+ (- local-x pad) (scroll-x morph))))
+    (if (or (<= target-x 0) (zerop len))
+        0
+        (let ((widths (ensure-prefix-widths morph txt)))
+          (loop for i from 1 to len
+                for prev-w = (aref widths (1- i))
+                for w = (aref widths i)
+                when (< target-x (/ (+ prev-w w) 2.0))
+                  return (1- i)
+                finally (return len))))))

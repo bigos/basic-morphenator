@@ -70,6 +70,7 @@
    #:world-keyboard-focus
    #:set-location-xy
    #:with-deferred-layout
+   #:invalidate-text-metrics
 
    ;; Text & input helpers used in tests/code
    #:printable-input-p
