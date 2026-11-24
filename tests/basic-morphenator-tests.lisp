@@ -391,3 +391,33 @@
       ;; Alt+x → no-op, text unchanged
       (process-event win :key-pressed '("x" "x" 0 (:ALT)))
       (is (string= "ab" (bm:widget-text tm))))))
+
+;;; =============== deferred layout & text metric cache tests ===============
+(test with-deferred-layout-batches-child-placement
+  "Verify with-deferred-layout updates locations/extents once after body completes."
+  (let* ((container (make-instance 'bm:layout-morph
+                                   :direction :horizontal
+                                   :separation 5
+                                   :extent (make-instance 'bm:extent :x 210 :y 30)))
+         (m1 (make-instance 'bm:boxed-morph
+                            :extent (make-instance 'bm:extent :x 100 :y 30)))
+         (m2 (make-instance 'bm:boxed-morph
+                            :extent (make-instance 'bm:extent :x 100 :y 30))))
+    (bm:with-deferred-layout ()
+      (bm:add-morph container m1)
+      (bm:add-morph container m2))
+    (is (= 0 (bm:x (bm:location m1))))
+    (is (= 105 (bm:x (bm:location m2))))))
+
+(test invalidate-text-metrics-clears-cached-widths
+  "Verify text mutations and explicit invalidation clear cached prefix widths."
+  (let ((tm (make-instance 'bm:text-model-morph :text "abcdef")))
+    (is-true (gethash tm bm::*text-width-caches*
+                      (progn (bm::ensure-prefix-widths tm "abcdef")
+                             (gethash tm bm::*text-width-caches*))))
+    (bm:insert-at-cursor tm "!")
+    (is (null (gethash tm bm::*text-width-caches*)))
+    (bm::ensure-prefix-widths tm (bm:widget-text tm))
+    (is-true (gethash tm bm::*text-width-caches*))
+    (bm:invalidate-text-metrics tm)
+    (is (null (gethash tm bm::*text-width-caches*)))))
