@@ -291,6 +291,29 @@ after BODY completes."
             (record-morph-damage fm)
             t))))))
 
+;;; ---------------focus -------------------------------------------------------
+(defun world-keyboard-focus (world)
+  (when (and world (active-hand world))
+    (keyboard-focus (active-hand world))))
+
+(defun (setf world-keyboard-focus) (morph world)
+  (when (and world (active-hand world))
+    (let ((next-focus (if (and morph (accepts-keyboard-focus-p morph))
+                          morph
+                          nil)))
+      (setf (keyboard-focus (active-hand world)) next-focus))))
+
+(defun morph-has-focus-p (morph)
+  (let ((w (morph-target-world morph)))
+    (and w (eq (world-keyboard-focus w) morph))))
+
+(defun active-text-morph ()
+  (let* ((model (the-model))
+         (world (and model (world model)))
+         (fm (world-keyboard-focus world)))
+    (when (and fm (typep fm 'text-model-morph))
+      fm)))
+
 ;;; ============= render =======================================================
 (defmethod render ((morph placed-morph))
   (draw-morph-box morph))
@@ -440,26 +463,3 @@ after BODY completes."
           (setf (y (extent sub)) (round (* h (proportional-height spec)))))))
     (layout-submorphs sub))
   (record-damage-rect morph 0 0 w h))
-
-;;; ---------------focus -------------------------------------------------------
-(defun world-keyboard-focus (world)
-  (when (and world (active-hand world))
-    (keyboard-focus (active-hand world))))
-
-(defun (setf world-keyboard-focus) (morph world)
-  (when (and world (active-hand world))
-    (let ((next-focus (if (and morph (accepts-keyboard-focus-p morph))
-                          morph
-                          nil)))
-      (setf (keyboard-focus (active-hand world)) next-focus))))
-
-(defun morph-has-focus-p (morph)
-  (let ((w (morph-target-world morph)))
-    (and w (eq (world-keyboard-focus w) morph))))
-
-(defun active-text-morph ()
-  (let* ((model (the-model))
-         (world (and model (world model)))
-         (fm (world-keyboard-focus world)))
-    (when (and fm (typep fm 'text-model-morph))
-      fm)))
