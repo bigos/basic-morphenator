@@ -36,7 +36,8 @@
 
 ;;; =========================== fixtures =======================================
 (def-fixture with-test-window ()
-  (let ((win (bm:main :testing t)))
+  (let* ((bm::*scene* :greeting)
+         (win (bm:main :testing t)))
     (unwind-protect (&body)
       (setf bm:*basic-morphenator-model* nil
             bm:*environment* nil

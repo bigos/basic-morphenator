@@ -2,6 +2,14 @@
 
 (in-package #:basic-morphenator)
 
+;; gui-experiments.lisp
+(defvar *scene* :row "Scene built by INIT-GUI: :greeting or :row.")
+
+(defmethod init-gui ((model basic-morphenator-model))
+  (ecase *scene*
+    (:greeting (build-greeting-scene model))
+    (:row      (build-row-scene model))))
+
 (defun activate-world (model world)
   "Attach WORLD to MODEL when both are non-NIL, returning WORLD."
   (when (and model world)
@@ -10,7 +18,7 @@
 
 ;;; ================= init gui =================================================
 
-(defmethod init-gui ((model basic-morphenator-model))
+(defmethod init-gui-2 ((model basic-morphenator-model))
   (let ((selector 1))
     ;; use selector to select the expected scene
     (case selector
