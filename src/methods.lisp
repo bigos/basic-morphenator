@@ -317,8 +317,14 @@ after BODY completes."
         (cairo:restore)))))
 
 (defmethod render ((morph label-morph))
-  (call-next-method)
-  (draw-morph-label morph (render-text-for-color morph)))
+  (let* ((txt (render-text-for-color morph))
+         (pad-x 8)
+         (ext (extent morph)))
+    (when ext
+      (setf (x ext) (max (or (x ext) 0)
+                         (ceiling (+ (safe-text-advance-width morph txt) (* 2 pad-x))))))
+    (call-next-method)
+    (draw-morph-label morph txt)))
 
 (defmethod render ((morph pluggable-button-morph))
   (let ((fill (cond
@@ -437,3 +443,16 @@ after BODY completes."
           (setf (y (extent sub)) (round (* h (proportional-height spec)))))))
     (layout-submorphs sub))
   (record-damage-rect morph 0 0 w h))
+
+(defun refresh-world-labels (&optional (world (current-world)))
+  (labels ((walk (m)
+             (when (typep m 'label-morph)
+               (sync-label-extent-and-layout m))
+             (dolist (sub (submorphs m))
+               (walk sub))))
+    (when world
+      (walk world))))
+
+(defmethod greet-me ((model basic-morphenator-model))
+  (setf (greeted model) (entered model))
+  (refresh-world-labels))

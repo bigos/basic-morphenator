@@ -132,3 +132,19 @@
         (setf (widget-text text-morph)
               (concatenate 'string (subseq txt 0 pos) (subseq txt (1+ pos))))
         (invalidate-text-metrics text-morph)))))
+
+(defun sync-label-extent-and-layout (morph &key (pad-x 8) (min-width 50) (height 20))
+  "Resize MORPH to fit its current rendered text plus horizontal padding, then
+  re-layout its owner if inside a layout-morph."
+  (when (and morph (typep morph 'label-morph) (extent morph))
+    (let* ((txt (render-text-for-color morph))
+           (measured-w (ceiling (+ (safe-text-advance-width morph txt) (* 2 pad-x))))
+           (new-w (max min-width measured-w)))
+      (setf (x (extent morph)) new-w)
+      (when height
+        (setf (y (extent morph)) height))
+      (record-morph-damage morph)
+      (let ((own (owner morph)))
+        (when (and own (typep own 'layout-morph))
+          (layout-submorphs own)
+          (record-morph-damage own))))))
