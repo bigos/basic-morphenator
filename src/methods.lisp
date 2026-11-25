@@ -386,7 +386,7 @@ after BODY completes."
   (let ((ext (extent morph))
         (rects (damage-recorder morph)))
     (when ext
-      (draw-box-rect 0 0 (x ext) (y ext) "red")
+      (draw-box-rect 0 0 (x ext) (y ext) "grey")
       (dolist (m (submorphs morph))
         (render-morph m 0 0))))
   (clear-needs-redraw morph))

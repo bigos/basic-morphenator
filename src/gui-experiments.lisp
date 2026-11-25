@@ -56,6 +56,7 @@
       (add-morph view greeting-label))
     world))
 
-(defun zzz ()
+;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html
+(defun build-row-scene (model)
   ;; TODO add another scene
   )
