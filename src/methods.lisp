@@ -338,12 +338,7 @@ after BODY completes."
         (cairo:restore)))))
 
 (defmethod render ((morph label-morph))
-  (let* ((txt (render-text-for-color morph))
-         (pad-x 8)
-         (ext (extent morph)))
-    (when ext
-      (setf (x ext) (max (or (x ext) 0)
-                         (ceiling (+ (safe-text-advance-width morph txt) (* 2 pad-x))))))
+  (let ((txt (render-text-for-color morph)))
     (call-next-method)
     (draw-morph-label morph txt)))
 

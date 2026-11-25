@@ -59,6 +59,10 @@
       (add-morph row input)
       (add-morph row button)
       (add-morph view greeting-label))
+    ;; NEW: measure-and-relayout every label now that the tree is assembled,
+    ;; so the greeting-label (whose contents is a closure over MODEL) is
+    ;; sized to its actual rendered text rather than its constructed 50×20.
+    (refresh-world-labels world)
     world))
 
 ;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html

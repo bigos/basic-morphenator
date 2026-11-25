@@ -87,13 +87,14 @@
 (defun sync-label-extent-and-layout (morph &key (pad-x 8) (min-width 50) (height 20))
   "Resize MORPH to fit its current rendered text plus horizontal padding, then
   re-layout its owner if inside a layout-morph."
-  (when (and morph (typep morph 'label-morph) (extent morph))
+  (when (and morph (typep morph 'label-morph))
     (let* ((txt (render-text-for-color morph))
            (measured-w (ceiling (+ (safe-text-advance-width morph txt) (* 2 pad-x))))
-           (new-w (max min-width measured-w)))
-      (setf (x (extent morph)) new-w)
+           (new-w (max min-width measured-w))
+           (ext (ensure-extent morph)))
+      (setf (x ext) new-w)
       (when height
-        (setf (y (extent morph)) height))
+        (setf (y ext) height))
       (record-morph-damage morph)
       (let ((own (owner morph)))
         (when (and own (typep own 'layout-morph))
@@ -144,3 +145,12 @@ set CURSOR-POS to NEW-CURSOR-POS, optionally clear selection, and invalidate met
            (len (length (widget-text text-morph))))
       (when (< pos len)
         (replace-text-range text-morph pos (1+ pos) "" pos)))))
+
+(defun clear-text-morph (morph)
+  "Replace all text in MORPH with the empty string, reset cursor and selection,
+and return MORPH."
+  (when (typep morph 'text-model-morph)
+    (setf (widget-text morph) "")
+    (clear-selection morph)
+    (setf (cursor-pos morph) 0))
+  morph)
