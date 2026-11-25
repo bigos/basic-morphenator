@@ -114,8 +114,9 @@ after BODY completes."
         (ecase kind
           (:proportional (incf prop-sum val))
           (:fixed        (incf fixed-sum val))))
-      (setf max-child-w (max max-child-w (or (x (extent sub)) 0))
-            max-child-h (max max-child-h (or (y (extent sub)) 0))))
+      (let ((ext (extent sub)))
+        (setf max-child-w (max max-child-w (if ext (x ext) 0))
+              max-child-h (max max-child-h (if ext (y ext) 0)))))
     (values fixed-sum prop-sum max-child-w max-child-h)))
 
 (defun layout-fit-cross-axis (morph dir max-child-w max-child-h)
