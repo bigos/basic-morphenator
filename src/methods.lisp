@@ -434,18 +434,9 @@ after BODY completes."
   (let ((ext (extent morph))
         (rects (damage-recorder morph)))
     (when ext
-      (draw-box-rect 0 0 (x ext) (y ext) "red"))
-    (if (and rects (boundp 'cairo:*context*) cairo:*context*)
-        (dolist (r rects)
-          (cairo:save)
-          (cairo:rectangle (getf r :x) (getf r :y) (getf r :w) (getf r :h))
-          (cairo:clip)
-          (unwind-protect
-               (dolist (m (submorphs morph))
-                 (render-morph m 0 0))
-            (cairo:restore)))
-        (dolist (m (submorphs morph))
-          (render-morph m 0 0))))
+      (draw-box-rect 0 0 (x ext) (y ext) "red")
+      (dolist (m (submorphs morph))
+        (render-morph m 0 0))))
   (clear-needs-redraw morph))
 
 (defmethod resize ((morph world-morph) w h)
