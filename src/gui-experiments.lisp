@@ -11,14 +11,14 @@
 ;;; ================= init gui =================================================
 
 (defmethod init-gui ((model basic-morphenator-model))
-  (let ((selector 0))
+  (let ((selector 1))
     ;; use selector to select the expected scene
     (case selector
       (0 (build-greeting-scene model))
       (1 (build-row-scene model))
       (otherwise (error "selector ~s did not match any scene" selector)))))
 
-;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
+;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -75,10 +75,11 @@
                               :extent (make-instance 'extent :x 600 :y 400)
                               :layout-spec (make-layout-spec :proportional-width 1.0
                                                              :proportional-height 1.0)))
+         ;; TODO children of the orange layout use default gap,
          (row (make-instance 'layout-morph
                              :color "orange"
                              :direction :horizontal
-                             :separation 12
+                             :separation 10
                              :padding-x 10
                              :padding-y 10
                              :extent (make-instance 'extent :x 580 :y 30)
