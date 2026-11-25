@@ -93,6 +93,8 @@
 (defclass/std layout-morph (boxed-morph)
   ((direction)
    (separation)
+   (padding-x :std 0)
+   (padding-y :std 0)
    (axis-edge-weight)
    (do-adopt-widgets-colour)))
 

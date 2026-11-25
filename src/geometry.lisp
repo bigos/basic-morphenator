@@ -41,10 +41,20 @@ defaulting to 0 when MORPH has no location."
 
 ;;; ---------------- sibling layout helpers ------------------------------------
 (defun layout-gap (morph)
-  "Separation to use between children of MORPH (default 10)."
+  "Separation to use between children of MORPH (default 0 for layout-morph)."
   (if (and morph (typep morph 'layout-morph))
-      (or (separation morph) 10)
-      10))
+      (or (separation morph) 0)
+      0))
+
+(defun layout-padding-x (morph)
+  (if (and morph (typep morph 'layout-morph))
+      (or (padding-x morph) 0)
+      0))
+
+(defun layout-padding-y (morph)
+  (if (and morph (typep morph 'layout-morph))
+      (or (padding-y morph) 0)
+      0))
 
 (defmethod prev-sibling-axis-sum ((morph morph) axis-fn)
   "Sum the sizes of MORPH's preceding siblings along AXIS-FN, including gaps."

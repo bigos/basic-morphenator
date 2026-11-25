@@ -79,6 +79,8 @@
    #:record-damage-rect
    #:record-morph-damage
    #:reset-damage-recorder
+   #:padding-x
+   #:padding-y
 
    ;; Text & input helpers used in tests/code
    #:printable-input-p
