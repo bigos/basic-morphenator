@@ -17,6 +17,11 @@
   "Make a fresh location object at (X, Y)."
   (make-instance 'location :x x :y y))
 
+(defun ensure-extent (morph)
+  "Return MORPH's extent, creating a zero-sized one if absent."
+  (or (extent morph)
+      (setf (extent morph) (make-instance 'extent))))
+
 (defun set-location-xy (morph x y)
   "Update MORPH's location coordinates to (X, Y) in place when possible."
   (let ((loc (location morph)))

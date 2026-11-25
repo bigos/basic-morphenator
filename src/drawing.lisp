@@ -8,7 +8,8 @@
 
 (defun draw-morph-box (morph &optional color)
   (let ((ext (extent morph)))
-    (draw-box-rect 0 0 (x ext) (y ext) (or color (color morph)))))
+    (when ext
+      (draw-box-rect 0 0 (x ext) (y ext) (or color (color morph))))))
 
 (defun draw-morph-label (morph text &key (color "white"))
   (render-prepare-to-show-text morph)

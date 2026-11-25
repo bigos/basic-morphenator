@@ -91,16 +91,17 @@ after BODY completes."
 
 (defun layout-child-main-size (sub dir)
   "Return SUB's main-axis contribution along DIR: proportional weight or fixed/current size."
-  (let ((spec (layout-spec sub)))
+  (let ((spec (layout-spec sub))
+        (ext  (extent sub)))
     (if (eq dir :horizontal)
         (cond
           ((and spec (proportional-width spec)) (values :proportional (proportional-width spec)))
           ((and spec (fixed-width spec))        (values :fixed (fixed-width spec)))
-          (t                                    (values :fixed (or (x (extent sub)) 0))))
+          (t                                    (values :fixed (if ext (x ext) 0))))
         (cond
           ((and spec (proportional-height spec)) (values :proportional (proportional-height spec)))
           ((and spec (fixed-height spec))        (values :fixed (fixed-height spec)))
-          (t                                     (values :fixed (or (y (extent sub)) 0)))))))
+          (t                                     (values :fixed (if ext (y ext) 0)))))))
 
 (defun layout-tally-children (subs dir)
   "Return (VALUES fixed-sum prop-sum max-child-w max-child-h) for SUBS along DIR."
@@ -138,8 +139,10 @@ after BODY completes."
           (setf (x (extent morph)) needed-w))))))
 
 (defun layout-child-dimensions (sub dir inner-w inner-h rem prop-sum)
-  "Return (VALUES new-w new-h) for SUB inside a container with inner size (INNER-W, INNER-H)."
-  (let ((spec (layout-spec sub)))
+  "Return (VALUES new-w new-h) for SUB inside a container with inner size (INNER-W, INNER-H).
+  Falls back to 0 when SUB has no EXTENT, rather than signaling."
+  (let ((spec (layout-spec sub))
+        (ext  (extent sub)))
     (values
      (cond
        ((and (eq dir :horizontal) spec (proportional-width spec) (> prop-sum 0))
@@ -148,7 +151,7 @@ after BODY completes."
         (fixed-width spec))
        ((and (eq dir :vertical) spec (proportional-width spec))
         (round (* inner-w (proportional-width spec))))
-       (t (x (extent sub))))
+       (t (if ext (x ext) 0)))
      (cond
        ((and (eq dir :vertical) spec (proportional-height spec) (> prop-sum 0))
         (round (* rem (/ (proportional-height spec) prop-sum))))
@@ -156,7 +159,7 @@ after BODY completes."
         (fixed-height spec))
        ((and (eq dir :horizontal) spec (proportional-height spec))
         (round (* inner-h (proportional-height spec))))
-       (t (y (extent sub)))))))
+       (t (if ext (y ext) 0))))))
 
 (defun layout-place-children (morph subs dir fixed-sum prop-sum)
   "Resize and position SUBS inside MORPH along DIR and recursively layout each child."
@@ -178,8 +181,9 @@ after BODY completes."
           (layout-child-dimensions sub dir inner-w inner-h rem prop-sum)
         (let ((centered-y (+ pad-y (max 0 (round (- inner-h new-h) 2))))
               (centered-x (+ pad-x (max 0 (round (- inner-w new-w) 2)))))
-          (setf (x (extent sub)) new-w
-                (y (extent sub)) new-h)
+          (let ((ext (ensure-extent sub)))
+            (setf (x ext) new-w
+                  (y ext)  new-h))
           (ecase dir
             (:horizontal
              (set-location-xy sub cursor centered-y)
