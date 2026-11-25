@@ -65,6 +65,8 @@
 (defun build-row-scene (model)
   ;; TODO add another scene
   ;; we need correct gap, padding and vertical centering
+  ;; we seem to have a hardcoded gap, but it does not reflect Cuis Morphic way
+  ;; we need to add resizing of the raw that includes the height of the blue box with padding
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
                               :color "pink"
