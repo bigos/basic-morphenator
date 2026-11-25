@@ -2,14 +2,6 @@
 
 (in-package #:basic-morphenator)
 
-;; gui-experiments.lisp
-(defvar *scene* :row "Scene built by INIT-GUI: :greeting or :row.")
-
-(defmethod init-gui ((model basic-morphenator-model))
-  (ecase *scene*
-    (:greeting (build-greeting-scene model))
-    (:row      (build-row-scene model))))
-
 (defun activate-world (model world)
   "Attach WORLD to MODEL when both are non-NIL, returning WORLD."
   (when (and model world)
@@ -17,14 +9,13 @@
   world)
 
 ;;; ================= init gui =================================================
+(defparameter *scene* :greeting
+  "Scene built by INIT-GUI: :greeting or :row.")
 
-(defmethod init-gui-2 ((model basic-morphenator-model))
-  (let ((selector 1))
-    ;; use selector to select the expected scene
-    (case selector
-      (0 (build-greeting-scene model))
-      (1 (build-row-scene model))
-      (otherwise (error "selector ~s did not match any scene" selector)))))
+(defmethod init-gui ((model basic-morphenator-model))
+  (ecase *scene*
+    (:greeting (build-greeting-scene model))
+    (:row      (build-row-scene model))))
 
 ;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
