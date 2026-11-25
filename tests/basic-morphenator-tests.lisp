@@ -646,3 +646,69 @@
       (is (= 500 (bm:y (bm:extent world))))
       (is (= 400 (bm:x (bm:extent panel))))
       (is (= 250 (bm:y (bm:extent panel)))))))
+
+;;; ======================= deferred layout, text & geometry tests ========
+(test with-deferred-layout-batches-and-updates-old-owner
+  "Verify deferred layout defers intermediate relayouts and updates previous owners on reparenting."
+  (let* ((old-row (make-instance 'bm:layout-morph
+                                 :direction :horizontal
+                                 :separation 10
+                                 :extent (make-instance 'bm:extent :x 300 :y 40)))
+         (new-row (make-instance 'bm:layout-morph
+                                 :direction :horizontal
+                                 :separation 5
+                                 :extent (make-instance 'bm:extent :x 300 :y 40)))
+         (m1 (make-instance 'bm:boxed-morph
+                            :extent (make-instance 'bm:extent :x 40 :y 20)))
+         (m2 (make-instance 'bm:boxed-morph
+                            :extent (make-instance 'bm:extent :x 50 :y 20))))
+    (bm:add-morph old-row m1)
+    (bm:add-morph old-row m2)
+    (is (= 50 (bm:x (bm:location m2))))
+    (bm::with-deferred-layout ()
+      (bm:add-morph new-row m1)
+      (is (eq new-row (bm::owner m1))))
+    (is (= 0 (bm:x (bm:location m2))))))
+
+(test invalidate-text-metrics-clears-cached-widths-2
+  "Verify invalidating text metrics clears cached prefix widths while keeping text intact."
+  (let ((tm (make-instance 'bm:text-model-morph
+                           :text "hello world"
+                           :extent (make-instance 'bm:extent :x 200 :y 40))))
+    (bm::ensure-prefix-widths tm "hello world")
+    (is-true (gethash tm bm::*text-width-caches*))
+    (bm:invalidate-text-metrics tm)
+    (is (null (gethash tm bm::*text-width-caches*)))
+    (is (string= "hello world" (bm:widget-text tm)))))
+
+(test input-and-string-helpers-handle-keys-and-backspace
+  "Verify return-key-p, backspace-key-p, printable-input-p, and delete-last-char."
+  (is-true  (bm::return-key-p "Return" ""))
+  (is-true  (bm::return-key-p "KP_Enter" ""))
+  (is-true  (bm::return-key-p "x" (string #\Return)))
+  (is-false (bm::return-key-p "a" "a"))
+  (is-true  (bm::backspace-key-p "BackSpace"))
+  (is-false (bm::backspace-key-p "Delete"))
+  (is-true  (bm::printable-input-p "x" nil))
+  (is-false (bm::printable-input-p "x" t))
+  (is-false (bm::printable-input-p (string #\Rubout) nil))
+  (is-false (bm::printable-input-p (string #\Escape) nil))
+  (is (string= "ab" (bm::delete-last-char "abc")))
+  (is (string= "" (bm::delete-last-char "a")))
+  (is (string= "" (bm::delete-last-char ""))))
+
+(test clamp-rect-to-viewport-and-overlap-predicates
+  "Verify viewport clamping and rectangle overlap/touch checks on edges and outside bounds."
+  (with-fixture with-test-window ()
+    (let ((world (bm:current-world)))
+      (multiple-value-bind (cx cy cw ch)
+          (bm::clamp-rect-to-viewport -10 -5 30 15 world)
+        (is (= 0 cx))
+        (is (= 0 cy))
+        (is (= 20 cw))
+        (is (= 10 ch)))
+      (is (null (bm::clamp-rect-to-viewport 1200 1200 20 20 world)))))
+  (is-true  (bm::rects-overlap-or-touch-p '(:x 0 :y 0 :w 10 :h 10)
+                                          '(:x 10 :y 0 :w 10 :h 10)))
+  (is-false (bm::rects-overlap-or-touch-p '(:x 0 :y 0 :w 10 :h 10)
+                                          '(:x 11 :y 0 :w 10 :h 10))))
