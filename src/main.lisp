@@ -6,8 +6,10 @@
   "Run a registered ALT shortcut for ENTERED. Return T if handled, NIL otherwise."
   (cond ((equal entered "r")
          (warn "refresh the init-ui")
-         (init-gui model)
+         (when model
+           (activate-world model (init-gui model)))
          t)
+
         ((equal entered "g")
          (greet-me model)
          t)
@@ -235,9 +237,10 @@
         gui-window-gtk:*initial-title*         "Basic-Morphenator"))
 
 (defun initialize-application-state ()
-  (setf *basic-morphenator-model* (make-instance 'basic-morphenator-model)
-        boxes:*model* (the-model))
-  (init-gui (the-model)))
+  (let ((model (make-instance 'basic-morphenator-model)))
+    (setf *basic-morphenator-model* model
+          boxes:*model* model)
+    (activate-world model (init-gui model))))
 
 (defun start-testing-window ()
   (let ((experimental-window (make-instance 'basic-morphenator-window)))
