@@ -109,9 +109,10 @@
     (ignore-errors (setf (height lisp-window) h)))
 
   (setf *window-size* (cons w h))
-  (when (current-world)
-    (resize (current-world) w h)
-    (record-damage-rect (current-world) 0 0 w h)))
+  (let ((world (current-world)))
+    (when world
+      (resize world w h)
+      (record-damage-rect world 0 0 w h))))
 
 (defun dispatch-mouse-button (event args)
   (destructuring-bind ((button x y)) args

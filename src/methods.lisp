@@ -277,8 +277,12 @@ after BODY completes."
        (finish-text-selection morph)
        (record-morph-damage morph)))))
 
+(defun current-keyboard-focus ()
+  (let ((w (current-world)))
+    (and w (world-keyboard-focus w))))
+
 (defun update-text-drag-selection (x)
-  (let ((fm (let ((w (current-world))) (and w (world-keyboard-focus w)))))
+  (let ((fm (current-keyboard-focus)))
     (when (and (typep fm 'text-model-morph) (is-selecting fm))
       (multiple-value-bind (dx dy) (morph-global-offset fm)
         (declare (ignore dy))
@@ -288,7 +292,6 @@ after BODY completes."
             (setf (cursor-pos fm) new-pos)
             (record-morph-damage fm)
             t))))))
-
 ;;; ---------------focus -------------------------------------------------------
 (defun world-keyboard-focus (world)
   (when (and world (active-hand world))
@@ -306,9 +309,7 @@ after BODY completes."
     (and w (eq (world-keyboard-focus w) morph))))
 
 (defun active-text-morph ()
-  (let* ((model (the-model))
-         (world (and model (world model)))
-         (fm (world-keyboard-focus world)))
+  (let ((fm (current-keyboard-focus)))
     (when (and fm (typep fm 'text-model-morph))
       fm)))
 
