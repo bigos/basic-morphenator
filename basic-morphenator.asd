@@ -16,10 +16,11 @@
                (:file "gui-color")
                (:file "geometry")
                (:file "damage")
-               (:file "protocols")     ; NEW
-               (:file "text")          ; NEW
-               (:file "drawing")       ; NEW
+               (:file "protocols")
+               (:file "text")
+               (:file "drawing")
                (:file "methods")
+               (:file "gui-experiments")
                (:file "helpers")
                (:file "main"))
   :in-order-to ((test-op (test-op "basic-morphenator/tests")))
