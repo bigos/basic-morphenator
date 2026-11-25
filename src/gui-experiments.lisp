@@ -15,7 +15,7 @@
     ;; use selector to select the expected scene
     (case selector
       (0 (build-greeting-scene model))
-      (1 (build-row-scene))
+      (1 (build-row-scene model))
       (otherwise (error "selector ~s did not match any scene" selector)))))
 
 ;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
@@ -64,6 +64,7 @@
 ;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html
 (defun build-row-scene (model)
   ;; TODO add another scene
+  ;; we need correct gap, padding and vertical centering
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
                               :color "pink"
