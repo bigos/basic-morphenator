@@ -38,6 +38,7 @@
 (def-fixture with-test-window ()
   (let* ((bm::*scene* :greeting)
          (win (bm:main :testing t)))
+    (declare (ignorable win))
     (unwind-protect (&body)
       (setf bm:*basic-morphenator-model* nil
             bm:*environment* nil
@@ -570,3 +571,78 @@
       (is (equal (bm::damage-recorder world)
                  '((:x 10 :y 10 :w 70 :h 50)
                    (:x 300 :y 200 :w 50 :h 40)))))))
+
+;;; ======================= additional layout & widget tests ===============
+(test layout-submorphs-vertical-and-proportional
+  "Verify vertical layout stacking, gap placement, and proportional height sizing."
+  (let* ((col (make-instance 'bm:layout-morph
+                             :direction :vertical
+                             :separation 6
+                             :extent (make-instance 'bm:extent :x 120 :y 206)))
+         (top (make-instance 'bm:boxed-morph
+                             :color "red"
+                             :extent (make-instance 'bm:extent :x 40 :y 40)
+                             :layout-spec (make-instance 'bm:layout-spec :fixed-height 40)))
+         (bottom (make-instance 'bm:boxed-morph
+                                :color "blue"
+                                :extent (make-instance 'bm:extent :x 40 :y 20)
+                                :layout-spec (make-instance 'bm:layout-spec :proportional-height 1.0))))
+    (bm:add-morph col top)
+    (bm:add-morph col bottom)
+    (is (= 0 (bm:y (bm:location top))))
+    (is (= 40 (bm:y (bm:extent top))))
+    (is (= 46 (bm:y (bm:location bottom))))
+    (is (= 160 (bm:y (bm:extent bottom))))
+    (is (<= (+ (bm:y (bm:location bottom)) (bm:y (bm:extent bottom)))
+            (bm:y (bm:extent col))))))
+
+(test layout-submorphs-handles-zero-proportional-sum-safely
+  "Verify a proportional child in a non-proportional container does not divide by zero."
+  (let* ((row (make-instance 'bm:layout-morph
+                             :direction :horizontal
+                             :extent (make-instance 'bm:extent :x 200 :y 30)))
+         (child (make-instance 'bm:boxed-morph
+                               :extent (make-instance 'bm:extent :x 50 :y 20)
+                               :layout-spec (make-instance 'bm:layout-spec :proportional-width 1.0))))
+    (bm:add-morph row child)
+    (is (numberp (bm:x (bm:extent child))))
+    (is (<= 0 (bm:x (bm:extent child))))))
+
+(test sync-label-extent-and-layout-updates-width-and-relayouts
+  "Verify label resizing respects min-width and updates sibling layout positions."
+  (let* ((row (make-instance 'bm:layout-morph
+                             :direction :horizontal
+                             :separation 10
+                             :extent (make-instance 'bm:extent :x 400 :y 30)))
+         (lbl (make-instance 'bm:label-morph
+                             :contents "Hi"
+                             :extent (make-instance 'bm:extent :x 20 :y 20)))
+         (box (make-instance 'bm:boxed-morph
+                             :extent (make-instance 'bm:extent :x 50 :y 20))))
+    (bm:add-morph row lbl)
+    (bm:add-morph row box)
+    (bm::sync-label-extent-and-layout lbl :pad-x 8 :min-width 50 :height 20)
+    (is (= 50 (bm:x (bm:extent lbl))))
+    (is (= 60 (bm:x (bm:location box))))
+
+    (setf (bm::contents lbl) "A much longer greeting string")
+    (bm::sync-label-extent-and-layout lbl :pad-x 8 :min-width 50 :height 20)
+    (is (> (bm:x (bm:extent lbl)) 50))
+    (is (= (+ (bm:x (bm:extent lbl)) 10)
+           (bm:x (bm:location box))))))
+
+(test world-resize-updates-extent-and-proportional-children
+  "Verify resizing a world updates its extent and proportional child dimensions."
+  (with-fixture with-test-window ()
+    (let* ((world (bm:current-world))
+           (panel (make-instance 'bm:boxed-morph
+                                 :extent (make-instance 'bm:extent :x 100 :y 100)
+                                 :layout-spec (make-instance 'bm:layout-spec
+                                                             :proportional-width 0.5
+                                                             :proportional-height 0.5))))
+      (bm:add-morph world panel)
+      (bm:resize world 800 500)
+      (is (= 800 (bm:x (bm:extent world))))
+      (is (= 500 (bm:y (bm:extent world))))
+      (is (= 400 (bm:x (bm:extent panel))))
+      (is (= 250 (bm:y (bm:extent panel)))))))
