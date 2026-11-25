@@ -54,17 +54,6 @@
   (setf (selection-start morph) nil
         (is-selecting morph) nil))
 
-(defun delete-selection (morph)
-  (multiple-value-bind (s e) (selection-bounds morph)
-    (when s
-      (let ((txt (widget-text morph)))
-        (setf (widget-text morph)
-              (concatenate 'string (subseq txt 0 s) (subseq txt e)))
-        (setf (cursor-pos morph) s)
-        (clear-selection morph)
-        (invalidate-text-metrics morph)
-        t))))
-
 (defun move-text-cursor (morph new-pos shift-p)
   (clamp-cursor morph)
   (if shift-p
@@ -73,27 +62,6 @@
       (clear-selection morph))
   (setf (cursor-pos morph)
         (max 0 (min (length (widget-text morph)) new-pos))))
-
-(defun insert-at-cursor (morph str)
-  (delete-selection morph)
-  (clamp-cursor morph)
-  (let* ((txt (widget-text morph))
-         (pos (cursor-pos morph)))
-    (setf (widget-text morph)
-          (concatenate 'string (subseq txt 0 pos) str (subseq txt pos)))
-    (incf (cursor-pos morph) (length str))
-    (invalidate-text-metrics morph)))
-
-(defun delete-before-cursor (morph)
-  (unless (delete-selection morph)
-    (clamp-cursor morph)
-    (let* ((txt (widget-text morph))
-           (pos (cursor-pos morph)))
-      (when (> pos 0)
-        (setf (widget-text morph)
-              (concatenate 'string (subseq txt 0 (1- pos)) (subseq txt pos)))
-        (decf (cursor-pos morph))
-        (invalidate-text-metrics morph)))))
 
 (defun cursor-index-at-local-x (morph local-x)
   (let* ((txt (widget-text morph))
@@ -116,23 +84,6 @@
     (when (eql (selection-start morph) (cursor-pos morph))
       (setf (selection-start morph) nil))))
 
-(defun clear-text-morph (text-morph)
-  (setf (widget-text text-morph) ""
-        (cursor-pos text-morph) 0
-        (scroll-x text-morph) 0)
-  (clear-selection text-morph)
-  (invalidate-text-metrics text-morph))
-
-(defun delete-char-at-cursor (text-morph)
-  (unless (delete-selection text-morph)
-    (clamp-cursor text-morph)
-    (let* ((txt (widget-text text-morph))
-           (pos (cursor-pos text-morph)))
-      (when (< pos (length txt))
-        (setf (widget-text text-morph)
-              (concatenate 'string (subseq txt 0 pos) (subseq txt (1+ pos))))
-        (invalidate-text-metrics text-morph)))))
-
 (defun sync-label-extent-and-layout (morph &key (pad-x 8) (min-width 50) (height 20))
   "Resize MORPH to fit its current rendered text plus horizontal padding, then
   re-layout its owner if inside a layout-morph."
@@ -148,3 +99,48 @@
         (when (and own (typep own 'layout-morph))
           (layout-submorphs own)
           (record-morph-damage own))))))
+
+(defun replace-text-range (morph start end replacement new-cursor-pos &key clear-sel-p)
+  "Replace text in MORPH over half-open range [START, END) with REPLACEMENT,
+set CURSOR-POS to NEW-CURSOR-POS, optionally clear selection, and invalidate metrics."
+  (let* ((txt (widget-text morph))
+         (len (length txt))
+         (s (max 0 (min start len)))
+         (e (max s (min end len))))
+    (setf (widget-text morph)
+          (concatenate 'string (subseq txt 0 s) replacement (subseq txt e)))
+    (when clear-sel-p
+      (clear-selection morph))
+    (setf (cursor-pos morph)
+          (max 0 (min new-cursor-pos (length (widget-text morph)))))
+    (invalidate-text-metrics morph)))
+
+(defun delete-selection (morph)
+  (multiple-value-bind (s e) (selection-bounds morph)
+    (when s
+      (replace-text-range morph s e "" s :clear-sel-p t)
+      t)))
+
+(defun insert-at-cursor (morph str)
+  (if (delete-selection morph)
+      (let ((pos (cursor-pos morph)))
+        (replace-text-range morph pos pos str (+ pos (length str))))
+      (progn
+        (clamp-cursor morph)
+        (let ((pos (cursor-pos morph)))
+          (replace-text-range morph pos pos str (+ pos (length str)))))))
+
+(defun delete-before-cursor (morph)
+  (unless (delete-selection morph)
+    (clamp-cursor morph)
+    (let ((pos (cursor-pos morph)))
+      (when (> pos 0)
+        (replace-text-range morph (1- pos) pos "" (1- pos))))))
+
+(defun delete-char-at-cursor (text-morph)
+  (unless (delete-selection text-morph)
+    (clamp-cursor text-morph)
+    (let* ((pos (cursor-pos text-morph))
+           (len (length (widget-text text-morph))))
+      (when (< pos len)
+        (replace-text-range text-morph pos (1+ pos) "" pos)))))

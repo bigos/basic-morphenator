@@ -89,99 +89,114 @@ after BODY completes."
   (unless (location morph)
     (setf (location morph) (build-location 0 0))))
 
+(defun layout-child-main-size (sub dir)
+  "Return SUB's main-axis contribution along DIR: proportional weight or fixed/current size."
+  (let ((spec (layout-spec sub)))
+    (if (eq dir :horizontal)
+        (cond
+          ((and spec (proportional-width spec)) (values :proportional (proportional-width spec)))
+          ((and spec (fixed-width spec))        (values :fixed (fixed-width spec)))
+          (t                                    (values :fixed (or (x (extent sub)) 0))))
+        (cond
+          ((and spec (proportional-height spec)) (values :proportional (proportional-height spec)))
+          ((and spec (fixed-height spec))        (values :fixed (fixed-height spec)))
+          (t                                     (values :fixed (or (y (extent sub)) 0)))))))
+
+(defun layout-tally-children (subs dir)
+  "Return (VALUES fixed-sum prop-sum max-child-w max-child-h) for SUBS along DIR."
+  (let ((fixed-sum 0)
+        (prop-sum 0.0)
+        (max-child-w 0)
+        (max-child-h 0))
+    (dolist (sub subs)
+      (multiple-value-bind (kind val) (layout-child-main-size sub dir)
+        (ecase kind
+          (:proportional (incf prop-sum val))
+          (:fixed        (incf fixed-sum val))))
+      (setf max-child-w (max max-child-w (or (x (extent sub)) 0))
+            max-child-h (max max-child-h (or (y (extent sub)) 0))))
+    (values fixed-sum prop-sum max-child-w max-child-h)))
+
+(defun layout-fit-cross-axis (morph dir max-child-w max-child-h)
+  "Grow MORPH's cross-axis extent if unconstrained by a fixed or proportional spec."
+  (let ((spec-self (layout-spec morph))
+        (pad-x (layout-padding-x morph))
+        (pad-y (layout-padding-y morph)))
+    (when (and (eq dir :horizontal)
+               (not (and spec-self (fixed-height spec-self)))
+               (not (and spec-self (proportional-height spec-self))))
+      (let ((needed-h (+ max-child-h (* 2 pad-y))))
+        (when (or (null (y (extent morph)))
+                  (< (y (extent morph)) needed-h))
+          (setf (y (extent morph)) needed-h))))
+    (when (and (eq dir :vertical)
+               (not (and spec-self (fixed-width spec-self)))
+               (not (and spec-self (proportional-width spec-self))))
+      (let ((needed-w (+ max-child-w (* 2 pad-x))))
+        (when (or (null (x (extent morph)))
+                  (< (x (extent morph)) needed-w))
+          (setf (x (extent morph)) needed-w))))))
+
+(defun layout-child-dimensions (sub dir inner-w inner-h rem prop-sum)
+  "Return (VALUES new-w new-h) for SUB inside a container with inner size (INNER-W, INNER-H)."
+  (let ((spec (layout-spec sub)))
+    (values
+     (cond
+       ((and (eq dir :horizontal) spec (proportional-width spec) (> prop-sum 0))
+        (round (* rem (/ (proportional-width spec) prop-sum))))
+       ((and spec (fixed-width spec))
+        (fixed-width spec))
+       ((and (eq dir :vertical) spec (proportional-width spec))
+        (round (* inner-w (proportional-width spec))))
+       (t (x (extent sub))))
+     (cond
+       ((and (eq dir :vertical) spec (proportional-height spec) (> prop-sum 0))
+        (round (* rem (/ (proportional-height spec) prop-sum))))
+       ((and spec (fixed-height spec))
+        (fixed-height spec))
+       ((and (eq dir :horizontal) spec (proportional-height spec))
+        (round (* inner-h (proportional-height spec))))
+       (t (y (extent sub)))))))
+
+(defun layout-place-children (morph subs dir fixed-sum prop-sum)
+  "Resize and position SUBS inside MORPH along DIR and recursively layout each child."
+  (let* ((gap (layout-gap morph))
+         (pad-x (layout-padding-x morph))
+         (pad-y (layout-padding-y morph))
+         (n (length subs))
+         (total-gap (* gap (max 0 (1- n))))
+         (owner-w (x (extent morph)))
+         (owner-h (y (extent morph)))
+         (inner-w (max 0 (- owner-w (* 2 pad-x))))
+         (inner-h (max 0 (- owner-h (* 2 pad-y))))
+         (avail-w (max 0 (- inner-w (if (eq dir :horizontal) total-gap 0))))
+         (avail-h (max 0 (- inner-h (if (eq dir :vertical) total-gap 0))))
+         (rem (max 0 (- (if (eq dir :horizontal) avail-w avail-h) fixed-sum)))
+         (cursor (if (eq dir :horizontal) pad-x pad-y)))
+    (dolist (sub subs)
+      (multiple-value-bind (new-w new-h)
+          (layout-child-dimensions sub dir inner-w inner-h rem prop-sum)
+        (let ((centered-y (+ pad-y (max 0 (round (- inner-h new-h) 2))))
+              (centered-x (+ pad-x (max 0 (round (- inner-w new-w) 2)))))
+          (setf (x (extent sub)) new-w
+                (y (extent sub)) new-h)
+          (ecase dir
+            (:horizontal
+             (set-location-xy sub cursor centered-y)
+             (incf cursor (+ new-w gap)))
+            (:vertical
+             (set-location-xy sub centered-x cursor)
+             (incf cursor (+ new-h gap))))
+          (layout-submorphs sub))))))
+
 (defmethod layout-submorphs ((morph layout-morph))
   (let* ((subs (submorphs morph))
-         (n (length subs)))
-    (when (> n 0)
-      (let* ((gap (layout-gap morph))
-             (pad-x (layout-padding-x morph))
-             (pad-y (layout-padding-y morph))
-             (total-gap (* gap (max 0 (1- n))))
-             (dir (direction morph))
-             (spec-self (layout-spec morph))
-             (fixed-sum 0)
-             (prop-sum 0.0)
-             (max-child-h 0)
-             (max-child-w 0))
-        ;; 1. Tally fixed sizes, proportional weights, and max child cross-sizes
-        (dolist (sub subs)
-          (let ((spec (layout-spec sub)))
-            (if (eq dir :horizontal)
-                (cond
-                  ((and spec (proportional-width spec))
-                   (incf prop-sum (proportional-width spec)))
-                  ((and spec (fixed-width spec))
-                   (incf fixed-sum (fixed-width spec)))
-                  (t
-                   (incf fixed-sum (x (extent sub)))))
-                (cond
-                  ((and spec (proportional-height spec))
-                   (incf prop-sum (proportional-height spec)))
-                  ((and spec (fixed-height spec))
-                   (incf fixed-sum (fixed-height spec)))
-                  (t
-                   (incf fixed-sum (y (extent sub))))))
-            (setf max-child-w (max max-child-w (or (x (extent sub)) 0))
-                  max-child-h (max max-child-h (or (y (extent sub)) 0)))))
-
-        ;; If a horizontal layout has no fixed-height and isn't purely fixed by spec,
-        ;; grow its height to fit the tallest child plus top/bottom padding.
-        (when (and (eq dir :horizontal)
-                   (not (and spec-self (fixed-height spec-self)))
-                   (not (and spec-self (proportional-height spec-self))))
-          (let ((needed-h (+ max-child-h (* 2 pad-y))))
-            (when (or (null (y (extent morph)))
-                      (< (y (extent morph)) needed-h))
-              (setf (y (extent morph)) needed-h))))
-
-        ;; Similarly, a vertical layout without a fixed/proportional width can fit widest child + pad-x.
-        (when (and (eq dir :vertical)
-                   (not (and spec-self (fixed-width spec-self)))
-                   (not (and spec-self (proportional-width spec-self))))
-          (let ((needed-w (+ max-child-w (* 2 pad-x))))
-            (when (or (null (x (extent morph)))
-                      (< (x (extent morph)) needed-w))
-              (setf (x (extent morph)) needed-w))))
-
-        (let* ((owner-w (x (extent morph)))
-               (owner-h (y (extent morph)))
-               (inner-w (max 0 (- owner-w (* 2 pad-x))))
-               (inner-h (max 0 (- owner-h (* 2 pad-y))))
-               (avail-w (max 0 (- inner-w (if (eq dir :horizontal) total-gap 0))))
-               (avail-h (max 0 (- inner-h (if (eq dir :vertical) total-gap 0))))
-               (rem (max 0 (- (if (eq dir :horizontal) avail-w avail-h) fixed-sum)))
-               (cursor (if (eq dir :horizontal) pad-x pad-y)))
-          ;; 2. Compute child extents, center along cross-axis, and advance cursor
-          (dolist (sub subs)
-            (let* ((spec (layout-spec sub))
-                   (new-w (cond
-                            ((and (eq dir :horizontal) spec (proportional-width spec) (> prop-sum 0))
-                             (round (* rem (/ (proportional-width spec) prop-sum))))
-                            ((and spec (fixed-width spec))
-                             (fixed-width spec))
-                            ((and (eq dir :vertical) spec (proportional-width spec))
-                             (round (* inner-w (proportional-width spec))))
-                            (t (x (extent sub)))))
-                   (new-h (cond
-                            ((and (eq dir :vertical) spec (proportional-height spec) (> prop-sum 0))
-                             (round (* rem (/ (proportional-height spec) prop-sum))))
-                            ((and spec (fixed-height spec))
-                             (fixed-height spec))
-                            ((and (eq dir :horizontal) spec (proportional-height spec))
-                             (round (* inner-h (proportional-height spec))))
-                            (t (y (extent sub)))))
-                   (centered-y (+ pad-y (max 0 (round (- inner-h new-h) 2))))
-                   (centered-x (+ pad-x (max 0 (round (- inner-w new-w) 2)))))
-              (setf (x (extent sub)) new-w
-                    (y (extent sub)) new-h)
-              (ecase dir
-                (:horizontal
-                 (set-location-xy sub cursor centered-y)
-                 (incf cursor (+ new-w gap)))
-                (:vertical
-                 (set-location-xy sub centered-x cursor)
-                 (incf cursor (+ new-h gap))))
-              (layout-submorphs sub))))))))
+         (dir (direction morph)))
+    (when (> (length subs) 0)
+      (multiple-value-bind (fixed-sum prop-sum max-child-w max-child-h)
+          (layout-tally-children subs dir)
+        (layout-fit-cross-axis morph dir max-child-w max-child-h)
+        (layout-place-children morph subs dir fixed-sum prop-sum)))))
 
 ;;; ---------------- mouse-over tracking ---------------------------------------
 (defun process-mouse-over (handler new-chain)
