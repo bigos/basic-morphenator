@@ -63,34 +63,34 @@
 
 ;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html
 (defun build-row-scene (model)
-  ;; TODO add another scene
-  ;; we need correct gap, padding and vertical centering
-  ;; we seem to have a hardcoded gap, but it does not reflect Cuis Morphic way
-  ;; we need to add resizing of the raw that includes the height of the blue box with padding
+  (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
                               :color "pink"
                               :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
                               :extent (make-instance 'extent :x 600 :y 400)
                               :layout-spec (make-layout-spec :proportional-width 1.0
                                                              :proportional-height 1.0)))
          (row (make-instance 'layout-morph
                              :color "orange"
                              :direction :horizontal
-                             :extent (make-instance 'extent :x 600 :y 30)
-                             :layout-spec (make-layout-spec :proportional-width 1.0
-                                                            :fixed-height 30)))
+                             :separation 12
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
          (box1 (make-instance 'boxed-morph
-                               :color "red"
-                               :extent (make-instance 'extent :x 50 :y 50)))
-
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
          (box2 (make-instance 'boxed-morph
-                               :color "green"
-                               :extent (make-instance 'extent :x 75 :y 75)))
-
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
          (box3 (make-instance 'boxed-morph
-                               :color "blue"
-                               :extent (make-instance 'extent :x 100 :y 100))))
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
     (with-deferred-layout ()
       (add-morph world view)
       (add-morph view row)
