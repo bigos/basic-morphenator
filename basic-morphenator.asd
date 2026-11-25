@@ -29,7 +29,7 @@
 ;; (ql:quickload :basic-morphenator)
 ;; (asdf:test-system "basic-morphenator")
 (defsystem "basic-morphenator/tests"
-    :depends-on ("basic-morphenator" "fiveam")
+  :depends-on (#:basic-morphenator  #:fiveam)
     :pathname "tests/"
     :serial T
     :components ((:file "test-packages")
