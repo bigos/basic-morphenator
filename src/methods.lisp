@@ -1,4 +1,4 @@
-(declaim (optimize (speed 2) (safety 3) (debug 3)))
+(declaim (optimize (speed 1) (safety 3) (debug 3)))
 
 (in-package #:basic-morphenator)
 
@@ -420,8 +420,7 @@ after BODY completes."
                          :mouse-over-handler (make-instance 'mouse-over-handler)))))
 
 (defmethod render-world ((morph world-morph))
-  (let ((ext (extent morph))
-        (rects (damage-recorder morph)))
+  (let ((ext (extent morph)))
     (when ext
       (draw-box-rect 0 0 (x ext) (y ext) "grey")
       (dolist (m (submorphs morph))

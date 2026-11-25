@@ -1,4 +1,4 @@
-(declaim (optimize (speed 2) (safety 3) (debug 3)))
+(declaim (optimize (speed 1) (safety 3) (debug 3)))
 (in-package #:basic-morphenator)
 
 (defun refresh-world-labels (&optional (world (current-world)))
