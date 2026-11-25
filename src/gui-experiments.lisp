@@ -11,7 +11,7 @@
 ;;; ================= init gui =================================================
 
 (defmethod init-gui ((model basic-morphenator-model))
-  (let ((selector 1))
+  (let ((selector 0))
     ;; use selector to select the expected scene
     (case selector
       (0 (build-greeting-scene model))
@@ -48,6 +48,7 @@
                                 :mouse-over-color "lime"
                                 :extent (make-instance 'extent :x 60 :y 30)
                                 :label "Greet"))
+         ;; TODO resize the label to reflect new content and center it after resizing
          (greeting-label (make-instance 'label-morph
                                         :color "blue"
                                         :extent (make-instance 'extent :x 50 :y 20)
