@@ -229,7 +229,7 @@
       (bm:add-morph (bm:current-world) btn)
       (setf (bm:entered model) "Ada")
       (bm:handle-event-mouse-button btn :pressed 1 10 10)
-      (is-false clicked)                ; ← not yet: press alone does nothing
+      (is-false clicked)
       (bm:handle-event-mouse-button btn :released 1 10 10)
       (is-true clicked)
       (is (string= "Ada" (bm:greeted model))))))
@@ -240,6 +240,7 @@ and pressed state is cleared."
   (with-fixture with-test-window ()
     (let* ((world (bm:current-world))
            (model (bm:the-model))
+           (initial-greeted (bm:greeted model))
            (press-count 0)
            (btn (make-instance 'bm:pluggable-button-morph
                                :color "green"
@@ -257,14 +258,14 @@ and pressed state is cleared."
       (is-true (bm::is-pressed btn))
       (is (eq btn (bm::pressed-morph world)))
       (is (= 0 press-count))
-      (is (string= "" (bm:greeted model)))
+      (is (equal initial-greeted (bm:greeted model)))
 
       ;; Release outside: pressed state cleared, action cancelled.
       (process-event win :released '(1 350 350))
       (is-false (bm::is-pressed btn))
       (is (null (bm::pressed-morph world)))
       (is (= 0 press-count))
-      (is (string= "" (bm:greeted model))))))
+      (is (equal initial-greeted (bm:greeted model))))))
 
 (test text-drag-selection-updates-cursor-and-selection
   "Verify dragging across a focused text-model-morph selects text and clears on release."

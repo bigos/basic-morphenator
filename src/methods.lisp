@@ -254,16 +254,17 @@ after BODY completes."
        (when w
          (setf (pressed-morph w) morph
                (world-keyboard-focus w) nil))
-       (record-morph-damage morph)
-       (when (and (contains-point-p morph x y)
-                  (action-selector morph))
-         (funcall (action-selector morph))))
+       (record-morph-damage morph))
       (:released
-       (release-world-pressed-morph w)
-       (record-morph-damage morph)
-       (when (and (contains-point-p morph x y)
-                  (secondary-action-selector morph))
-         (funcall (secondary-action-selector morph)))))))
+       (let ((was-pressed (and w (eq (pressed-morph w) morph)))
+             (inside-p    (contains-point-p morph x y)))
+         (release-world-pressed-morph w)
+         (record-morph-damage morph)
+         (when (and was-pressed inside-p)
+           (when (action-selector morph)
+             (funcall (action-selector morph)))
+           (when (secondary-action-selector morph)
+             (funcall (secondary-action-selector morph)))))))))
 
 (defmethod handle-event-mouse-button ((morph text-model-morph) (event symbol) button x y)
   (declare (ignore button y))
