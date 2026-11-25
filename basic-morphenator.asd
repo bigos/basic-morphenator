@@ -12,6 +12,7 @@
   :serial T
   :components ((:file "packages")
                (:file "basic-morphenator")
+               (:file "helpers")
                (:file "classes")
                (:file "gui-color")
                (:file "geometry")
@@ -21,7 +22,6 @@
                (:file "drawing")
                (:file "methods")
                (:file "gui-experiments")
-               (:file "helpers")
                (:file "main"))
   :in-order-to ((test-op (test-op "basic-morphenator/tests")))
   :description "basic morphenator for GUI for clops in separate system")
