@@ -9,11 +9,11 @@
   world)
 
 ;;; ================= init gui =================================================
-;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 
 (defmethod init-gui ((model basic-morphenator-model))
   (build-greeting-scene model))
 
+;;; try to implement: https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -55,3 +55,7 @@
       (add-morph row button)
       (add-morph view greeting-label))
     world))
+
+(defun zzz ()
+  ;; TODO add another scene
+  )
