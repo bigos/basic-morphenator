@@ -1,10 +1,20 @@
 (declaim (optimize (speed 2) (safety 3) (debug 3)))
 (in-package #:basic-morphenator)
 
+(defun refresh-world-labels (&optional (world (current-world)))
+  (labels ((walk (m)
+             (when (typep m 'label-morph)
+               (sync-label-extent-and-layout m))
+             (dolist (sub (submorphs m))
+               (walk sub))))
+    (when world
+      (walk world))))
+
 ;;; ---------------- generics whose methods are spread across files -----------
 (defgeneric greet-me (model))
 (defmethod greet-me ((model basic-morphenator-model))
-  (setf (greeted model) (entered model)))
+  (setf (greeted model) (entered model))
+  (refresh-world-labels))
 
 (defgeneric widget-text (morph)
   (:documentation "Return the current text displayed by MORPH."))
