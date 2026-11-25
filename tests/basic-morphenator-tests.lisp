@@ -213,8 +213,8 @@
         (is (not (eq world hit)))))))
 
 ;;; ======================= widget & cursor/selection tests ==================
-(test button-press-triggers-greet-me
-  "Pressing a pluggable-button-morph invokes its action-selector and updates greeted."
+(test button-release-triggers-greet-me
+  "Pressing then releasing a pluggable-button-morph invokes its action-selector."
   (with-fixture with-test-window ()
     (let* ((model (bm:the-model))
            (clicked nil)
@@ -222,16 +222,21 @@
                                :color "green"
                                :extent (make-instance 'bm:extent :x 100 :y 30)
                                :label "Test"
+                               :location (make-instance 'bm:location :x 0 :y 0)
                                :action-selector (lambda ()
                                                   (setf clicked t)
                                                   (bm:greet-me model)))))
+      (bm:add-morph (bm:current-world) btn)
       (setf (bm:entered model) "Ada")
       (bm:handle-event-mouse-button btn :pressed 1 10 10)
+      (is-false clicked)                ; ← not yet: press alone does nothing
+      (bm:handle-event-mouse-button btn :released 1 10 10)
       (is-true clicked)
       (is (string= "Ada" (bm:greeted model))))))
 
 (test button-press-and-release-outside-clears-pressed-state
-  "Verify pressing a button sets is-pressed and releasing outside clears pressed state."
+  "Verify pressing a button sets is-pressed, releasing outside cancels the action,
+and pressed state is cleared."
   (with-fixture with-test-window ()
     (let* ((world (bm:current-world))
            (model (bm:the-model))
@@ -247,17 +252,19 @@
       (bm:add-morph world btn)
       (setf (bm:entered model) "Grace")
 
-      ;; Press inside the button
+      ;; Press inside the button: state set, action NOT yet fired.
       (process-event win :pressed '(1 20 20))
       (is-true (bm::is-pressed btn))
       (is (eq btn (bm::pressed-morph world)))
-      (is (= 1 press-count))
-      (is (string= "Grace" (bm:greeted model)))
+      (is (= 0 press-count))
+      (is (string= "" (bm:greeted model)))
 
-      ;; Release outside the button (e.g., on world background)
+      ;; Release outside: pressed state cleared, action cancelled.
       (process-event win :released '(1 350 350))
       (is-false (bm::is-pressed btn))
-      (is (null (bm::pressed-morph world))))))
+      (is (null (bm::pressed-morph world)))
+      (is (= 0 press-count))
+      (is (string= "" (bm:greeted model))))))
 
 (test text-drag-selection-updates-cursor-and-selection
   "Verify dragging across a focused text-model-morph selects text and clears on release."

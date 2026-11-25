@@ -68,7 +68,8 @@ defaulting to 0 when MORPH has no location."
     (loop for m in (submorphs own)
           for idx from 0
           until (eq m morph)
-          sum (+ (funcall axis-fn (extent m))
+          sum (+ (let ((ext (extent m)))
+                   (if ext (funcall axis-fn ext) 0))
                  (if (> idx 0) gap 0)))))
 
 (defmethod prev-sibling-widths-sum ((morph morph))
