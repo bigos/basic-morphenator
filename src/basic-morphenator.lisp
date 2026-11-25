@@ -5,8 +5,6 @@
 (in-package #:basic-morphenator)
 ;;; (main)
 
-;;; we have a bug with some widgets disappearing when text of button are in focus
-
 (defvar *basic-morphenator-model* nil)
 (defvar *environment* nil)
 (defvar *window-size* nil)
