@@ -413,9 +413,8 @@
 (test invalidate-text-metrics-clears-cached-widths
   "Verify text mutations and explicit invalidation clear cached prefix widths."
   (let ((tm (make-instance 'bm:text-model-morph :text "abcdef")))
-    (is-true (gethash tm bm::*text-width-caches*
-                      (progn (bm::ensure-prefix-widths tm "abcdef")
-                             (gethash tm bm::*text-width-caches*))))
+    (bm::ensure-prefix-widths tm "abcdef")
+    (is-true (gethash tm bm::*text-width-caches*))
     (bm:insert-at-cursor tm "!")
     (is (null (gethash tm bm::*text-width-caches*)))
     (bm::ensure-prefix-widths tm (bm:widget-text tm))
