@@ -8,18 +8,68 @@
     (setf (world model) world))
   world)
 
+(defun set-layout-alignment (morph &key horizontal vertical)
+  "Store alignment preferences (:left/:center for HORIZONTAL, :top/:center for VERTICAL)
+  in MORPH's properties plist."
+  (when morph
+    (let ((props (properties morph)))
+      (when horizontal
+        (setf (getf props :h-align) horizontal))
+      (when vertical
+        (setf (getf props :v-align) vertical))
+      (setf (properties morph) props)))
+  morph)
+
+(defun align-horizontal-row-children (row &key horizontal vertical)
+  "Position children of ROW along its horizontal axis and cross axis according to
+  HORIZONTAL (:left or :center) and VERTICAL (:top or :center), using values stored
+  on ROW when keyword arguments are omitted."
+  (let* ((h-align (or horizontal (getf (properties row) :h-align) :left))
+         (v-align (or vertical   (getf (properties row) :v-align) :center))
+         (subs (submorphs row))
+         (gap (layout-gap row))
+         (pad-x (layout-padding-x row))
+         (pad-y (layout-padding-y row))
+         (row-ext (ensure-extent row))
+         (inner-w (max 0 (- (x row-ext) (* 2 pad-x))))
+         (inner-h (max 0 (- (y row-ext) (* 2 pad-y))))
+         (children-w (loop for sub in subs
+                           for idx from 0
+                           sum (+ (x (ensure-extent sub))
+                                  (if (> idx 0) gap 0))))
+         (cur-x (ecase h-align
+                  (:left   pad-x)
+                  (:center (+ pad-x (max 0 (round (- inner-w children-w) 2)))))))
+    (dolist (sub subs)
+      (let* ((sub-ext (ensure-extent sub))
+             (sub-h (y sub-ext))
+             (y-pos (ecase v-align
+                      (:top    pad-y)
+                      (:center (+ pad-y (max 0 (round (- inner-h sub-h) 2)))))))
+        (set-location-xy sub cur-x y-pos)
+        (incf cur-x (+ (x sub-ext) gap))))))
+
+(defmethod layout-submorphs :after ((morph layout-morph))
+  "Re-apply custom row alignment after standard layout passes (such as window resize)."
+  (when (and (eq (direction morph) :horizontal)
+             (or (getf (properties morph) :h-align)
+                 (getf (properties morph) :v-align))
+             (> (length (submorphs morph)) 0))
+    (align-horizontal-row-children morph)))
+
 ;;; ================= init gui =================================================
 (defparameter *scene* :row-center-center
   "Scene built by INIT-GUI:
-  :greeting, :row, :row-left-center, :row-center-center, or :vertical-center-top.")
+  :greeting, :row, :row-left-center, :row-center-center, or :row-center-top.")
 
 (defmethod init-gui ((model basic-morphenator-model))
+  (warn "current scene is ~s" *scene*)
   (ecase *scene*
-    (:greeting            (build-greeting-scene model))
-    (:row                 (build-row-scene model))
-    (:row-left-center     (build-horizontal-left-aligned-row-scene model))
-    (:row-center-center   (build-horizontal-center-aligned-row-scene model))
-    (:vertical-center-top (build-vertical-top-aligned-row-scene model))))
+    (:greeting          (build-greeting-scene model))
+    (:row               (build-row-scene model))
+    (:row-left-center   (build-horizontal-left-vetical-center-aligned-row-scene model))
+    (:row-center-center (build-horizontal-center-vertical-center-aligned-row-scene model))
+    (:row-center-top    (build-horizontal-centered-vertical-top-aligned-row-scene model))))
 
 ;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
@@ -109,7 +159,7 @@
     world))
 
 (defun build-horizontal-left-vetical-center-aligned-row-scene (model)
-  ;; TODO horizontal left, vertical center
+  ;; TODO is OK
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -138,6 +188,7 @@
          (box3 (make-instance 'boxed-morph
                               :color "blue"
                               :extent (make-instance 'extent :x 100 :y 100))))
+    (set-layout-alignment row :horizontal :left :vertical :center)
     (with-deferred-layout ()
       (add-morph world view)
       (add-morph view row)
@@ -147,7 +198,7 @@
     world))
 
 (defun build-horizontal-center-vertical-center-aligned-row-scene (model)
-  ;; TODO horozontal center, vertical center
+  ;; TODO horizontal alignment should be centered and vertical alignment center
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -176,13 +227,13 @@
          (box3 (make-instance 'boxed-morph
                               :color "blue"
                               :extent (make-instance 'extent :x 100 :y 100))))
+    (set-layout-alignment row :horizontal :center :vertical :center)
     (with-deferred-layout ()
       (add-morph world view)
       (add-morph view row)
       (add-morph row box1)
       (add-morph row box2)
       (add-morph row box3))
-    (center-horizontal-children row)
     world))
 
 (defun build-horizontal-centered-vertical-top-aligned-row-scene (model)
@@ -198,14 +249,14 @@
                               :extent (make-instance 'extent :x 600 :y 400)
                               :layout-spec (make-layout-spec :proportional-width 1.0
                                                              :proportional-height 1.0)))
-         (column (make-instance 'layout-morph
-                                :color "orange"
-                                :direction :vertical
-                                :separation 10
-                                :padding-x 10
-                                :padding-y 10
-                                :extent (make-instance 'extent :x 580 :y 30)
-                                :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
          (box1 (make-instance 'boxed-morph
                               :color "red"
                               :extent (make-instance 'extent :x 50 :y 50)))
@@ -215,12 +266,13 @@
          (box3 (make-instance 'boxed-morph
                               :color "blue"
                               :extent (make-instance 'extent :x 100 :y 100))))
+    (set-layout-alignment row :horizontal :center :vertical :top)
     (with-deferred-layout ()
       (add-morph world view)
-      (add-morph view column)
-      (add-morph column box1)
-      (add-morph column box2)
-      (add-morph column box3))
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
     world))
 
 ;; (defun build-proportional-row-scene (model)
