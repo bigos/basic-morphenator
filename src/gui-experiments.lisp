@@ -9,8 +9,9 @@
   world)
 
 ;;; ================= init gui =================================================
-(defparameter *scene* :greeting
-  "Scene built by INIT-GUI: :greeting, :row, :row-left-center, :row-center-center, or :vertical-center-top.")
+(defparameter *scene* :row-center-center
+  "Scene built by INIT-GUI:
+  :greeting, :row, :row-left-center, :row-center-center, or :vertical-center-top.")
 
 (defmethod init-gui ((model basic-morphenator-model))
   (ecase *scene*
@@ -107,7 +108,8 @@
       (add-morph row box3))
     world))
 
-(defun build-horizontal-left-aligned-row-scene (model)
+(defun build-horizontal-left-vetical-center-aligned-row-scene (model)
+  ;; TODO horizontal left, vertical center
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -144,7 +146,8 @@
       (add-morph row box3))
     world))
 
-(defun build-horizontal-center-aligned-row-scene (model)
+(defun build-horizontal-center-vertical-center-aligned-row-scene (model)
+  ;; TODO horozontal center, vertical center
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -182,7 +185,8 @@
     (center-horizontal-children row)
     world))
 
-(defun build-vertical-top-aligned-row-scene (model)
+(defun build-horizontal-centered-vertical-top-aligned-row-scene (model)
+  ;; TODO horizontal center, vertical top
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
