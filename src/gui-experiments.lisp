@@ -58,7 +58,7 @@
     (align-horizontal-row-children morph)))
 
 ;;; ================= init gui =================================================
-(defparameter *scene* :row-center-top
+(defparameter *scene* :row-center-center
   "Scene built by INIT-GUI:
   :greeting, :row, :row-left-center, :row-center-center, or :row-center-top.")
 
@@ -66,10 +66,10 @@
   (warn "current scene is ~s" *scene*)
   (ecase *scene*
     (:greeting          (build-greeting-scene model))
-    (:row               (build-row-scene model))
-    (:row-left-center   (build-horizontal-left-vetical-center-aligned-row-scene model))
-    (:row-center-center (build-horizontal-center-vertical-center-aligned-row-scene model))
-    (:row-center-top    (build-horizontal-centered-vertical-top-aligned-row-scene model))))
+    (:row               (build-row-default-scene model))
+    (:row-left-center   (build-row-left-center-scene model))
+    (:row-center-center (build-row-center-center-scene model))
+    (:row-center-top    (build-row-center-top-scene model))))
 
 ;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
@@ -120,7 +120,7 @@
     world))
 
 ;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html
-(defun build-row-scene (model)
+(defun build-row-default-scene (model)
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -158,8 +158,8 @@
       (add-morph row box3))
     world))
 
-(defun build-horizontal-left-vetical-center-aligned-row-scene (model)
-  ;; TODO is OK
+(defun build-row-left-center-scene (model)
+  ;; Horizontal left, vertical center
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -197,8 +197,8 @@
       (add-morph row box3))
     world))
 
-(defun build-horizontal-center-vertical-center-aligned-row-scene (model)
-  ;; TODO horizontal alignment should be centered and vertical alignment center
+(defun build-row-center-center-scene (model)
+  ;; Horizontal center, vertical center
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -236,8 +236,8 @@
       (add-morph row box3))
     world))
 
-(defun build-horizontal-centered-vertical-top-aligned-row-scene (model)
-  ;; TODO horizontal center, vertical top
+(defun build-row-center-top-scene (model)
+  ;; Horizontal center, vertical top
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -275,6 +275,6 @@
       (add-morph row box3))
     world))
 
-;; (defun build-proportional-row-scene (model)
+;; (defun build-row-proportional-scene (model)
 ;;   ;; TODO
 ;;   )
