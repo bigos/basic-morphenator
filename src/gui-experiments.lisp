@@ -10,12 +10,13 @@
 
 ;;; ================= init gui =================================================
 (defparameter *scene* :greeting
-  "Scene built by INIT-GUI: :greeting or :row.")
+  "Scene built by INIT-GUI: :greeting, :row, or :row-left-center.")
 
 (defmethod init-gui ((model basic-morphenator-model))
   (ecase *scene*
-    (:greeting (build-greeting-scene model))
-    (:row      (build-row-scene model))))
+    (:greeting         (build-greeting-scene model))
+    (:row              (build-row-scene model))
+    (:row-left-center  (build-horizontal-left-aligned-row-scene model))))
 
 ;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
