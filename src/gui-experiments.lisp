@@ -105,10 +105,41 @@
     world))
 
 (defun build-horizontal-left-aligned-row-scene (model)
-  ;; TODO make scene similar to build-row-scene
-  ;; taken from https://drcuis.github.io/DesignGUI/Alignment.html
-  ;; with boxes horizontal left aligned, and vertical center aligned
-  )
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
+    world))
 
 (defun build-horizontal-center-aligned-row-scene (model)
   ;; TODO make scene similar to build-row-scene
