@@ -103,3 +103,25 @@
       (add-morph row box2)
       (add-morph row box3))
     world))
+
+(defun build-horizontal-left-aligned-row-scene (model)
+  ;; TODO make scene similar to build-row-scene
+  ;; taken from https://drcuis.github.io/DesignGUI/Alignment.html
+  ;; with boxes horizontal left aligned, and vertical center aligned
+  )
+
+(defun build-horizontal-center-aligned-row-scene (model)
+  ;; TODO make scene similar to build-row-scene
+  ;; taken from https://drcuis.github.io/DesignGUI/Alignment.html
+  ;; with boxes horizontal center aligned, and vertical center aligned
+  )
+
+(defun build-vertical-top-aligned-row-scene (model)
+  ;; TODO make scene similar to build-row-scene
+  ;; taken from https://drcuis.github.io/DesignGUI/Alignment.html
+  ;; with boxes horizontal center aligned, and vertical top aligned
+  )
+
+;; (defun build-proportional-row-scene (model)
+;;   ;; TODO
+;;   )
