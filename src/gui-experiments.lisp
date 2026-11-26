@@ -20,10 +20,32 @@
       (setf (properties morph) props)))
   morph)
 
+(defun mark-fill-width (morph &optional (fill-p t))
+  "Mark MORPH in its properties plist to absorb remaining horizontal row width."
+  (when morph
+    (let ((props (properties morph)))
+      (setf (getf props :fill-width) fill-p)
+      (setf (properties morph) props)))
+  morph)
+
+(defun fill-width-child-p (morph)
+  (or (getf (properties morph) :fill-width)
+      (and (slot-boundp morph 'layout-spec)
+           (layout-spec morph)
+           (slot-exists-p (layout-spec morph) 'proportional-width)
+           (let ((pw (slot-value (layout-spec morph) 'proportional-width)))
+             (and pw (> pw 0))))))
+
+(defun set-morph-width (morph new-w)
+  (let* ((ext (ensure-extent morph))
+         (h (y ext)))
+    (setf (extent morph) (make-instance 'extent :x (max 0 (round new-w)) :y h))))
+
 (defun align-horizontal-row-children (row &key horizontal vertical)
   "Position children of ROW along its horizontal axis and cross axis according to
   HORIZONTAL (:left or :center) and VERTICAL (:top or :center), using values stored
-  on ROW when keyword arguments are omitted."
+  on ROW when keyword arguments are omitted. Any child marked to fill remaining
+  width expands to consume leftover inner width."
   (let* ((h-align (or horizontal (getf (properties row) :h-align) :left))
          (v-align (or vertical   (getf (properties row) :v-align) :center))
          (subs (submorphs row))
@@ -33,43 +55,59 @@
          (row-ext (ensure-extent row))
          (inner-w (max 0 (- (x row-ext) (* 2 pad-x))))
          (inner-h (max 0 (- (y row-ext) (* 2 pad-y))))
-         (children-w (loop for sub in subs
-                           for idx from 0
-                           sum (+ (x (ensure-extent sub))
-                                  (if (> idx 0) gap 0))))
-         (cur-x (ecase h-align
-                  (:left   pad-x)
-                  (:center (+ pad-x (max 0 (round (- inner-w children-w) 2)))))))
-    (dolist (sub subs)
-      (let* ((sub-ext (ensure-extent sub))
-             (sub-h (y sub-ext))
-             (y-pos (ecase v-align
-                      (:top    pad-y)
-                      (:center (+ pad-y (max 0 (round (- inner-h sub-h) 2)))))))
-        (set-location-xy sub cur-x y-pos)
-        (incf cur-x (+ (x sub-ext) gap))))))
+         (flex-subs (remove-if-not #'fill-width-child-p subs))
+         (fixed-subs (remove-if #'fill-width-child-p subs))
+         (total-gaps (if (> (length subs) 1)
+                         (* gap (1- (length subs)))
+                         0))
+         (fixed-w (loop for sub in fixed-subs
+                        sum (x (ensure-extent sub))))
+         (flex-w (if (plusp (length flex-subs))
+                     (max 0 (round (- inner-w fixed-w total-gaps) (length flex-subs)))
+                     0)))
+    (when (plusp (length flex-subs))
+      (dolist (fsub flex-subs)
+        (set-morph-width fsub flex-w)))
+    (let* ((children-w (loop for sub in subs
+                             for idx from 0
+                             sum (+ (x (ensure-extent sub))
+                                    (if (> idx 0) gap 0))))
+           (cur-x (ecase h-align
+                    (:left   pad-x)
+                    (:center (+ pad-x (max 0 (round (- inner-w children-w) 2)))))))
+      (dolist (sub subs)
+        (let* ((sub-ext (ensure-extent sub))
+               (sub-h (y sub-ext))
+               (y-pos (ecase v-align
+                        (:top    pad-y)
+                        (:center (+ pad-y (max 0 (round (- inner-h sub-h) 2)))))))
+          (set-location-xy sub cur-x y-pos)
+          (incf cur-x (+ (x sub-ext) gap)))))))
 
 (defmethod layout-submorphs :after ((morph layout-morph))
   "Re-apply custom row alignment after standard layout passes (such as window resize)."
   (when (and (eq (direction morph) :horizontal)
              (or (getf (properties morph) :h-align)
-                 (getf (properties morph) :v-align))
+                 (getf (properties morph) :v-align)
+                 (some #'fill-width-child-p (submorphs morph)))
              (> (length (submorphs morph)) 0))
     (align-horizontal-row-children morph)))
 
 ;;; ================= init gui =================================================
-(defparameter *scene* :row-center-center
+(defparameter *scene* :row-proportional-fill
   "Scene built by INIT-GUI:
-  :greeting, :row, :row-left-center, :row-center-center, or :row-center-top.")
+  :greeting, :row, :row-left-center, :row-center-center, :row-center-top,
+  or :row-proportional-fill.")
 
 (defmethod init-gui ((model basic-morphenator-model))
   (warn "current scene is ~s" *scene*)
   (ecase *scene*
-    (:greeting          (build-greeting-scene model))
-    (:row               (build-row-default-scene model))
-    (:row-left-center   (build-row-left-center-scene model))
-    (:row-center-center (build-row-center-center-scene model))
-    (:row-center-top    (build-row-center-top-scene model))))
+    (:greeting             (build-greeting-scene model))
+    (:row                  (build-row-default-scene model))
+    (:row-left-center      (build-row-left-center-scene model))
+    (:row-center-center    (build-row-center-center-scene model))
+    (:row-center-top       (build-row-center-top-scene model))
+    (:row-proportional-fill (build-row-proportional-fill-scene model))))
 
 ;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
@@ -159,7 +197,6 @@
     world))
 
 (defun build-row-left-center-scene (model)
-  ;; Horizontal left, vertical center
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -198,7 +235,6 @@
     world))
 
 (defun build-row-center-center-scene (model)
-  ;; Horizontal center, vertical center
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
          (view (make-instance 'layout-morph
@@ -275,6 +311,46 @@
       (add-morph row box3))
     world))
 
-;; (defun build-row-proportional-scene (model)
-;;   ;; TODO
-;;   )
+;;; see https://drcuis.github.io/DesignGUI/Proportion.html
+;;; First proportional scene: green box (box2) takes all remaining width after
+;;; red box (box1), blue box (box3), row padding, and gaps, updating on resize.
+(defun build-row-proportional-fill-scene (model)
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (mark-fill-width box2 t)
+    (set-layout-alignment row :horizontal :left :vertical :center)
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
+    world))
+
+;;; Second proportional scene: waiting for instructions.
