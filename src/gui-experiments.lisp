@@ -353,4 +353,5 @@
       (add-morph row box3))
     world))
 
-;;; Second proportional scene: waiting for instructions.
+;;; Second proportional scene: all boxes are square as in the build-row-left-center-scene scene
+;;; but as I resize the window gaps change, the gaps on the left of the red square and on the right of the blue sqare stays the same, but gaps around the green square change as i horizontally resize the window
