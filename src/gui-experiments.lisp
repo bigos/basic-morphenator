@@ -10,13 +10,15 @@
 
 ;;; ================= init gui =================================================
 (defparameter *scene* :greeting
-  "Scene built by INIT-GUI: :greeting, :row, or :row-left-center.")
+  "Scene built by INIT-GUI: :greeting, :row, :row-left-center, :row-center-center, or :vertical-center-top.")
 
 (defmethod init-gui ((model basic-morphenator-model))
   (ecase *scene*
-    (:greeting         (build-greeting-scene model))
-    (:row              (build-row-scene model))
-    (:row-left-center  (build-horizontal-left-aligned-row-scene model))))
+    (:greeting            (build-greeting-scene model))
+    (:row                 (build-row-scene model))
+    (:row-left-center     (build-horizontal-left-aligned-row-scene model))
+    (:row-center-center   (build-horizontal-center-aligned-row-scene model))
+    (:vertical-center-top (build-vertical-top-aligned-row-scene model))))
 
 ;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
@@ -143,16 +145,79 @@
     world))
 
 (defun build-horizontal-center-aligned-row-scene (model)
-  ;; TODO make scene similar to build-row-scene
-  ;; taken from https://drcuis.github.io/DesignGUI/Alignment.html
-  ;; with boxes horizontal center aligned, and vertical center aligned
-  )
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
+    (center-horizontal-children row)
+    world))
 
 (defun build-vertical-top-aligned-row-scene (model)
-  ;; TODO make scene similar to build-row-scene
-  ;; taken from https://drcuis.github.io/DesignGUI/Alignment.html
-  ;; with boxes horizontal center aligned, and vertical top aligned
-  )
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (column (make-instance 'layout-morph
+                                :color "orange"
+                                :direction :vertical
+                                :separation 10
+                                :padding-x 10
+                                :padding-y 10
+                                :extent (make-instance 'extent :x 580 :y 30)
+                                :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view column)
+      (add-morph column box1)
+      (add-morph column box2)
+      (add-morph column box3))
+    world))
 
 ;; (defun build-proportional-row-scene (model)
 ;;   ;; TODO

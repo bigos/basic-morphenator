@@ -460,3 +460,20 @@ after BODY completes."
             (setf (y ext) (round (* h (proportional-height spec))))))))
     (layout-submorphs sub))
   (record-damage-rect morph 0 0 w h))
+
+;;; =================== other ==================================================
+(defun center-horizontal-children (row)
+  (let* ((subs (submorphs row))
+         (gap (layout-gap row))
+         (pad-x (layout-padding-x row))
+         (row-w (x (ensure-extent row)))
+         (inner-w (max 0 (- row-w (* 2 pad-x))))
+         (children-w (loop for sub in subs
+                           for idx from 0
+                           sum (+ (x (ensure-extent sub))
+                                  (if (> idx 0) gap 0))))
+         (start-x (+ pad-x (max 0 (round (- inner-w children-w) 2))))
+         (cur-x start-x))
+    (dolist (sub subs)
+      (set-location-xy sub cur-x (morph-location-y sub))
+      (incf cur-x (+ (x (ensure-extent sub)) gap)))))
