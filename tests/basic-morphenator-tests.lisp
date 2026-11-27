@@ -335,7 +335,6 @@ and pressed state is cleared."
         (b (make-instance 'bm:boxed-morph)))
     (bm:add-morph a b)
     (signals error (bm:add-morph a b))))
-   ; ← was <, now <=
 
 (test next-morph-id-per-world
   "Pin: worlds get id 1; morphs receive per-world ids on add-morph;
