@@ -510,3 +510,9 @@
         (add-morph col3 lbl)))
     (refresh-world-labels world)
     world))
+
+;;; ------------------ button demo ---------------------------------------------
+;; see https://drcuis.github.io/DesignGUI/Button.html
+;;; TODO I need a scene as in the figure 4.1
+;;; that needs the Window title: button Demo
+;;; and a toggled button with a tooltip: Toggle background color
