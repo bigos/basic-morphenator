@@ -335,24 +335,49 @@ and pressed state is cleared."
         (b (make-instance 'bm:boxed-morph)))
     (bm:add-morph a b)
     (signals error (bm:add-morph a b))))
+   ; ← was <, now <=
 
-(test next-morph-id-invariant
-  "Pin: worlds get id 1, morph ids increase, and a new world resets the counter."
+(test next-morph-id-per-world
+  "Pin: worlds get id 1; morphs receive per-world ids on add-morph;
+   counters are independent per world; standalone morphs have no id."
   (let* ((w1 (make-instance 'bm:world-morph))
          (a  (make-instance 'bm:boxed-morph))
+         (b  (make-instance 'bm:boxed-morph))
          (w2 (make-instance 'bm:world-morph))
-         (b  (make-instance 'bm:boxed-morph)))
+         (c  (make-instance 'bm:boxed-morph))
+         (d  (make-instance 'bm:boxed-morph)))
     (is (= 1 (bm::id w1)))
     (is (= 1 (bm::id w2)))
-    (is (< (bm::id w1) (bm::id a)))
-    (is (<= (bm::id b) (bm::id a)))))   ; ← was <, now <=
+    (is (null (bm::id a)))
+    (is (null (bm::id b)))
+    (is (null (bm::id c)))
+    (is (null (bm::id d)))
+    ;; w1 issues 2, 3
+    (bm:add-morph w1 a)
+    (bm:add-morph w1 b)
+    (is (= 2 (bm::id a)))
+    (is (= 3 (bm::id b)))
+    ;; w2 restarts at 2 — independent counter
+    (bm:add-morph w2 c)
+    (is (= 2 (bm::id c)))
+    ;; w1 continues 4
+    (bm:add-morph w1 d)
+    (is (= 4 (bm::id d)))))
 
 (test next-morph-id-increases-within-world
+  "Within an existing scene, sequential add-morph calls advance the world's counter."
   (with-fixture with-test-window ()
     (let* ((world (bm:current-world))
+           (counter-before (bm::morph-id-counter world))
            (a (make-instance 'bm:boxed-morph))
            (b (make-instance 'bm:boxed-morph)))
       (is (= 1 (bm::id world)))
+      (is (null (bm::id a)))
+      (is (null (bm::id b)))
+      (bm:add-morph world a)
+      (bm:add-morph world b)
+      (is (= (1+ counter-before) (bm::id a)))
+      (is (= (+ 2 counter-before) (bm::id b)))
       (is (< (bm::id a) (bm::id b))))))
 
 (test add-morph-reparents-and-relayouts-old-owner
