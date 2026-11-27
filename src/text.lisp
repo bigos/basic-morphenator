@@ -42,6 +42,34 @@
         (nth-value 4 (cairo:text-extents str)))
       (* (length str) 9.0)))
 
+(defun emphasis->cairo-slant-and-weight (emphasis)
+  "Map an emphasis keyword to Cairo (SLANT WEIGHT) values."
+  (ecase (or emphasis :normal)
+    (:normal      (values :normal :normal))
+    (:bold        (values :normal :bold))
+    (:italic      (values :italic :normal))
+    (:oblique     (values :oblique :normal))
+    (:bold-italic (values :italic :bold))))
+
+(defun resolve-font-spec (morph)
+  "Return (VALUES FAMILY SIZE SLANT WEIGHT COLOR) for MORPH from its FONT plist and defaults."
+  (let ((font-plist (when (and morph (slot-exists-p morph 'font) (slot-boundp morph 'font))
+                      (slot-value morph 'font))))
+    (multiple-value-bind (slant weight)
+        (emphasis->cairo-slant-and-weight (getf font-plist :emphasis))
+      (values (or (getf font-plist :family) *default-font-family*)
+              (or (getf font-plist :size) *default-font-size*)
+              slant
+              weight
+              (or (getf font-plist :color) *default-text-color*)))))
+
+(defun font-line-height (size &key (pad-y 4))
+  "Compute label height for font SIZE (defaulting to *DEFAULT-FONT-SIZE*) plus PAD-Y."
+  (let ((font-size (if (and (numberp size) (> size 0))
+                       size
+                       *default-font-size*)))
+    (ceiling (+ (* font-size 1.2) (* 2 pad-y)))))
+
 (defun clamp-cursor (morph)
   (let ((len (length (widget-text morph))))
     (setf (cursor-pos morph) (max 0 (min (cursor-pos morph) len)))))
