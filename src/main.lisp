@@ -133,13 +133,18 @@
        nil)
       ((:motion :motion-enter)
        (destructuring-bind ((x y)) args
-         (let ((drag-changed (update-text-drag-selection x))
-               (hover-changed (and (current-world)
-                                   (process-mouse-over (the-handler)
-                                                       (morphs-at (current-world) x y)))))
-           (when (or drag-changed hover-changed)
-             (mark-needs-redraw)
-             (setf changed-p t)))))
+         (let* ((w (current-world))
+                (hand (and w (active-hand w)))
+                (had-tooltip (and w (active-tooltip-morph w))))
+           (when hand
+             (setf (hover-position hand) (cons x y)))
+           (let ((drag-changed (update-text-drag-selection x))
+                 (hover-changed (and w
+                                     (process-mouse-over (the-handler)
+                                                         (morphs-at w x y)))))
+             (when (or drag-changed hover-changed had-tooltip (and w (active-tooltip-morph w)))
+               (mark-needs-redraw)
+               (setf changed-p t))))))
       (:motion-leave
        (when (process-mouse-over (the-handler) nil)
          (mark-needs-redraw)
@@ -236,6 +241,11 @@
         gui-window-gtk:*initial-window-width*  600
         gui-window-gtk:*initial-window-height* 400
         gui-window-gtk:*initial-title*         "Basic-Morphenator"))
+
+(defun scene-window-title ()
+  (case *scene*
+    (:button-demo "Button Demo")
+    (otherwise "Basic-Morphenator")))
 
 (defun initialize-application-state ()
   (let ((model (make-instance 'basic-morphenator-model)))

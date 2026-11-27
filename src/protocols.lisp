@@ -52,7 +52,9 @@
   (:method ((morph text-model-morph)) t))
 
 (defgeneric handles-mouse-over-p (morph)
-  (:method ((morph morph)) nil)
+  (:method ((morph morph))
+    (and (typep morph 'placed-morph)
+         (not (null (tooltip morph)))))
   (:method ((morph pluggable-button-morph)) t))
 
 (defgeneric mouse-enter (morph))

@@ -354,12 +354,25 @@ after BODY completes."
     (draw-morph-label morph txt)))
 
 (defmethod render ((morph pluggable-button-morph))
-  (let ((fill (cond
-                ((is-pressed morph) "red")
-                ((mouse-is-over morph) (mouse-over-color morph))
-                (t (color morph)))))
+  (let* ((toggled-p (and (state-selector morph)
+                         (funcall (state-selector morph))))
+         (fill (cond
+                 ((is-pressed morph) "red")
+                 ((mouse-is-over morph) (or (mouse-over-color morph) (color morph)))
+                 (toggled-p (or (mouse-over-color morph) "lime"))
+                 (t (color morph)))))
     (draw-morph-box morph fill))
   (draw-morph-label morph (label morph)))
+
+(defun active-tooltip-morph (world)
+  (let* ((hand (and world (active-hand world)))
+         (handler (and hand (mouse-over-handler hand))))
+    (when handler
+      (find-if (lambda (m)
+                 (and (typep m 'placed-morph)
+                      (tooltip m)
+                      (plusp (length (tooltip m)))))
+               (reverse (mouse-over-morphs handler))))))
 
 (defmethod widget-text ((morph text-model-morph))
   (cond
@@ -445,12 +458,39 @@ after BODY completes."
           (make-instance 'hand-morph
                          :mouse-over-handler (make-instance 'mouse-over-handler)))))
 
+(defun render-tooltip-overlay (world)
+  (let* ((target (active-tooltip-morph world))
+         (hand (and world (active-hand world)))
+         (pos (and hand (hover-position hand))))
+    (when (and target pos)
+      (let* ((text (tooltip target))
+             (pad-x 6)
+             (pad-y 4)
+             (text-w (ceiling (safe-text-advance-width target text)))
+             (box-w (+ text-w (* 2 pad-x)))
+             (box-h 22)
+             (world-ext (extent world))
+             (max-x (max 0 (- (x world-ext) box-w)))
+             (max-y (max 0 (- (y world-ext) box-h)))
+             (bx (min max-x (max 0 (+ (car pos) 12))))
+             (by (min max-y (max 0 (+ (cdr pos) 16)))))
+        (cairo:save)
+        (draw-box-rect bx by box-w box-h "light yellow")
+        (gui-color:set-rgba "black")
+        (cairo:set-line-width 1.0)
+        (cairo:rectangle bx by box-w box-h)
+        (cairo:stroke)
+        (cairo:move-to (+ bx pad-x) (+ by pad-y 12))
+        (cairo:show-text text)
+        (cairo:restore)))))
+
 (defmethod render-world ((morph world-morph))
   (let ((ext (extent morph)))
     (when ext
       (draw-box-rect 0 0 (x ext) (y ext) "grey")
       (dolist (m (submorphs morph))
-        (render-morph m 0 0))))
+        (render-morph m 0 0))
+      (render-tooltip-overlay morph)))
   (clear-needs-redraw morph))
 
 (defmethod resize ((morph world-morph) w h)

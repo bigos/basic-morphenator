@@ -81,6 +81,7 @@
    #:reset-damage-recorder
    #:padding-x
    #:padding-y
+   #:tooltip
 
    ;; Text & input helpers used in tests/code
    #:printable-input-p

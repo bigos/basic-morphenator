@@ -131,7 +131,7 @@
     (align-horizontal-row-children morph)))
 
 ;;; ================= init gui =================================================
-(defparameter *scene* :nesting
+(defparameter *scene* :button-demo
   "Scene built by INIT-GUI:
   :greeting, :row, :row-left-center, :row-center-center, :row-center-top,
   :row-proportional-fill, :row-proportional-gaps, or :nesting.")
@@ -145,7 +145,8 @@
     (:row-center-top        (build-row-center-top-scene model))
     (:row-proportional-fill (build-row-proportional-fill-scene model))
     (:row-proportional-gaps (build-row-proportional-gaps-scene model))
-    (:nesting               (build-nesting-scene model))))
+    (:nesting               (build-nesting-scene model))
+    (:button-demo           (build-button-demo-scene model))))
 
 ;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
@@ -516,3 +517,45 @@
 ;;; TODO I need a scene as in the figure 4.1
 ;;; that needs the Window title: button Demo
 ;;; and a toggled button with a tooltip: Toggle background color
+(defun build-button-demo-scene (model)
+  (declare (ignore model))
+  (let* ((toggled-p nil)
+         (world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color nil
+                             :direction :horizontal
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 380)
+                             :layout-spec (make-layout-spec :proportional-width 1.0
+                                                            :proportional-height 1.0)))
+         (button (make-instance 'pluggable-button-morph
+                                :color "green"
+                                :mouse-over-color "lime"
+                                :font '(:family "Ubuntu Mono" :size 15 :color "black")
+                                :extent (make-instance 'extent :x 140 :y 36)
+                                :label "Toggle Color"
+                                :tooltip "Toggle background color"
+                                :state-selector (lambda () toggled-p)
+                                :action-selector (lambda ()
+                                                   (setf toggled-p (not toggled-p)
+                                                         (color view) (if toggled-p
+                                                                          "light blue"
+                                                                          "pink"))
+                                                   (record-morph-damage view)))))
+    (set-layout-alignment row :horizontal :center :vertical :center)
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row button))
+    (refresh-world-labels world)
+    world))

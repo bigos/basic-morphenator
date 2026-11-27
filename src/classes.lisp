@@ -37,7 +37,8 @@
 
 (defclass/std placed-morph (morph)
   ((location)
-   (layout-spec)))
+   (layout-spec)
+   (tooltip :std nil)))
 
 (defclass/std boxed-morph (placed-morph)
   ((extent)                             ;width and height
@@ -58,7 +59,8 @@
    (last-mouse-event-time)
    (prev-full-bounds)
    (grab-morph-data)
-   (last-position)))
+   (last-position)
+   (hover-position :std nil)))
 
 (defclass/std paste-up-morph (boxed-morph)
   ((background-image)
