@@ -212,7 +212,6 @@
                               :extent (make-instance 'extent :x 600 :y 400)
                               :layout-spec (make-layout-spec :proportional-width 1.0
                                                              :proportional-height 1.0)))
-         ;; TODO children of the orange layout use default gap,
          (row (make-instance 'layout-morph
                              :color "orange"
                              :direction :horizontal

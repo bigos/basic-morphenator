@@ -179,7 +179,6 @@
       (gui-window:redraw-canvas lisp-window (format nil "EVENT_~A" event)))))
 ;;; ========================
 (defmethod draw-window ((window basic-morphenator-window))
-  ;; TODO review drawing window
   (declare (ignore window))
   (render-world (current-world)))
 
