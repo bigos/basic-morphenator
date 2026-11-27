@@ -514,7 +514,7 @@
 
 ;;; ------------------ button demo ---------------------------------------------
 ;; see https://drcuis.github.io/DesignGUI/Button.html
-;;; TODO I need a scene as in the figure 4.1
+;;; a scene as in the figure 4.1
 ;;; that needs the Window title: button Demo
 ;;; and a toggled button with a tooltip: Toggle background color
 (defun build-button-demo-scene (model)
@@ -559,3 +559,7 @@
       (add-morph row button))
     (refresh-world-labels world)
     world))
+
+;;; ----------------------- menu demo ------------------------------------------
+;; see https://drcuis.github.io/DesignGUI/Menu.html
+;;; TODO create a scene as in Figure 4.2: A pop up menu to inform

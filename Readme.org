@@ -27,4 +27,4 @@ sudo apt install libgtk-4-dev libgirepository-2.0-dev libgtk-4-doc
 #+end_src
 
 ** next task
-https://drcuis.github.io/DesignGUI/Button.html
+https://drcuis.github.io/DesignGUI/Menu.html
