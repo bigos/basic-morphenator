@@ -7,14 +7,18 @@
   (cairo:fill-path))
 
 (defun draw-morph-box (morph &optional color)
-  (let ((ext (extent morph)))
-    (when ext
-      (draw-box-rect 0 0 (x ext) (y ext) (or color (color morph))))))
+  (let ((ext (extent morph))
+        (fill-color (if (and (null color) (slot-boundp morph 'color))
+                        (color morph)
+                        color)))
+    (when (and ext fill-color)
+      (draw-box-rect 0 0 (x ext) (y ext) fill-color))))
 
-(defun draw-morph-label (morph text &key (color "white"))
+(defun draw-morph-label (morph text &key color)
   (render-prepare-to-show-text morph)
-  (gui-color:set-rgba color)
-  (cairo:show-text (or text "")))
+  (let ((resolved-color (or color (nth-value 4 (resolve-font-spec morph)))))
+    (gui-color:set-rgba resolved-color)
+    (cairo:show-text (or text ""))))
 
 (defun make-layout-spec (&key fixed-width fixed-height
                            proportional-width proportional-height
