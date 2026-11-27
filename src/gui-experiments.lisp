@@ -131,7 +131,7 @@
     (align-horizontal-row-children morph)))
 
 ;;; ================= init gui =================================================
-(defparameter *scene* :nesting
+(defparameter *scene* :greeting
   "Scene built by INIT-GUI:
   :greeting, :row, :row-left-center, :row-center-center, :row-center-top,
   :row-proportional-fill, :row-proportional-gaps, or :nesting.")
