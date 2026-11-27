@@ -196,6 +196,7 @@
 
 ;;; ------------------------- rows ---------------------------------------------
 ;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html
+
 (defun build-row-default-scene (model)
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
@@ -207,4 +208,4 @@
                               :separation 10
                               :extent (make-instance 'extent :x 600 :y 400)
                               :layout-spec (make-layout-spec :proportional-width 1.0
-                                                             :
+                                                             :proportional-height 1.0))))))

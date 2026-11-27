@@ -485,3 +485,16 @@ after BODY completes."
     (dolist (sub subs)
       (set-location-xy sub cur-x (morph-location-y sub))
       (incf cur-x (+ (x (ensure-extent sub)) gap)))))
+
+(defun make-layout-spec (&key proportional-width proportional-height fixed-width fixed-height)
+  "Construct a LAYOUT-SPEC instance from optional proportional or fixed size hints."
+  (let ((spec (make-instance 'layout-spec)))
+    (when (and proportional-width (slot-exists-p spec 'proportional-width))
+      (setf (slot-value spec 'proportional-width) proportional-width))
+    (when (and proportional-height (slot-exists-p spec 'proportional-height))
+      (setf (slot-value spec 'proportional-height) proportional-height))
+    (when (and fixed-width (slot-exists-p spec 'fixed-width))
+      (setf (slot-value spec 'fixed-width) fixed-width))
+    (when (and fixed-height (slot-exists-p spec 'fixed-height))
+      (setf (slot-value spec 'fixed-height) fixed-height))
+    spec))
