@@ -131,7 +131,7 @@
     (align-horizontal-row-children morph)))
 
 ;;; ================= init gui =================================================
-(defparameter *scene* :greeting
+(defparameter *scene* :nesting
   "Scene built by INIT-GUI:
   :greeting, :row, :row-left-center, :row-center-center, :row-center-top,
   :row-proportional-fill, :row-proportional-gaps, or :nesting.")
@@ -488,7 +488,8 @@
                                                 :contents text))
                                '("Apple" "Banana" "Cherry")))
          (question-label (make-instance 'label-morph
-                                        :color nil
+                                        :color "yellow"
+                                        :font '(:family "Ubuntu Mono" :size 15 :color "black")
                                         :font '(:family "Ubuntu Mono" :size 15 :color "black")
                                         :contents "What are your favourites?"))
          (season-labels (mapcar (lambda (text)
