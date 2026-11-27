@@ -153,6 +153,7 @@
          (view (make-instance 'layout-morph
                               :color "pink"
                               :direction :vertical
+                              :separation 10
                               :extent (make-instance 'extent :x 600 :y 400)
                               :layout-spec (make-layout-spec :proportional-width 1.0
                                                              :proportional-height 1.0)))
@@ -179,11 +180,14 @@
                                 :mouse-over-color "lime"
                                 :extent (make-instance 'extent :x 60 :y 30)
                                 :label "Greet"))
-         ;; TODO resize the label to reflect new content and center it after resizing
          (greeting-label (make-instance 'label-morph
-                                        :color nil
+                                        :color "yellow"
                                         :font '(:family "Ubuntu Mono" :size 15 :color "black")
-                                        :contents (lambda () (or (greeted model) "Hmm...")))))
+                                        :contents (lambda ()
+                                                    (let ((g (greeted model)))
+                                                      (if (and g (plusp (length g)))
+                                                          g
+                                                          "Hmm...")))))))
     (with-deferred-layout ()
       (add-morph world view)
       (add-morph view row)
@@ -192,8 +196,7 @@
       (add-morph row button)
       (add-morph view greeting-label))
     (refresh-world-labels world)
-    (sync-label-extent-and-layout label :min-width 80)
-    world))
+    world)
 
 ;;; ------------------------- rows ---------------------------------------------
 ;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html

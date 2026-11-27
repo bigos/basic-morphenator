@@ -16,7 +16,7 @@
         ((equal entered "c")
          (warn "clear by shortcut")
          (when model
-           (setf (greeted model) nil))
+           (setf (greeted model) ""))
          (if text-morph
              (clear-text-morph text-morph)
              (when model

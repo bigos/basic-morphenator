@@ -74,12 +74,13 @@
           widths))))
 
 (defun safe-text-advance-width (morph str)
-  "Measure STR width via cl-cairo2 when a context is active, otherwise 9.0px/char."
+  "Measure STR width via cl-cairo2 when a context is active, otherwise estimate from font size."
   (if (and (boundp 'cairo:*context*) cairo:*context*)
       (progn
         (render-prepare-to-show-text morph)
         (nth-value 4 (cairo:text-extents str)))
-      (* (length str) 9.0)))
+      (let ((size (nth-value 1 (resolve-font-spec morph))))
+        (* (length str) size 0.5d0))))
 
 (defun clamp-cursor (morph)
   (let ((len (length (widget-text morph))))
