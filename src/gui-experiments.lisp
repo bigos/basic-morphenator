@@ -187,7 +187,7 @@
                                                     (let ((g (greeted model)))
                                                       (if (and g (plusp (length g)))
                                                           g
-                                                          "Hmm...")))))))
+                                                          "Hmm..."))))))
     (with-deferred-layout ()
       (add-morph world view)
       (add-morph view row)
@@ -196,7 +196,7 @@
       (add-morph row button)
       (add-morph view greeting-label))
     (refresh-world-labels world)
-    world)
+    world))
 
 ;;; ------------------------- rows ---------------------------------------------
 ;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html

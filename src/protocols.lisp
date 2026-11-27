@@ -14,7 +14,18 @@
 (defgeneric greet-me (model))
 (defmethod greet-me ((model basic-morphenator-model))
   (setf (greeted model) (entered model))
-  (refresh-world-labels))
+  (refresh-world-labels)
+  (let ((w (current-world)))
+    (format t "~&[greet-me] current-world=~S model-world=~S~%" w (world model))
+    (when w
+      (labels ((dump (m)
+                 (when (typep m 'label-morph)
+                   (format t "  label ~S -> loc=(~A,~A) extent=(~A,~A)~%"
+                           (label-text m)
+                           (x (location m)) (y (location m))
+                           (x (extent m)) (y (extent m))))
+                 (mapc #'dump (submorphs m))))
+        (dump w)))))
 
 (defgeneric widget-text (morph)
   (:documentation "Return the current text displayed by MORPH."))
