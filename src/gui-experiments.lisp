@@ -486,14 +486,17 @@
                               :extent (make-instance 'extent :x 140 :y 100)))
          (fruit-labels (mapcar (lambda (text)
                                  (make-instance 'label-morph
+                                                :color "black"
                                                 :contents text
                                                 :extent (make-instance 'extent :x 100 :y 20)))
                                '("Apple" "Banana" "Cherry")))
          (question-label (make-instance 'label-morph
+                                        :color "black"
                                         :contents "What are your favourites?"
                                         :extent (make-instance 'extent :x 190 :y 20)))
          (season-labels (mapcar (lambda (text)
                                   (make-instance 'label-morph
+                                                 :color "black"
                                                  :contents text
                                                  :extent (make-instance 'extent :x 100 :y 20)))
                                 '("Spring" "Winter" "Summer" "Fall"))))
