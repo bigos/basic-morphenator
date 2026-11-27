@@ -39,10 +39,6 @@ after BODY completes."
                          :color
                          (color obj)))))
 
-(defmethod initialize-instance :after ((morph morph) &key)
-  (unless (typep morph 'world-morph)
-    (setf (id morph) (next-morph-id))))
-
 ;;; =============== add morph ==================================================
 (defmethod add-morph ((morph morph) (submorph morph))
   ;; 1. Cycle: submorph is morph, or an ancestor of morph.
@@ -67,6 +63,9 @@ after BODY completes."
               (nconc (submorphs morph) (list submorph))
               (list submorph)))
     (refresh-location submorph)
+    ;; Assign per-world ids if the tree is now rooted at a world.
+    (let ((w (morph-world morph)))
+      (when w (ensure-subtree-has-ids submorph w)))
 
     ;; 5. Layout immediately unless inside with-deferred-layout.
     (if *deferred-layout-morphs*
@@ -82,6 +81,15 @@ after BODY completes."
             (record-morph-damage old-owner)))))
 
   submorph)
+
+(defun ensure-subtree-has-ids (morph world)
+  "Assign fresh per-world ids to MORPH and any submorphs that lack one.
+  Morphs already carrying an id (e.g. reparented from another world) keep it."
+  (unless (id morph)
+    (incf (morph-id-counter world))
+    (setf (id morph) (morph-id-counter world)))
+  (dolist (sub (submorphs morph))
+    (ensure-subtree-has-ids sub world)))
 
 ;;; ================== location ================================================
 ;;; Ensure every placed-morph starts with a valid (0, 0) location
@@ -423,7 +431,6 @@ after BODY completes."
 
 ;;; ------------ world ---------------------------------------------------------
 (defmethod initialize-instance :after ((morph world-morph) &key)
-  (reset-morph-id-counter 1)             ; next non-world morph will be id 2
   (setf (id morph) 1
         (owner morph) nil
         (pressed-morph morph) nil

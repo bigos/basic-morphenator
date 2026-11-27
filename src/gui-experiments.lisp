@@ -137,7 +137,6 @@
   :row-proportional-fill, or :row-proportional-gaps.")
 
 (defmethod init-gui ((model basic-morphenator-model))
-  (warn "current scene is ~s" *scene*)
   (ecase *scene*
     (:greeting              (build-greeting-scene model))
     (:row                   (build-row-default-scene model))

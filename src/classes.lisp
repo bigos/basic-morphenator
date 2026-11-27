@@ -32,7 +32,7 @@
   ((owner)
    (submorphs)
    (properties)
-   (id)
+   (id :std nil)
    (private-display-bounds)))
 
 (defclass/std placed-morph (morph)
@@ -68,6 +68,7 @@
   ((active-hand)
    (pressed-morph :std nil)
    (needs-redraw-p :std t)
+   (morph-id-counter :std 1)
    (canvas)
    (damage-recorder)
    (step-list)

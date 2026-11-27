@@ -12,7 +12,6 @@
   :serial T
   :components ((:file "packages")
                (:file "basic-morphenator")
-               (:file "helpers")
                (:file "classes")
                (:file "gui-color")
                (:file "geometry")
@@ -20,6 +19,7 @@
                (:file "protocols")
                (:file "text")
                (:file "drawing")
+               (:file "helpers")
                (:file "methods")
                (:file "gui-experiments")
                (:file "main"))
