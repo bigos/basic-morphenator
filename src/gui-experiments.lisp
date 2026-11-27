@@ -174,6 +174,7 @@
          (button (make-instance 'pluggable-button-morph
                                 :action-selector (lambda () (greet-me (the-model)))
                                 :color "green"
+                                :font '(:family "Ubuntu Mono" :size 15 :color "yellow")
                                 :mouse-over-color "lime"
                                 :extent (make-instance 'extent :x 60 :y 30)
                                 :label "Greet"))
@@ -190,6 +191,7 @@
       (add-morph row button)
       (add-morph view greeting-label))
     (refresh-world-labels world)
+    (sync-label-extent-and-layout label :min-width 80)
     world))
 
 ;;; ------------------------- rows ---------------------------------------------
