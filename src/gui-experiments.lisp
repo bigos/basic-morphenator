@@ -165,6 +165,7 @@
          (label (make-instance 'label-morph
                                :color nil
                                :font '(:family "Ubuntu Mono" :size 15 :color "black")
+                               :layout-spec (make-layout-spec :fixed-width 80)
                                :contents "Name:"))
          (input (make-instance 'text-model-morph
                                :color "white"

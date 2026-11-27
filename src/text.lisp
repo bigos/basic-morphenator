@@ -127,23 +127,27 @@
     (when (eql (selection-start morph) (cursor-pos morph))
       (setf (selection-start morph) nil))))
 
-(defun sync-label-extent-and-layout (morph &key (pad-x 8) (pad-y 4) (min-width 0) height)
-  "Resize MORPH to fit its current rendered text and font metrics, then
-  re-layout its owner if inside a layout-morph."
+(defun sync-label-extent-and-layout (morph &key (pad-x 4) (min-width 0) height)
+  "Resize MORPH's extent to fit its current text while respecting MIN-WIDTH and any
+FIXED-WIDTH on its layout-spec, then re-layout its owner if present."
   (when (and morph (typep morph 'label-morph))
-    (let* ((txt (render-text-for-color morph))
-           (size (nth-value 1 (resolve-font-spec morph)))
-           (measured-w (ceiling (+ (safe-text-advance-width morph txt) (* 2 pad-x))))
-           (new-w (max min-width measured-w))
-           (new-h (or height (font-line-height size :pad-y pad-y)))
-           (ext (ensure-extent morph)))
+    (let* ((txt (or (render-text-for-color morph) ""))
+           (text-w (ceiling (safe-text-advance-width morph txt)))
+           (spec (and (slot-boundp morph 'layout-spec) (layout-spec morph)))
+           (spec-fixed-w (and spec (fixed-width spec)))
+           (effective-min-w (max (or min-width 0) (or spec-fixed-w 0)))
+           (new-w (max effective-min-w (+ text-w (* 2 pad-x))))
+           (ext (ensure-extent morph))
+           (new-h (or height
+                      (and spec (fixed-height spec))
+                      (and (plusp (y ext)) (y ext))
+                      20)))
       (setf (x ext) new-w
             (y ext) new-h)
-      (record-morph-damage morph)
-      (let ((own (owner morph)))
-        (when (and own (typep own 'layout-morph))
-          (layout-submorphs own)
-          (record-morph-damage own))))))
+      (when (owner morph)
+        (layout-submorphs (owner morph))
+        (record-morph-damage (owner morph))))
+    morph))
 
 (defun replace-text-range (morph start end replacement new-cursor-pos &key clear-sel-p)
   "Replace text in MORPH over half-open range [START, END) with REPLACEMENT,
