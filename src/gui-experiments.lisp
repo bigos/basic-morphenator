@@ -131,10 +131,10 @@
     (align-horizontal-row-children morph)))
 
 ;;; ================= init gui =================================================
-(defparameter *scene* :row-proportional-gaps
+(defparameter *scene* :nesting
   "Scene built by INIT-GUI:
   :greeting, :row, :row-left-center, :row-center-center, :row-center-top,
-  :row-proportional-fill, or :row-proportional-gaps.")
+  :row-proportional-fill, :row-proportional-gaps, or :nesting.")
 
 (defmethod init-gui ((model basic-morphenator-model))
   (ecase *scene*
@@ -144,7 +144,8 @@
     (:row-center-center     (build-row-center-center-scene model))
     (:row-center-top        (build-row-center-top-scene model))
     (:row-proportional-fill (build-row-proportional-fill-scene model))
-    (:row-proportional-gaps (build-row-proportional-gaps-scene model))))
+    (:row-proportional-gaps (build-row-proportional-gaps-scene model))
+    (:nesting (build-nesting-scene model))))
 
 ;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
@@ -194,6 +195,7 @@
     (refresh-world-labels world)
     world))
 
+;;; ------------------------- rows ---------------------------------------------
 ;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html
 (defun build-row-default-scene (model)
   (declare (ignore model))
@@ -430,4 +432,81 @@
       (add-morph row box1)
       (add-morph row box2)
       (add-morph row box3))
+    world))
+
+;;; ---------------------------- nesting ---------------------------------------
+;;; TODO
+;;; see https://drcuis.github.io/DesignGUI/Nesting-layouts.html
+;;; in previous scenes we had a row with 3 boxes
+;;; now I want columns instead of boxes
+;;; so in the row I need 3 columns that contain several labels
+;;; first column labels, 3 words: Apple, Banana, Cherry
+;;; second column, one question: What are your favourites?
+;;; third column, 4 words: Spring, Winter, Summer, Fall
+;;; ---------------------------- nesting ---------------------------------------
+;;; see https://drcuis.github.io/DesignGUI/Nesting-layouts.html
+;;; A horizontal row containing three vertical columns of labels.
+(defun build-nesting-scene (model)
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 120)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (col1 (make-instance 'layout-morph
+                              :direction :vertical
+                              :separation 6
+                              :padding-x 8
+                              :padding-y 8
+                              :extent (make-instance 'extent :x 140 :y 100)))
+         (col2 (make-instance 'layout-morph
+                              :direction :vertical
+                              :separation 6
+                              :padding-x 8
+                              :padding-y 8
+                              :extent (make-instance 'extent :x 220 :y 100)))
+         (col3 (make-instance 'layout-morph
+                              :direction :vertical
+                              :separation 6
+                              :padding-x 8
+                              :padding-y 8
+                              :extent (make-instance 'extent :x 140 :y 100)))
+         (fruit-labels (mapcar (lambda (text)
+                                 (make-instance 'label-morph
+                                                :contents text
+                                                :extent (make-instance 'extent :x 100 :y 20)))
+                               '("Apple" "Banana" "Cherry")))
+         (question-label (make-instance 'label-morph
+                                        :contents "What are your favourites?"
+                                        :extent (make-instance 'extent :x 190 :y 20)))
+         (season-labels (mapcar (lambda (text)
+                                  (make-instance 'label-morph
+                                                 :contents text
+                                                 :extent (make-instance 'extent :x 100 :y 20)))
+                                '("Spring" "Winter" "Summer" "Fall"))))
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row col1)
+      (add-morph row col2)
+      (add-morph row col3)
+      (dolist (lbl fruit-labels)
+        (add-morph col1 lbl))
+      (add-morph col2 question-label)
+      (dolist (lbl season-labels)
+        (add-morph col3 lbl)))
+    (refresh-world-labels world)
     world))
