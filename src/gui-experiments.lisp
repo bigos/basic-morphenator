@@ -145,7 +145,7 @@
     (:row-center-top        (build-row-center-top-scene model))
     (:row-proportional-fill (build-row-proportional-fill-scene model))
     (:row-proportional-gaps (build-row-proportional-gaps-scene model))
-    (:nesting (build-nesting-scene model))))
+    (:nesting               (build-nesting-scene model))))
 
 ;;; https://drcuis.github.io/DesignGUI/Quick-Start.html
 (defun build-greeting-scene (model)
@@ -163,8 +163,8 @@
                              :layout-spec (make-layout-spec :proportional-width 1.0
                                                             :fixed-height 30)))
          (label (make-instance 'label-morph
-                               :color "brown"
-                               :extent (make-instance 'extent :x 60 :y 30)
+                               :color nil
+                               :font '(:family "Ubuntu Mono" :size 15 :color "black")
                                :contents "Name:"))
          (input (make-instance 'text-model-morph
                                :color "white"
@@ -179,8 +179,8 @@
                                 :label "Greet"))
          ;; TODO resize the label to reflect new content and center it after resizing
          (greeting-label (make-instance 'label-morph
-                                        :color "blue"
-                                        :extent (make-instance 'extent :x 50 :y 20)
+                                        :color nil
+                                        :font '(:family "Ubuntu Mono" :size 15 :color "black")
                                         :contents (lambda () (or (greeted model) "Hmm...")))))
     (with-deferred-layout ()
       (add-morph world view)
@@ -189,9 +189,6 @@
       (add-morph row input)
       (add-morph row button)
       (add-morph view greeting-label))
-    ;; NEW: measure-and-relayout every label now that the tree is assembled,
-    ;; so the greeting-label (whose contents is a closure over MODEL) is
-    ;; sized to its actual rendered text rather than its constructed 50×20.
     (refresh-world-labels world)
     world))
 
@@ -435,15 +432,6 @@
     world))
 
 ;;; ---------------------------- nesting ---------------------------------------
-;;; TODO
-;;; see https://drcuis.github.io/DesignGUI/Nesting-layouts.html
-;;; in previous scenes we had a row with 3 boxes
-;;; now I want columns instead of boxes
-;;; so in the row I need 3 columns that contain several labels
-;;; first column labels, 3 words: Apple, Banana, Cherry
-;;; second column, one question: What are your favourites?
-;;; third column, 4 words: Spring, Winter, Summer, Fall
-;;; ---------------------------- nesting ---------------------------------------
 ;;; see https://drcuis.github.io/DesignGUI/Nesting-layouts.html
 ;;; A horizontal row containing three vertical columns of labels.
 (defun build-nesting-scene (model)
@@ -464,41 +452,44 @@
                              :separation 10
                              :padding-x 10
                              :padding-y 10
-                             :extent (make-instance 'extent :x 580 :y 120)
+                             :extent (make-instance 'extent :x 580 :y 150)
                              :layout-spec (make-layout-spec :proportional-width 1.0)))
          (col1 (make-instance 'layout-morph
+                              :color nil
                               :direction :vertical
                               :separation 6
                               :padding-x 8
                               :padding-y 8
-                              :extent (make-instance 'extent :x 140 :y 100)))
+                              :extent (make-instance 'extent :x 140 :y 120)))
          (col2 (make-instance 'layout-morph
+                              :color nil
                               :direction :vertical
                               :separation 6
                               :padding-x 8
                               :padding-y 8
-                              :extent (make-instance 'extent :x 220 :y 100)))
+                              :extent (make-instance 'extent :x 240 :y 120)))
          (col3 (make-instance 'layout-morph
+                              :color nil
                               :direction :vertical
                               :separation 6
                               :padding-x 8
                               :padding-y 8
-                              :extent (make-instance 'extent :x 140 :y 100)))
+                              :extent (make-instance 'extent :x 140 :y 120)))
          (fruit-labels (mapcar (lambda (text)
                                  (make-instance 'label-morph
-                                                :color "black"
-                                                :contents text
-                                                :extent (make-instance 'extent :x 100 :y 20)))
+                                                :color nil
+                                                :font '(:family "Ubuntu Mono" :size 15 :color "black")
+                                                :contents text))
                                '("Apple" "Banana" "Cherry")))
          (question-label (make-instance 'label-morph
-                                        :color "black"
-                                        :contents "What are your favourites?"
-                                        :extent (make-instance 'extent :x 190 :y 20)))
+                                        :color nil
+                                        :font '(:family "Ubuntu Mono" :size 15 :color "black")
+                                        :contents "What are your favourites?"))
          (season-labels (mapcar (lambda (text)
                                   (make-instance 'label-morph
-                                                 :color "black"
-                                                 :contents text
-                                                 :extent (make-instance 'extent :x 100 :y 20)))
+                                                 :color nil
+                                                 :font '(:family "Ubuntu Mono" :size 15 :color "black")
+                                                 :contents text))
                                 '("Spring" "Winter" "Summer" "Fall"))))
     (with-deferred-layout ()
       (add-morph world view)
