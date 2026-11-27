@@ -16,11 +16,12 @@
         ((equal entered "c")
          (warn "clear by shortcut")
          (when model
-           (setf (greeted model) ""))
+           (setf (greeted model) nil))
          (if text-morph
              (clear-text-morph text-morph)
              (when model
                (setf (entered model) "")))
+         (refresh-world-labels)
          t)
         (t nil)))
 
