@@ -131,7 +131,7 @@
     (align-horizontal-row-children morph)))
 
 ;;; ================= init gui =================================================
-(defparameter *scene* :greeting
+(defparameter *scene* :nesting
   "Scene built by INIT-GUI:
   :greeting, :row, :row-left-center, :row-center-center, :row-center-top,
   :row-proportional-fill, :row-proportional-gaps, or :nesting.")
@@ -174,7 +174,6 @@
          (button (make-instance 'pluggable-button-morph
                                 :action-selector (lambda () (greet-me (the-model)))
                                 :color "green"
-                                :font '(:family "Ubuntu Mono" :size 15 :color "yellow")
                                 :mouse-over-color "lime"
                                 :extent (make-instance 'extent :x 60 :y 30)
                                 :label "Greet"))
@@ -191,12 +190,10 @@
       (add-morph row button)
       (add-morph view greeting-label))
     (refresh-world-labels world)
-    (sync-label-extent-and-layout label :min-width 80)
     world))
 
 ;;; ------------------------- rows ---------------------------------------------
 ;; https://drcuis.github.io/DesignGUI/To-row-or-not-to-row.html
-
 (defun build-row-default-scene (model)
   (declare (ignore model))
   (let* ((world (make-instance 'world-morph))
@@ -208,4 +205,302 @@
                               :separation 10
                               :extent (make-instance 'extent :x 600 :y 400)
                               :layout-spec (make-layout-spec :proportional-width 1.0
-                                                             :proportional-height 1.0))))))
+                                                             :proportional-height 1.0)))
+         ;; TODO children of the orange layout use default gap,
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
+    world))
+
+(defun build-row-left-center-scene (model)
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (set-layout-alignment row :horizontal :left :vertical :center)
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
+    world))
+
+(defun build-row-center-center-scene (model)
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (set-layout-alignment row :horizontal :center :vertical :center)
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
+    world))
+
+(defun build-row-center-top-scene (model)
+  ;; Horizontal center, vertical top
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (set-layout-alignment row :horizontal :center :vertical :top)
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
+    world))
+
+;;; see https://drcuis.github.io/DesignGUI/Proportion.html
+;;; First proportional scene: green box (box2) takes all remaining width after
+;;; red box (box1), blue box (box3), row padding, and gaps, updating on resize.
+(defun build-row-proportional-fill-scene (model)
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (mark-fill-width box2 t)
+    (set-layout-alignment row :horizontal :left :vertical :center)
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
+    world))
+
+;;; Second proportional scene: all boxes stay square (50x50, 75x75, 100x100) and
+;;; vertically centered, outer left/right padding stays fixed, and the gaps
+;;; around the green square (box2) adjust evenly on horizontal resize.
+(defun build-row-proportional-gaps-scene (model)
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 30)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (box1 (make-instance 'boxed-morph
+                              :color "red"
+                              :extent (make-instance 'extent :x 50 :y 50)))
+         (box2 (make-instance 'boxed-morph
+                              :color "green"
+                              :extent (make-instance 'extent :x 75 :y 75)))
+         (box3 (make-instance 'boxed-morph
+                              :color "blue"
+                              :extent (make-instance 'extent :x 100 :y 100))))
+    (mark-proportional-gaps row t)
+    (set-layout-alignment row :horizontal :left :vertical :center)
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row box1)
+      (add-morph row box2)
+      (add-morph row box3))
+    world))
+
+;;; ---------------------------- nesting ---------------------------------------
+;;; see https://drcuis.github.io/DesignGUI/Nesting-layouts.html
+;;; A horizontal row containing three vertical columns of labels.
+(defun build-nesting-scene (model)
+  (declare (ignore model))
+  (let* ((world (make-instance 'world-morph))
+         (view (make-instance 'layout-morph
+                              :color "pink"
+                              :direction :vertical
+                              :padding-x 10
+                              :padding-y 10
+                              :separation 10
+                              :extent (make-instance 'extent :x 600 :y 400)
+                              :layout-spec (make-layout-spec :proportional-width 1.0
+                                                             :proportional-height 1.0)))
+         (row (make-instance 'layout-morph
+                             :color "orange"
+                             :direction :horizontal
+                             :separation 10
+                             :padding-x 10
+                             :padding-y 10
+                             :extent (make-instance 'extent :x 580 :y 150)
+                             :layout-spec (make-layout-spec :proportional-width 1.0)))
+         (col1 (make-instance 'layout-morph
+                              :color nil
+                              :direction :vertical
+                              :separation 6
+                              :padding-x 8
+                              :padding-y 8
+                              :extent (make-instance 'extent :x 140 :y 120)))
+         (col2 (make-instance 'layout-morph
+                              :color nil
+                              :direction :vertical
+                              :separation 6
+                              :padding-x 8
+                              :padding-y 8
+                              :extent (make-instance 'extent :x 240 :y 120)))
+         (col3 (make-instance 'layout-morph
+                              :color nil
+                              :direction :vertical
+                              :separation 6
+                              :padding-x 8
+                              :padding-y 8
+                              :extent (make-instance 'extent :x 140 :y 120)))
+         (fruit-labels (mapcar (lambda (text)
+                                 (make-instance 'label-morph
+                                                :color nil
+                                                :font '(:family "Ubuntu Mono" :size 15 :color "black")
+                                                :contents text))
+                               '("Apple" "Banana" "Cherry")))
+         (question-label (make-instance 'label-morph
+                                        :color nil
+                                        :font '(:family "Ubuntu Mono" :size 15 :color "black")
+                                        :contents "What are your favourites?"))
+         (season-labels (mapcar (lambda (text)
+                                  (make-instance 'label-morph
+                                                 :color nil
+                                                 :font '(:family "Ubuntu Mono" :size 15 :color "black")
+                                                 :contents text))
+                                '("Spring" "Winter" "Summer" "Fall"))))
+    (with-deferred-layout ()
+      (add-morph world view)
+      (add-morph view row)
+      (add-morph row col1)
+      (add-morph row col2)
+      (add-morph row col3)
+      (dolist (lbl fruit-labels)
+        (add-morph col1 lbl))
+      (add-morph col2 question-label)
+      (dolist (lbl season-labels)
+        (add-morph col3 lbl)))
+    (refresh-world-labels world)
+    world))
