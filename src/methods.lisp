@@ -349,7 +349,8 @@ after BODY completes."
 
 (defmethod render ((morph label-morph))
   (let ((txt (render-text-for-color morph)))
-    (call-next-method)
+    (when (color morph)
+      (call-next-method))
     (draw-morph-label morph txt)))
 
 (defmethod render ((morph pluggable-button-morph))
