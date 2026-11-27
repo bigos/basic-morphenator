@@ -240,7 +240,7 @@
         gui-events:*client-fn-process-event* 'basic-morphenator:process-event
         gui-window-gtk:*initial-window-width*  600
         gui-window-gtk:*initial-window-height* 400
-        gui-window-gtk:*initial-title*         "Basic-Morphenator"))
+        gui-window-gtk:*initial-title*         (scene-window-title)))
 
 (defun scene-window-title ()
   (case *scene*

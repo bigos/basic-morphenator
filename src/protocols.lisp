@@ -57,8 +57,10 @@
          (not (null (tooltip morph)))))
   (:method ((morph pluggable-button-morph)) t))
 
-(defgeneric mouse-enter (morph))
-(defgeneric mouse-leave (morph))
+(defgeneric mouse-enter (morph)
+  (:method ((morph morph)) nil))
+(defgeneric mouse-leave (morph)
+  (:method ((morph morph)) nil))
 (defmethod mouse-enter ((morph pluggable-button-morph))
   (setf (mouse-is-over morph) t))
 (defmethod mouse-leave ((morph pluggable-button-morph))
