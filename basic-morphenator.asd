@@ -2,7 +2,7 @@
   :version "0.0.1"
   :author "https://github.com/bigos"
   :license "PUBLIC DOMAIN"
-  :depends-on (#:closer-mop #:defclass-std #:cl-cairo2)
+  :depends-on (#:closer-mop #:defclass-std #:cl-cairo2 #:clops-gui)
   :pathname "src/"
   :serial T
   :components ((:file "packages")
