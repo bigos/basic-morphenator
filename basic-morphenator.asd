@@ -2,7 +2,11 @@
   :version "0.0.1"
   :author "https://github.com/bigos"
   :license "PUBLIC DOMAIN"
-  :depends-on (#:closer-mop #:defclass-std #:cl-cairo2 #:clops-gui)
+  :depends-on (#:clops-gui        ; provides `boxes` package
+               #:sycamore
+               #:closer-mop
+               #:cl-gtk4 #:cl-gdk4 #:cl-glib #:cl-cairo2
+               #:defclass-std)
   :pathname "src/"
   :serial T
   :components ((:file "packages")
