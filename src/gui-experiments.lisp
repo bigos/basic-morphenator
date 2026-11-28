@@ -490,7 +490,6 @@
          (question-label (make-instance 'label-morph
                                         :color "yellow"
                                         :font '(:family "Ubuntu Mono" :size 15 :color "black")
-                                        :font '(:family "Ubuntu Mono" :size 15 :color "black")
                                         :contents "What are your favourites?"))
          (season-labels (mapcar (lambda (text)
                                   (make-instance 'label-morph
